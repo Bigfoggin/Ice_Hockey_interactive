@@ -1,4 +1,10 @@
-this file's purpose is to keep track of our group's ideas
+# Brainstorming Ideas
+
+**Research Question: How can we transform real performance data in ice hockey into an experience that people actually want to explore?**
+
+The goal is to develop a *simple*, interactive, and entertaining web experience. This should help both ice hockey experts and beginners playfully understand what is happening on the ice and why a player's performance was important using real match data (from the Spengler Cup) – *instead of just showing dry tables of numbers*.
+
+## Ideas:
 #
 #
 #
@@ -44,3 +50,30 @@ this file's purpose is to keep track of our group's ideas
 # Nicola
 
 # Jason
+1. Interactive map featuring highlights from the current game (e.g., goals, shots, checks, fights, etc.)
+
+   a. Clicking a goal on the rink opens up the video scene of that goal
+
+2. Player 1 vs Player 2 voting on who achieves the better Spengler Cup Score
+
+   a. Distance covered, top speed, goals, assists, checks, etc. reduced into a single score value
+
+3. TopScorers app for the Spengler Cup
+
+   a. Predictor game (tippspiel) as simple as a fantasy league
+
+4. Mini-game quiz:
+
+   a. Spengler Cup trivia / knowledge
+
+   b. Results
+
+   c. Predictions for upcoming games
+
+5. Interactive explanation of ice hockey for beginners
+
+   a. Rules presented in a playful way
+
+6. Live data of game situations displayed directly in the live feed
+
+   a. Attack-zone time
