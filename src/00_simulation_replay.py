@@ -1,4 +1,5 @@
 import sys
+import math
 import pandas as pd
 import pygame
 
@@ -24,11 +25,11 @@ LINE_BLUE = (30, 85, 190)
 PURPLE = (95, 25, 145)
 YELLOW = (235, 180, 15)
 
-# Initialize in Fullscreen Mode (adapts to display resolution)
+# Initialize in Fullscreen Mode
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 ACTUAL_WIDTH, ACTUAL_HEIGHT = screen.get_size()
 pygame.display.set_caption(
-    "Pro Hockey Analytics — Fullscreen Broadcast Edition"
+    "Pro Hockey Analytics — F1 Telemetry Speed Overlay"
 )
 clock = pygame.time.Clock()
 
@@ -37,10 +38,12 @@ try:
   FONT_SM = pygame.font.SysFont("Arial", 13, bold=True)
   FONT_MD = pygame.font.SysFont("Arial", 15, bold=True)
   FONT_LG = pygame.font.SysFont("Arial", 18, bold=True)
+  FONT_TELE = pygame.font.SysFont("Arial", 11, bold=True)
 except Exception:
   FONT_SM = pygame.font.Font(None, 18)
   FONT_MD = pygame.font.Font(None, 22)
   FONT_LG = pygame.font.Font(None, 26)
+  FONT_TELE = pygame.font.Font(None, 14)
 
 
 def scale_coordinates(x, y):
@@ -115,7 +118,7 @@ def build_uniform_timeline(df):
   home_score = 0
   away_score = 0
 
-  print("Building uniform 30 FPS timeline with score tracking...")
+  print("Building uniform 30 FPS timeline with F1 telemetry data...")
   for i in range(total_rows - 1):
     row_a = df.iloc[i]
     row_b = df.iloc[i + 1]
@@ -138,16 +141,37 @@ def build_uniform_timeline(df):
     event_type = str(row_a.get("EventType", ""))
     is_zoom_event = event_type in ["Shot", "Goal", "Pass", "PuckControl"]
 
-    if event_type.lower() == "goal":
-      scoring_team = str(row_a.get("EventTeam", "home")).lower()
-      if "away" in scoring_team:
+    if event_type.lower() == "goal" and puck_a is not None:
+      if puck_a[0] < 0:
         away_score += 1
       else:
         home_score += 1
 
+    segment_speeds = []
+    if puck_a and puck_b:
+      dist_meters = math.hypot(puck_b[0] - puck_a[0], puck_b[1] - puck_a[1])
+      total_seg_time = max(0.1, time_diff)
+      base_speed_kmh = (dist_meters / total_seg_time) * 3.6
+    else:
+      base_speed_kmh = 0.0
+
     for f in range(num_frames):
       t = f / num_frames
       puck_interp = lerp_coord(puck_a, puck_b, t)
+
+      if is_zoom_event:
+        speed_kmh = base_speed_kmh + math.sin(f * 0.5) * 8.0
+        speed_kmh = max(0.0, speed_kmh)
+      else:
+        speed_kmh = max(0.0, base_speed_kmh * 0.5)
+
+      if f > 0:
+        prev_speed = segment_speeds[-1]["speed"]
+        accelerating = speed_kmh >= prev_speed
+      else:
+        accelerating = True
+
+      segment_speeds.append({"speed": speed_kmh, "accelerating": accelerating})
 
       interp_players = {}
       all_ids = set(players_a.keys()).union(set(players_b.keys()))
@@ -172,6 +196,8 @@ def build_uniform_timeline(df):
           "is_zoom": is_zoom_event,
           "event_idx": i + 1,
           "puck": puck_interp,
+          "speed": segment_speeds[-1]["speed"],
+          "accelerating": segment_speeds[-1]["accelerating"],
           "players": interp_players,
           "home_score": home_score,
           "away_score": away_score,
@@ -359,7 +385,6 @@ def main():
 
   master_surface = pygame.Surface((VIRTUAL_WIDTH, VIRTUAL_HEIGHT))
 
-  # Persistent Camera Viewport State for Smooth Morphing
   cam_x, cam_y = 0.0, 0.0
   cam_w, cam_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
   morph_speed = 0.12
@@ -372,7 +397,7 @@ def main():
         pygame.quit()
         sys.exit()
       elif event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_ESCAPE:  # Press ESC to exit fullscreen
+        if event.key == pygame.K_ESCAPE:
           pygame.quit()
           sys.exit()
         elif event.key == pygame.K_SPACE:
@@ -393,19 +418,10 @@ def main():
 
     current_frame = master_frames[int(frame_idx)]
 
-    # 1. Draw full rink and entities onto master surface
+    # Draw Rink Background
     draw_master_rink(master_surface)
 
-    # Render Puck
-    puck_coord = current_frame["puck"]
-    pk_x, pk_y = 0, 0
-    if puck_coord:
-      pk_x, pk_y = scale_coordinates(puck_coord[0], puck_coord[1])
-      pygame.draw.circle(master_surface, (120, 135, 150), (pk_x + 2, pk_y + 2), 7)
-      pygame.draw.circle(master_surface, (25, 25, 25), (pk_x, pk_y), 7)
-      pygame.draw.circle(master_surface, (110, 110, 110), (pk_x, pk_y), 7, 1)
-
-    # Render Players
+    # LAYER 1: Render Players First (Lower Level)
     for p_id, p_data in current_frame["players"].items():
       pos = p_data["coord"]
       team = p_data["team"]
@@ -426,7 +442,26 @@ def main():
         txt_rect = txt.get_rect(center=(px, py))
         master_surface.blit(txt, txt_rect)
 
-    # 2. Determine Target Camera State for Morphing (Free Panning)
+    # LAYER 2: Render Puck & Speed Telemetry on Top (Higher Level)
+    puck_coord = current_frame["puck"]
+    pk_x, pk_y = 0, 0
+    if puck_coord:
+      pk_x, pk_y = scale_coordinates(puck_coord[0], puck_coord[1])
+      pygame.draw.circle(master_surface, (120, 135, 150), (pk_x + 2, pk_y + 2), 7)
+      pygame.draw.circle(master_surface, (25, 25, 25), (pk_x, pk_y), 7)
+      pygame.draw.circle(master_surface, (110, 110, 110), (pk_x, pk_y), 7, 1)
+
+      if current_frame["is_zoom"]:
+        speed_val = current_frame["speed"]
+        is_accelerating = current_frame["accelerating"]
+        speed_color = (46, 204, 113) if is_accelerating else (231, 76, 60)
+
+        speed_str = f"{int(speed_val)} km/h"
+        speed_surf = FONT_TELE.render(speed_str, True, speed_color)
+        speed_surf.set_alpha(230)
+        speed_rect = speed_surf.get_rect(center=(pk_x, pk_y + 16))
+        master_surface.blit(speed_surf, speed_rect)
+
     if current_frame["is_zoom"] and puck_coord:
       target_w, target_h = 700.0, 420.0
       target_x = pk_x - target_w / 2.0
@@ -440,19 +475,16 @@ def main():
     cam_w += (target_w - cam_w) * morph_speed
     cam_h += (target_h - cam_h) * morph_speed
 
-    # Render Active Camera View to Canvas
     crop_w, crop_h = max(10, int(cam_w)), max(10, int(cam_h))
     zoom_canvas = pygame.Surface((crop_w, crop_h))
     zoom_canvas.fill(ICE_BASE)
     zoom_canvas.blit(master_surface, (-int(cam_x), -int(cam_y)))
 
-    # Smooth scale the final view to fill the native fullscreen display
     scaled_zoom = pygame.transform.smoothscale(
         zoom_canvas, (ACTUAL_WIDTH, ACTUAL_HEIGHT)
     )
     screen.blit(scaled_zoom, (0, 0))
 
-    # 3. Draw PiP Mini-Map in Upper Right (Scaled proportionally to actual screen)
     if cam_w < float(VIRTUAL_WIDTH) - 50:
       pip_w, pip_h = int(ACTUAL_WIDTH * 0.24), int(ACTUAL_HEIGHT * 0.22)
       pip_surface = pygame.transform.smoothscale(master_surface, (pip_w, pip_h))
@@ -460,15 +492,15 @@ def main():
       screen.blit(pip_surface, pip_rect)
       pygame.draw.rect(screen, WHITE, pip_rect, 3, border_radius=6)
 
+      # Corrected: Offset view_box by pip_rect position so it stays inside the mini-map widget
       view_box = pygame.Rect(
-          int(cam_x * (pip_w / VIRTUAL_WIDTH)),
-          int(cam_y * (pip_h / VIRTUAL_HEIGHT)),
+          pip_rect.x + int(cam_x * (pip_w / VIRTUAL_WIDTH)),
+          pip_rect.y + int(cam_y * (pip_h / VIRTUAL_HEIGHT)),
           int(cam_w * (pip_w / VIRTUAL_WIDTH)),
           int(cam_h * (pip_h / VIRTUAL_HEIGHT)),
       )
       pygame.draw.rect(screen, (255, 80, 80), view_box, 2)
 
-    # 4. Modern Glassmorphic HUD Bar (Stretched dynamically across full screen width)
     hud_height = int(ACTUAL_HEIGHT * 0.065)
     hud_surface = pygame.Surface((ACTUAL_WIDTH, hud_height), pygame.SRCALPHA)
     hud_surface.fill(DARK_PANEL)
@@ -482,11 +514,9 @@ def main():
         else "🏟️ [FULL VIEW]"
     )
 
-    # Left Section: Status & Mode
     txt_status = FONT_MD.render(f"[{status_label}] {mode_str}", True, status_color)
     screen.blit(txt_status, (30, hud_height // 2 - txt_status.get_height() // 2))
 
-    # Center Section: Scoreboard
     h_score = current_frame["home_score"]
     a_score = current_frame["away_score"]
     txt_score = FONT_LG.render(
@@ -497,7 +527,6 @@ def main():
     )
     screen.blit(txt_score, score_rect)
 
-    # Right Section: Clock & Match Data
     info_str = (
         f"Speed: {playback_speed}x  |  Clock: {current_frame['match_clock']}"
         f"  |  Type: {current_frame['event_type']}"
