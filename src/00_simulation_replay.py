@@ -29,7 +29,7 @@ YELLOW = (235, 180, 15)
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 ACTUAL_WIDTH, ACTUAL_HEIGHT = screen.get_size()
 pygame.display.set_caption(
-    "Pro Hockey Analytics — F1 Telemetry Speed Overlay"
+    "Pro Hockey Analytics — Snappy Broadcast Edition"
 )
 clock = pygame.time.Clock()
 
@@ -109,7 +109,11 @@ def extract_players(row):
   return players
 
 
-def build_uniform_timeline(df):
+def precompute_replay_timeline(df):
+  """Pre-calculates all frames using a fast, fixed frame count per transition
+
+  for a high-speed, responsive broadcast experience.
+  """
   master_frames = []
   total_rows = len(df)
   if total_rows < 2:
@@ -118,20 +122,18 @@ def build_uniform_timeline(df):
   home_score = 0
   away_score = 0
 
-  print("Building uniform 30 FPS timeline with F1 telemetry data...")
+  print("Pre-calculating fast broadcast replay timeline...")
+
+  cam_x, cam_y = 0.0, 0.0
+  cam_w, cam_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
+  morph_factor = 0.25  # Snappier camera morphing
+
+  # Fixed short frame count per step to ensure fast, lively pacing
+  FRAMES_PER_STEP = 15
+
   for i in range(total_rows - 1):
     row_a = df.iloc[i]
     row_b = df.iloc[i + 1]
-
-    clock_a = parse_match_clock(row_a.get("MatchClock (mm:ss)"))
-    clock_b = parse_match_clock(row_b.get("MatchClock (mm:ss)"))
-
-    time_diff = clock_b - clock_a
-    if time_diff <= 0 or time_diff > 10.0:
-      time_diff = 1.0
-
-    num_frames = int(time_diff * TARGET_FPS)
-    num_frames = max(1, num_frames)
 
     players_a = extract_players(row_a)
     players_b = extract_players(row_b)
@@ -141,22 +143,25 @@ def build_uniform_timeline(df):
     event_type = str(row_a.get("EventType", ""))
     is_zoom_event = event_type in ["Shot", "Goal", "Pass", "PuckControl"]
 
-    if event_type.lower() == "goal" and puck_a is not None:
-      if puck_a[0] < 0:
-        away_score += 1
-      else:
+    if "goal" in event_type.lower():
+      puck_x = puck_a[0] if puck_a is not None else 20.0
+      if puck_x < 0:
         home_score += 1
+      else:
+        away_score += 1
 
-    segment_speeds = []
     if puck_a and puck_b:
       dist_meters = math.hypot(puck_b[0] - puck_a[0], puck_b[1] - puck_a[1])
-      total_seg_time = max(0.1, time_diff)
-      base_speed_kmh = (dist_meters / total_seg_time) * 3.6
     else:
-      base_speed_kmh = 0.0
+      dist_meters = 1.0
 
-    for f in range(num_frames):
-      t = f / num_frames
+    segment_speeds = []
+    base_speed_kmh = (
+        dist_meters / max(0.1, FRAMES_PER_STEP / TARGET_FPS)
+    ) * 3.6
+
+    for f in range(FRAMES_PER_STEP):
+      t = f / FRAMES_PER_STEP
       puck_interp = lerp_coord(puck_a, puck_b, t)
 
       if is_zoom_event:
@@ -190,6 +195,23 @@ def build_uniform_timeline(df):
               "jersey": jersey,
           }
 
+      pk_x, pk_y = 0, 0
+      if puck_interp:
+        pk_x, pk_y = scale_coordinates(puck_interp[0], puck_interp[1])
+
+      if is_zoom_event and puck_interp:
+        target_w, target_h = 700.0, 420.0
+        target_x = pk_x - target_w / 2.0
+        target_y = pk_y - target_h / 2.0
+      else:
+        target_x, target_y = 0.0, 0.0
+        target_w, target_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
+
+      cam_x += (target_x - cam_x) * morph_factor
+      cam_y += (target_y - cam_y) * morph_factor
+      cam_w += (target_w - cam_w) * morph_factor
+      cam_h += (target_h - cam_h) * morph_factor
+
       master_frames.append({
           "match_clock": row_a.get("MatchClock (mm:ss)"),
           "event_type": event_type,
@@ -201,9 +223,15 @@ def build_uniform_timeline(df):
           "players": interp_players,
           "home_score": home_score,
           "away_score": away_score,
+          "cam_x": cam_x,
+          "cam_y": cam_y,
+          "cam_w": cam_w,
+          "cam_h": cam_h,
       })
 
-  print(f"✔ Timeline ready: {len(master_frames)} frames.")
+  print(
+      f"✔ Fast pre-computation complete: {len(master_frames)} frames ready."
+  )
   return master_frames
 
 
@@ -373,24 +401,20 @@ def main():
     pygame.quit()
     sys.exit()
 
-  master_frames = build_uniform_timeline(df)
+  master_frames = precompute_replay_timeline(df)
   if not master_frames:
     pygame.quit()
     sys.exit()
 
-  frame_idx = 0
+  frame_idx = 0.0
   total_frames = len(master_frames)
   paused = False
   playback_speed = 1.0
 
   master_surface = pygame.Surface((VIRTUAL_WIDTH, VIRTUAL_HEIGHT))
 
-  cam_x, cam_y = 0.0, 0.0
-  cam_w, cam_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
-  morph_speed = 0.12
-
   while True:
-    dt = clock.tick(TARGET_FPS) / 1000.0
+    clock.tick(TARGET_FPS)
 
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
@@ -414,14 +438,14 @@ def main():
     if not paused:
       frame_idx += playback_speed
       if frame_idx >= total_frames:
-        frame_idx = 0
+        frame_idx = 0.0
 
     current_frame = master_frames[int(frame_idx)]
 
-    # Draw Rink Background
+    # 1. Draw Rink Background
     draw_master_rink(master_surface)
 
-    # LAYER 1: Render Players First (Lower Level)
+    # 2. LAYER 1: Render Players (Lower Level)
     for p_id, p_data in current_frame["players"].items():
       pos = p_data["coord"]
       team = p_data["team"]
@@ -442,9 +466,8 @@ def main():
         txt_rect = txt.get_rect(center=(px, py))
         master_surface.blit(txt, txt_rect)
 
-    # LAYER 2: Render Puck & Speed Telemetry on Top (Higher Level)
+    # 3. LAYER 2: Render Puck & Speed Telemetry on Top (Higher Level)
     puck_coord = current_frame["puck"]
-    pk_x, pk_y = 0, 0
     if puck_coord:
       pk_x, pk_y = scale_coordinates(puck_coord[0], puck_coord[1])
       pygame.draw.circle(master_surface, (120, 135, 150), (pk_x + 2, pk_y + 2), 7)
@@ -462,18 +485,11 @@ def main():
         speed_rect = speed_surf.get_rect(center=(pk_x, pk_y + 16))
         master_surface.blit(speed_surf, speed_rect)
 
-    if current_frame["is_zoom"] and puck_coord:
-      target_w, target_h = 700.0, 420.0
-      target_x = pk_x - target_w / 2.0
-      target_y = pk_y - target_h / 2.0
-    else:
-      target_x, target_y = 0.0, 0.0
-      target_w, target_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
-
-    cam_x += (target_x - cam_x) * morph_speed
-    cam_y += (target_y - cam_y) * morph_speed
-    cam_w += (target_w - cam_w) * morph_speed
-    cam_h += (target_h - cam_h) * morph_speed
+    # 4. Render Active Pre-Calculated Camera Viewport
+    cam_x = current_frame["cam_x"]
+    cam_y = current_frame["cam_y"]
+    cam_w = current_frame["cam_w"]
+    cam_h = current_frame["cam_h"]
 
     crop_w, crop_h = max(10, int(cam_w)), max(10, int(cam_h))
     zoom_canvas = pygame.Surface((crop_w, crop_h))
@@ -485,6 +501,7 @@ def main():
     )
     screen.blit(scaled_zoom, (0, 0))
 
+    # 5. Draw PiP Mini-Map in Upper Right
     if cam_w < float(VIRTUAL_WIDTH) - 50:
       pip_w, pip_h = int(ACTUAL_WIDTH * 0.24), int(ACTUAL_HEIGHT * 0.22)
       pip_surface = pygame.transform.smoothscale(master_surface, (pip_w, pip_h))
@@ -492,7 +509,6 @@ def main():
       screen.blit(pip_surface, pip_rect)
       pygame.draw.rect(screen, WHITE, pip_rect, 3, border_radius=6)
 
-      # Corrected: Offset view_box by pip_rect position so it stays inside the mini-map widget
       view_box = pygame.Rect(
           pip_rect.x + int(cam_x * (pip_w / VIRTUAL_WIDTH)),
           pip_rect.y + int(cam_y * (pip_h / VIRTUAL_HEIGHT)),
@@ -501,6 +517,7 @@ def main():
       )
       pygame.draw.rect(screen, (255, 80, 80), view_box, 2)
 
+    # 6. Modern Glassmorphic HUD Bar
     hud_height = int(ACTUAL_HEIGHT * 0.065)
     hud_surface = pygame.Surface((ACTUAL_WIDTH, hud_height), pygame.SRCALPHA)
     hud_surface.fill(DARK_PANEL)
