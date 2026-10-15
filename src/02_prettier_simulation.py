@@ -41,11 +41,13 @@ try:
     FONT_MD = pygame.font.SysFont("Segoe UI", 15, bold=True)
     FONT_LG = pygame.font.SysFont("Segoe UI", 20, bold=True)
     FONT_TITLE = pygame.font.SysFont("Segoe UI", 24, bold=True)
+    FONT_HUGE = pygame.font.SysFont("Segoe UI", 30, bold=True)
 except Exception:
     FONT_SM = pygame.font.Font(None, 18)
     FONT_MD = pygame.font.Font(None, 22)
     FONT_LG = pygame.font.Font(None, 26)
     FONT_TITLE = pygame.font.Font(None, 30)
+    FONT_HUGE = pygame.font.Font(None, 36)
 
 
 def scale_coordinates(x, y):
@@ -135,18 +137,41 @@ def precompute_replay_timeline(df):
         primary_name = row_a.get("EventPrimaryPlayerName")
 
         if "goal" in event_lower:
-            puck_x = puck_a[0] if puck_a is not None else 20.0
-            if puck_x < 0:
-                home_score += 1
-            else:
+            left_count = 0
+            right_count = 0
+            lookback = min(3, i)
+            for lb in range(lookback, 0, -1):
+                prev_row = df.iloc[i - lb]
+                prev_puck = parse_coord_str(prev_row.get("EventStartCoordinate"))
+                if prev_puck is not None:
+                    if prev_puck[0] < 0:
+                        left_count += 1
+                    else:
+                        right_count += 1
+
+            if left_count == 0 and right_count == 0 and puck_a is not None:
+                if puck_a[0] < 0:
+                    left_count = 1
+                else:
+                    right_count = 1
+
+            if left_count > right_count:
                 away_score += 1
+            else:
+                home_score += 1
 
         if pd.notna(primary_name) and isinstance(primary_name, str):
             parts = primary_name.split()
             if parts and parts[0].startswith("#"):
                 j_num = parts[0][1:]
                 clean_name = " ".join(parts[1:])
-                player_info = (j_num, clean_name)
+                
+                p_team = ""
+                for p_data in players_a.values():
+                    if p_data.get("jersey") == j_num:
+                        p_team = p_data.get("team", "")
+                        break
+                player_info = (j_num, clean_name, p_team)
 
                 if event_type in ("Shot", "Goal"):
                     player_shots[player_info] = player_shots.get(player_info, 0) + 1
@@ -157,17 +182,18 @@ def precompute_replay_timeline(df):
             for p_data in players_a.values():
                 j = p_data.get("jersey")
                 p_name = p_data.get("name", "Unknown")
+                p_team = p_data.get("team", "")
                 if j:
                     dist = math.hypot(p_data["coord"][0] - puck_a[0], p_data["coord"][1] - puck_a[1])
                     if dist <= 3.5 or is_zoom_event:
                         weight = 2 if is_zoom_event and dist <= 2.0 else 1
-                        player_interactions[(j, p_name)] = player_interactions.get((j, p_name), 0) + weight
+                        player_interactions[(j, p_name, p_team)] = player_interactions.get((j, p_name, p_team), 0) + weight
                         total_interactions += weight
 
         interaction_shares = {}
         if total_interactions > 0:
-            for (j, name), count in sorted(player_interactions.items(), key=lambda x: x[1], reverse=True):
-                interaction_shares[(j, name)] = (count / total_interactions) * 100.0
+            for (j, name, team), count in sorted(player_interactions.items(), key=lambda x: x[1], reverse=True):
+                interaction_shares[(j, name, team)] = (count / total_interactions) * 100.0
 
         shots_ranked = dict(sorted(player_shots.items(), key=lambda x: x[1], reverse=True))
         passes_ranked = dict(sorted(player_passes.items(), key=lambda x: x[1], reverse=True))
@@ -350,11 +376,27 @@ def blit_camera_view(source, destination, frame, crop_surface):
 
     crop_w, crop_h = max(10, int(cam_w)), max(10, int(cam_h))
     crop_surface.fill(ARENA_BG)
-    crop_surface.blit(source, ( -int(cam_x), -int(cam_y)))
+    crop_surface.blit(source, (-int(cam_x), -int(cam_y)))
 
     crop_view = crop_surface.subsurface((0, 0, crop_w, crop_h))
-    scaled = pygame.transform.scale(crop_view, (ACTUAL_WIDTH, ACTUAL_HEIGHT))
-    destination.blit(scaled, (0, 0))
+
+    target_aspect = ACTUAL_WIDTH / ACTUAL_HEIGHT
+    crop_aspect = crop_w / crop_h
+
+    if crop_aspect > target_aspect:
+        scaled_w = ACTUAL_WIDTH
+        scaled_h = int(ACTUAL_WIDTH / crop_aspect)
+    else:
+        scaled_h = ACTUAL_HEIGHT
+        scaled_w = int(ACTUAL_HEIGHT * crop_aspect)
+
+    scaled = pygame.transform.smoothscale(crop_view, (scaled_w, scaled_h))
+    
+    dest_x = (ACTUAL_WIDTH - scaled_w) // 2
+    dest_y = (ACTUAL_HEIGHT - scaled_h) // 2
+
+    destination.fill(ARENA_BG)
+    destination.blit(scaled, (dest_x, dest_y))
     return cam_x, cam_y, cam_w, cam_h
 
 
@@ -366,6 +408,16 @@ def main():
         print(f"Error: Could not find '{csv_file}'.")
         pygame.quit()
         sys.exit(1)
+
+    home_team_name = "EV Zug"
+    away_team_name = "HC Davos"
+    for _, row in df.iterrows():
+        p1 = str(row.get("StartPlayerName1", ""))
+        p7 = str(row.get("StartPlayerName7", ""))
+        if "Aeschlimann" in p1 or "Stransky" in p1:
+            away_team_name = "HC Davos"
+        if "Gajan" in p7 or "Finley" in p7:
+            home_team_name = "EV Zug"
 
     master_frames = precompute_replay_timeline(df)
     if not master_frames:
@@ -387,10 +439,10 @@ def main():
 
     pip_w = max(1, int(ACTUAL_WIDTH * PIP_WIDTH_RATIO))
     pip_h = max(1, int(ACTUAL_HEIGHT * PIP_HEIGHT_RATIO))
-    pip_background = pygame.transform.scale(rink_surface, (pip_w, pip_h)).convert()
+    pip_background = pygame.transform.smoothscale(rink_surface, (pip_w, pip_h)).convert()
     pip_surface = pygame.Surface((pip_w, pip_h)).convert()
 
-    hud_height = max(1, int(ACTUAL_HEIGHT * 0.07))
+    hud_height = max(1, int(ACTUAL_HEIGHT * 0.08))
     hud_surface = pygame.Surface((ACTUAL_WIDTH, hud_height), pygame.SRCALPHA)
     hud_surface.fill(PANEL_BG)
 
@@ -404,7 +456,6 @@ def main():
             text_cache[key] = result
         return result
 
-    # Wall-clock independent overlay state tracking
     overlay_start_time = time.time()
 
     print("Replay running. Controls: Space pause, arrows seek/speed, F3 performance, Esc quit.")
@@ -487,9 +538,37 @@ def main():
         txt_status = cached_text(FONT_MD, f"[{status_label}] {mode_str}", status_color)
         screen.blit(txt_status, (30, hud_height // 2 - txt_status.get_height() // 2))
 
-        score_text = f"HOME  {current_frame['home_score']}  -  {current_frame['away_score']}  AWAY"
-        txt_score = cached_text(FONT_TITLE, score_text, GOLD_NEON)
-        screen.blit(txt_score, txt_score.get_rect(center=(ACTUAL_WIDTH // 2, hud_height // 2)))
+        # Centered Scoreboard: Small HOME/AWAY labels stacked above larger team names
+        txt_home_label = cached_text(FONT_SM, "HOME", (180, 190, 210))
+        txt_home_name = cached_text(FONT_HUGE, home_team_name, HOME_TEAM)
+        txt_home_score = cached_text(FONT_HUGE, f"  {current_frame['home_score']} ", GOLD_NEON)
+        txt_dash = cached_text(FONT_HUGE, " - ", WHITE)
+        txt_away_score = cached_text(FONT_HUGE, f" {current_frame['away_score']}  ", GOLD_NEON)
+        txt_away_name = cached_text(FONT_HUGE, away_team_name, AWAY_TEAM)
+        txt_away_label = cached_text(FONT_SM, "AWAY", (180, 190, 210))
+
+        total_width = (
+            txt_home_name.get_width() +
+            txt_home_score.get_width() +
+            txt_dash.get_width() +
+            txt_away_score.get_width() +
+            txt_away_name.get_width()
+        )
+        start_x = (ACTUAL_WIDTH - total_width) // 2
+
+        y_center = hud_height // 2 + 2
+        screen.blit(txt_home_name, (start_x, y_center - txt_home_name.get_height() // 2))
+        curr_x = start_x + txt_home_name.get_width()
+        screen.blit(txt_home_score, (curr_x, y_center - txt_home_score.get_height() // 2))
+        curr_x += txt_home_score.get_width()
+        screen.blit(txt_dash, (curr_x, y_center - txt_dash.get_height() // 2))
+        curr_x += txt_dash.get_width()
+        screen.blit(txt_away_score, (curr_x, y_center - txt_away_score.get_height() // 2))
+        curr_x += txt_away_score.get_width()
+        screen.blit(txt_away_name, (curr_x, y_center - txt_away_name.get_height() // 2))
+
+        screen.blit(txt_home_label, (start_x + (txt_home_name.get_width() - txt_home_label.get_width()) // 2, 6))
+        screen.blit(txt_away_label, (curr_x + (txt_away_name.get_width() - txt_away_label.get_width()) // 2, 6))
 
         info_text = (
             f"Speed: {playback_speed:.1f}x  |  Clock: {current_frame['match_clock']}  "
@@ -501,15 +580,14 @@ def main():
         # ---------------------------------------------------------------------------
         # Wall-Clock Independent F1-Style Leaderboard State Machine (Upper Left)
         # ---------------------------------------------------------------------------
-        # Total cycle: 30s hidden + (3 windows * 5 actual seconds each) = 45 seconds total
         cycle_duration = 45.0
         elapsed_real = time.time() - overlay_start_time
         cycle_time = elapsed_real % cycle_duration
 
         if cycle_time >= 30.0:
-            active_time = cycle_time - 30.0  # 0.0s to 15.0s active sequence
-            window_idx = int(active_time // 5.0)  # 0: Interactions, 1: Shots, 2: Passes
-            sub_time = active_time % 5.0          # Time within current 5.0s window
+            active_time = cycle_time - 30.0
+            window_idx = int(active_time // 5.0)
+            sub_time = active_time % 5.0
 
             if window_idx == 0:
                 mode = "INTERACTION %"
@@ -524,14 +602,11 @@ def main():
                 data = current_frame.get("passes_ranked", {})
                 formatter = lambda val: f"{val} Passes"
 
-            # Smooth F1 broadcast slide-in / slide-out animation (0.6s transition)
             anim_duration = 0.6
             if sub_time < anim_duration:
-                # Slide in from left
                 p = sub_time / anim_duration
                 anim_progress = 1.0 - math.pow(1.0 - p, 3)
             elif sub_time > (5.0 - anim_duration):
-                # Slide back out to left
                 p = (5.0 - sub_time) / anim_duration
                 anim_progress = 1.0 - math.pow(1.0 - p, 3)
             else:
@@ -540,31 +615,44 @@ def main():
             anim_progress = max(0.0, min(1.0, anim_progress))
 
             if anim_progress > 0.0:
-                table_w, table_h = 360, 200
+                table_w, table_h = 420, 240
                 table_surf = pygame.Surface((table_w, table_h), pygame.SRCALPHA)
                 table_surf.fill((10, 16, 28, 240))
 
-                # Header & Category Title
-                header_txt = cached_text(FONT_SM, f"TOP {mode}", GOLD_NEON)
-                table_surf.blit(header_txt, (14, 12))
-                pygame.draw.line(table_surf, CYAN_NEON, (14, 34), (table_w - 14, 34), 2)
+                header_txt = cached_text(FONT_MD, f"TOP {mode}", GOLD_NEON)
+                table_surf.blit(header_txt, (16, 14))
+                pygame.draw.line(table_surf, CYAN_NEON, (16, 38), (table_w - 16, 38), 2)
 
-                # Leaderboard Rows
-                y_offset = 44
+                y_offset = 50
                 count = 0
-                for (jersey, name), val in data.items():
+                for item, val in data.items():
                     if count >= 5:
                         break
-                    display_str = f"#{jersey} {name}"
-                    row_str = f"{display_str:<26} {formatter(val)}"
-                    row_txt = cached_text(FONT_SM, row_str, WHITE)
-                    table_surf.blit(row_txt, (14, y_offset))
-                    y_offset += 22
+                    if len(item) == 3:
+                        jersey, name, team = item
+                    else:
+                        jersey, name = item
+                        team = ""
+
+                    is_home = team.lower() == "home"
+                    jersey_color = HOME_TEAM if is_home else AWAY_TEAM
+
+                    txt_hash = cached_text(FONT_MD, "#", WHITE)
+                    txt_jersey = cached_text(FONT_MD, str(jersey), jersey_color)
+                    txt_rest = cached_text(FONT_MD, f" {name:<20} {formatter(val)}", WHITE)
+
+                    current_x = 16
+                    table_surf.blit(txt_hash, (current_x, y_offset))
+                    current_x += txt_hash.get_width()
+                    table_surf.blit(txt_jersey, (current_x, y_offset))
+                    current_x += txt_jersey.get_width()
+                    table_surf.blit(txt_rest, (current_x, y_offset))
+
+                    y_offset += 32
                     count += 1
 
                 pygame.draw.rect(table_surf, CYAN_NEON, pygame.Rect(0, 0, table_w, table_h), 2, border_radius=6)
 
-                # Animate X position sliding in from off-screen left (x = -380px) to upper left (x = 30px)
                 target_x = 30
                 start_x = -table_w - 30
                 current_x = int(start_x + (target_x - start_x) * anim_progress)

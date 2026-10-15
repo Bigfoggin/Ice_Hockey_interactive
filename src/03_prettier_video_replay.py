@@ -15,7 +15,6 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 VIRTUAL_WIDTH, VIRTUAL_HEIGHT = 1500, 800
 TARGET_FPS = 30
 FRAMES_PER_STEP = 15
-VIDEO_DURATION_SEC = 20  # Total duration or let it run through all frames
 
 # Palette: Midnight Arena, Deep Glass Ice, Electric Cyan, Neon Gold, Azure & Crimson Teams
 ARENA_BG = (6, 10, 18)
@@ -47,15 +46,15 @@ ACTUAL_WIDTH, ACTUAL_HEIGHT = VIRTUAL_WIDTH, VIRTUAL_HEIGHT
 
 # Fonts
 try:
-    FONT_SM = pygame.font.SysFont("Segoe UI", 14, bold=True)
-    FONT_MD = pygame.font.SysFont("Segoe UI", 16, bold=True)
-    FONT_LG = pygame.font.SysFont("Segoe UI", 22, bold=True)
-    FONT_TITLE = pygame.font.SysFont("Segoe UI", 26, bold=True)
+    FONT_SM = pygame.font.SysFont("Segoe UI", 13, bold=True)
+    FONT_MD = pygame.font.SysFont("Segoe UI", 15, bold=True)
+    FONT_LG = pygame.font.SysFont("Segoe UI", 20, bold=True)
+    FONT_TITLE = pygame.font.SysFont("Segoe UI", 24, bold=True)
 except Exception:
     FONT_SM = pygame.font.Font(None, 18)
     FONT_MD = pygame.font.Font(None, 22)
-    FONT_LG = pygame.font.Font(None, 28)
-    FONT_TITLE = pygame.font.Font(None, 34)
+    FONT_LG = pygame.font.Font(None, 26)
+    FONT_TITLE = pygame.font.Font(None, 30)
 
 
 def scale_coordinates(x, y):
@@ -75,23 +74,6 @@ def parse_coord_str(coord_str):
         return float(parts[0]), float(parts[1])
     except (ValueError, TypeError):
         return None
-
-
-def parse_match_clock(clock_str):
-    if pd.isna(clock_str):
-        return 0.0
-    if isinstance(clock_str, (int, float)):
-        return float(clock_str)
-    if isinstance(clock_str, str) and ":" in clock_str:
-        try:
-            parts = clock_str.split(":")
-            return int(parts[0]) * 60 + float(parts[1])
-        except (ValueError, TypeError):
-            return 0.0
-    try:
-        return float(clock_str)
-    except (ValueError, TypeError):
-        return 0.0
 
 
 def lerp_coord(coord_a, coord_b, t):
@@ -115,14 +97,17 @@ def extract_players(row):
 
         if pd.notna(p_id) and coord is not None:
             jersey = ""
+            p_name = "Unknown"
             if pd.notna(name) and isinstance(name, str):
                 parts = name.split()
                 if parts and parts[0].startswith("#"):
                     jersey = parts[0][1:]
+                    p_name = " ".join(parts[1:])
             players[p_id] = {
                 "coord": coord,
                 "team": str(team) if pd.notna(team) else "",
                 "jersey": jersey,
+                "name": p_name,
             }
     return players
 
@@ -137,10 +122,12 @@ def precompute_replay_timeline(df):
     cam_x, cam_y = 0.0, 0.0
     cam_w, cam_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
 
-    player_interaction_counts = {}
+    player_interactions = {}
+    player_shots = {}
+    player_passes = {}
     total_interactions = 0
 
-    print("Precomputing stylized timeline...")
+    print("Precomputing multi-stat timelines...")
     for i in range(len(df) - 1):
         row_a = df.iloc[i]
         row_b = df.iloc[i + 1]
@@ -154,6 +141,8 @@ def precompute_replay_timeline(df):
         event_lower = event_type.lower()
         is_zoom_event = event_type in ("Shot", "Goal", "Pass", "PuckControl")
 
+        primary_name = row_a.get("EventPrimaryPlayerName")
+
         if "goal" in event_lower:
             puck_x = puck_a[0] if puck_a is not None else 20.0
             if puck_x < 0:
@@ -161,21 +150,36 @@ def precompute_replay_timeline(df):
             else:
                 away_score += 1
 
+        if pd.notna(primary_name) and isinstance(primary_name, str):
+            parts = primary_name.split()
+            if parts and parts[0].startswith("#"):
+                j_num = parts[0][1:]
+                clean_name = " ".join(parts[1:])
+                player_info = (j_num, clean_name)
+
+                if event_type in ("Shot", "Goal"):
+                    player_shots[player_info] = player_shots.get(player_info, 0) + 1
+                elif event_type == "Pass":
+                    player_passes[player_info] = player_passes.get(player_info, 0) + 1
+
         if puck_a is not None:
             for p_data in players_a.values():
                 j = p_data.get("jersey")
+                p_name = p_data.get("name", "Unknown")
                 if j:
-                    dist_to_puck = math.hypot(p_data["coord"][0] - puck_a[0], p_data["coord"][1] - puck_a[1])
-                    if dist_to_puck <= 3.5 or is_zoom_event:
-                        weight = 2 if is_zoom_event and dist_to_puck <= 2.0 else 1
-                        player_interaction_counts[j] = player_interaction_counts.get(j, 0) + weight
+                    dist = math.hypot(p_data["coord"][0] - puck_a[0], p_data["coord"][1] - puck_a[1])
+                    if dist <= 3.5 or is_zoom_event:
+                        weight = 2 if is_zoom_event and dist <= 2.0 else 1
+                        player_interactions[(j, p_name)] = player_interactions.get((j, p_name), 0) + weight
                         total_interactions += weight
 
-        current_percentages = {}
+        interaction_shares = {}
         if total_interactions > 0:
-            for j, count in player_interaction_counts.items():
-                current_percentages[j] = (count / total_interactions) * 100.0
-            current_percentages = dict(sorted(current_percentages.items(), key=lambda item: item[1], reverse=True))
+            for (j, name), count in sorted(player_interactions.items(), key=lambda x: x[1], reverse=True):
+                interaction_shares[(j, name)] = (count / total_interactions) * 100.0
+
+        shots_ranked = dict(sorted(player_shots.items(), key=lambda x: x[1], reverse=True))
+        passes_ranked = dict(sorted(player_passes.items(), key=lambda x: x[1], reverse=True))
 
         if puck_a is not None and puck_b is not None:
             dist_meters = math.hypot(puck_b[0] - puck_a[0], puck_b[1] - puck_a[1])
@@ -217,6 +221,7 @@ def precompute_replay_timeline(df):
                         "coord": pos,
                         "team": source["team"],
                         "jersey": source.get("jersey", ""),
+                        "name": source.get("name", ""),
                     }
 
             if puck_interp is not None:
@@ -253,7 +258,9 @@ def precompute_replay_timeline(df):
                 "cam_y": cam_y,
                 "cam_w": cam_w,
                 "cam_h": cam_h,
-                "interaction_shares": current_percentages,
+                "interaction_shares": interaction_shares,
+                "shots_ranked": shots_ranked,
+                "passes_ranked": passes_ranked,
             })
 
     print(f"Precomputation complete: {len(master_frames):,} frames.")
@@ -379,11 +386,9 @@ def generate_video():
 
     total_frames = len(master_frames)
 
-#   Setup OpenCV VideoWriter
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_video_path, fourcc, TARGET_FPS, (ACTUAL_WIDTH, ACTUAL_HEIGHT))
 
-    # Removed .convert() to avoid requiring a video display mode in headless dummy mode
     rink_surface = pygame.Surface((VIRTUAL_WIDTH, VIRTUAL_HEIGHT))
     draw_master_rink(rink_surface)
     master_surface = pygame.Surface((VIRTUAL_WIDTH, VIRTUAL_HEIGHT))
@@ -409,6 +414,7 @@ def generate_video():
         return result
 
     print(f"Generating stylized video ({total_frames} frames)...")
+    cycle_duration = 45.0
 
     for frame_idx, current_frame in enumerate(master_frames):
         master_surface.blit(rink_surface, (0, 0))
@@ -466,32 +472,68 @@ def generate_video():
         txt_info = cached_text(FONT_MD, info_text, WHITE)
         screen.blit(txt_info, txt_info.get_rect(right=ACTUAL_WIDTH - 30, centery=hud_height // 2))
 
-        # Stylized Interaction Percentage Table (Top Left)
-        match_secs = parse_match_clock(current_frame["match_clock"])
-        if (match_secs % 30.0) <= 5.0:
-            shares = current_frame.get("interaction_shares", {})
-            if shares:
-                table_w, table_h = 240, 190
+        # F1-Style Leaderboard State Machine (Upper Left) based on frame progression
+        sim_elapsed_real = (frame_idx / TARGET_FPS)
+        cycle_time = sim_elapsed_real % cycle_duration
+
+        if cycle_time >= 30.0:
+            active_time = cycle_time - 30.0
+            window_idx = int(active_time // 5.0)
+            sub_time = active_time % 5.0
+
+            if window_idx == 0:
+                mode = "INTERACTION %"
+                data = current_frame.get("interaction_shares", {})
+                formatter = lambda val: f"{val:5.1f}%"
+            elif window_idx == 1:
+                mode = "SHOTS LEADERS"
+                data = current_frame.get("shots_ranked", {})
+                formatter = lambda val: f"{val} Shots"
+            else:
+                mode = "PASSES LEADERS"
+                data = current_frame.get("passes_ranked", {})
+                formatter = lambda val: f"{val} Passes"
+
+            anim_duration = 0.6
+            if sub_time < anim_duration:
+                p = sub_time / anim_duration
+                anim_progress = 1.0 - math.pow(1.0 - p, 3)
+            elif sub_time > (5.0 - anim_duration):
+                p = (5.0 - sub_time) / anim_duration
+                anim_progress = 1.0 - math.pow(1.0 - p, 3)
+            else:
+                anim_progress = 1.0
+
+            anim_progress = max(0.0, min(1.0, anim_progress))
+
+            if anim_progress > 0.0:
+                table_w, table_h = 360, 200
                 table_surf = pygame.Surface((table_w, table_h), pygame.SRCALPHA)
-                table_surf.fill((10, 16, 28, 235))
-                
-                header_txt = cached_text(FONT_SM, "PLAYER INTERACTION %", GOLD_NEON)
+                table_surf.fill((10, 16, 28, 240))
+
+                header_txt = cached_text(FONT_SM, f"TOP {mode}", GOLD_NEON)
                 table_surf.blit(header_txt, (14, 12))
                 pygame.draw.line(table_surf, CYAN_NEON, (14, 34), (table_w - 14, 34), 2)
 
                 y_offset = 44
                 count = 0
-                for jersey, pct in shares.items():
-                    if count >= 6:
+                for (jersey, name), val in data.items():
+                    if count >= 5:
                         break
-                    row_str = f"NO. {jersey:<3}  {pct:5.1f}%"
-                    row_txt = cached_text(FONT_MD, row_str, WHITE)
-                    table_surf.blit(row_txt, (16, y_offset))
+                    display_str = f"#{jersey} {name}"
+                    row_str = f"{display_str:<26} {formatter(val)}"
+                    row_txt = cached_text(FONT_SM, row_str, WHITE)
+                    table_surf.blit(row_txt, (14, y_offset))
                     y_offset += 22
                     count += 1
 
-                pygame.draw.rect(table_surf, CYAN_NEON, table_surf.get_rect(), 2, border_radius=6)
-                screen.blit(table_surf, (30, hud_height + 15))
+                pygame.draw.rect(table_surf, CYAN_NEON, pygame.Rect(0, 0, table_w, table_h), 2, border_radius=6)
+
+                target_x = 30
+                start_x = -table_w - 30
+                current_x = int(start_x + (target_x - start_x) * anim_progress)
+
+                screen.blit(table_surf, (current_x, hud_height + 15))
 
         # Convert Pygame Surface -> OpenCV Video Frame
         view = pygame.surfarray.array3d(screen)
