@@ -34,7 +34,7 @@ CAMERA_ZOOM_WIDTH = 920
 CAMERA_ZOOM_HEIGHT = 490
 
 # --- CAMERA DYNAMICS ---
-CAMERA_SMOOTH_SPEED = 0.04  # Controlled per-frame exponential smoothing speed
+CAMERA_SMOOTH_SPEED = 0.18  # Increased for snappy camera tracking
 
 PIP_WIDTH_RATIO = 0.24
 PIP_HEIGHT_RATIO = 0.22
@@ -333,41 +333,41 @@ def precompute_replay_timeline(df):
     return master_frames
 
 
-def optimize_stagnant_frames(master_frames, movement_radius=0.05, fps=30):
+def optimize_stagnant_frames(master_frames, movement_radius=0.01, fps=30):
     if not master_frames:
         return master_frames
 
     optimized_frames = [master_frames[0]]
-    skip_cooldown_frames = 0  # 1-second grace period counter
     
-    i = 1
-    while i < len(master_frames):
+    for i in range(1, len(master_frames)):
         current = master_frames[i]
         prev = optimized_frames[-1]
 
-        event_type = str(current.get("event_type", "")).lower()
-        banner_text = current.get("banner_text")
-        
-        is_major_event = (
-            "goal" in event_type or 
-            banner_text is not None or 
-            "faceoff" in event_type or 
-            "period" in event_type
+        # 1. Delete consecutive identical target coordinates & zero speed static frames (unless event/banner changes)
+        is_same_target = (
+            current.get("target_x") == prev.get("target_x") and
+            current.get("target_y") == prev.get("target_y") and
+            current.get("target_w") == prev.get("target_w") and
+            current.get("banner_text") is None and prev.get("banner_text") is None and
+            current.get("event_idx") == prev.get("event_idx")
         )
 
-        if is_major_event:
-            # Enforce 1-second retention window (no frame-skipping right when goal/restart occurs)
-            skip_cooldown_frames = fps
+        if is_same_target and current.get("speed", 1.0) == 0.0:
+            continue
 
-        if skip_cooldown_frames > 0:
+        # Always keep frames that trigger an event change or banner text
+        is_event_change = (
+            current.get("event_idx") != prev.get("event_idx") or
+            current.get("banner_text") is not None or
+            str(current.get("event_type")) != str(prev.get("event_type"))
+        )
+
+        if is_event_change:
             optimized_frames.append(current)
-            skip_cooldown_frames -= 1
-            i += 1
             continue
 
         puck_a = prev.get("puck")
         puck_b = current.get("puck")
-        
         puck_moved = False
         if puck_a is not None and puck_b is not None:
             if math.hypot(puck_b[0] - puck_a[0], puck_b[1] - puck_a[1]) > movement_radius:
@@ -379,9 +379,10 @@ def optimize_stagnant_frames(master_frames, movement_radius=0.05, fps=30):
 
         for p_id, p_data_b in players_b.items():
             if p_id in players_a:
-                p_data_a = players_a[p_id]
-                dist = math.hypot(p_data_b["coord"][0] - p_data_a["coord"][0],
-                                  p_data_b["coord"][1] - p_data_a["coord"][1])
+                dist = math.hypot(
+                    p_data_b["coord"][0] - players_a[p_id]["coord"][0],
+                    p_data_b["coord"][1] - players_a[p_id]["coord"][1]
+                )
                 if dist > movement_radius:
                     players_moved = True
                     break
@@ -389,14 +390,13 @@ def optimize_stagnant_frames(master_frames, movement_radius=0.05, fps=30):
                 players_moved = True
                 break
 
+        # Drop entirely if nothing moved and no event happened
         if not puck_moved and not players_moved:
-            i += 1
             continue
 
         optimized_frames.append(current)
-        i += 1
 
-    print(f"Post-processing optimization with grace period: compressed down to {len(optimized_frames):,} frames.")
+    print(f"Aggressive compression & duplicate purging: reduced from {len(master_frames):,} down to {len(optimized_frames):,} active frames.")
     return optimized_frames
 
 
@@ -548,8 +548,8 @@ def draw_puck(surface, frame):
 def blit_camera_view(source, destination, cur_cam_x, cur_cam_y, cur_cam_w, cur_cam_h, crop_surface):
     cam_w = max(10, min(float(VIRTUAL_WIDTH), cur_cam_w))
     cam_h = max(10, min(float(VIRTUAL_HEIGHT), cur_cam_h))
-    cam_x = max(0.0, min(float(VIRTUAL_WIDTH) - cam_w, cur_cam_x))
-    cam_y = max(0.0, min(float(VIRTUAL_HEIGHT) - cam_h, cur_cam_y))
+    cam_x = cur_cam_x
+    cam_y = cur_cam_y
 
     crop_w, crop_h = max(10, int(cam_w)), max(10, int(cam_h))
     crop_surface.fill(ARENA_BG)
@@ -683,8 +683,11 @@ def main():
         target_w = current_frame["target_w"]
         target_h = current_frame["target_h"]
 
-        cur_cam_x += (target_x - cur_cam_x) * CAMERA_SMOOTH_SPEED
-        cur_cam_y += (target_y - cur_cam_y) * CAMERA_SMOOTH_SPEED
+        cam_diff = math.hypot(target_x - cur_cam_x, target_y - cur_cam_y)
+        smooth_speed = 0.45 if cam_diff > 300 else CAMERA_SMOOTH_SPEED
+
+        cur_cam_x += (target_x - cur_cam_x) * smooth_speed
+        cur_cam_y += (target_y - cur_cam_y) * smooth_speed
         cur_cam_w += (target_w - cur_cam_w) * CAMERA_SMOOTH_SPEED
         cur_cam_h += (target_h - cur_cam_h) * CAMERA_SMOOTH_SPEED
 
@@ -872,9 +875,9 @@ def main():
 
                 pygame.draw.rect(table_surf, CYAN_NEON, pygame.Rect(0, 0, table_w, table_h), 2, border_radius=6)
 
-                target_x = 30
+                target_x_box = 30
                 start_x_box = -table_w - 30
-                current_x_box = int(start_x_box + (target_x - start_x_box) * anim_progress)
+                current_x_box = int(start_x_box + (target_x_box - start_x_box) * anim_progress)
 
                 screen.blit(table_surf, (current_x_box, hud_height + 15))
 
@@ -883,6 +886,7 @@ def main():
                 f"FPS: {clock.get_fps():.1f} | Frame: {last_frame_ms:.1f} ms | "
                 f"Replay: {int(frame_idx)}/{total_frames}"
             )
+    
             perf_surf = cached_text(FONT_MD, perf_text, WHITE)
             panel = pygame.Surface((perf_surf.get_width() + 20, perf_surf.get_height() + 12),
                                    pygame.SRCALPHA)
