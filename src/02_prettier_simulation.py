@@ -301,8 +301,13 @@ def precompute_replay_timeline(df):
 
             target_w = float(CAMERA_ZOOM_WIDTH) if is_zoom_event else float(VIRTUAL_WIDTH)
             target_h = float(CAMERA_ZOOM_HEIGHT) if is_zoom_event else float(VIRTUAL_HEIGHT)
-            target_x = pk_x - target_w / 2.0
-            target_y = pk_y - target_h / 2.0
+            
+            if is_zoom_event:
+                target_x = pk_x - target_w / 2.0
+                target_y = pk_y - target_h / 2.0
+            else:
+                target_x = 0.0
+                target_y = 0.0
 
             master_frames.append({
                 "match_clock": row_a.get("MatchClock (mm:ss)", "00:00"),
