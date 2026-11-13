@@ -208,6 +208,11 @@ footer b{color:var(--white)}
   .reveal{opacity:1;transform:none}
 }
 
+
+/* Headline: drittes Wort wechselt */
+.hero h1 .w{position:relative}
+.hero h1 .w em{font-style:normal;display:block;position:absolute;left:0;top:0;opacity:0;transform:translateY(40%);transition:opacity .25s,transform .55s cubic-bezier(.2,.8,.2,1)}
+.hero h1 .w em.on{position:relative;opacity:1;transform:none;transition:opacity .4s .15s,transform .55s .15s cubic-bezier(.2,.8,.2,1)}
 /* Sprache: nur die aktive Sprache ist sichtbar */
 .js.static .step{opacity:1}
 .door{min-height:0 !important}
@@ -272,11 +277,8 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 
   <div class="wrap">
     <div class="eyebrow fade">Spengler Cup Davos · <span data-l="de">Konzept</span><span data-l="en">Concept</span> Sport Innovation Challenge 2026</div>
-    <h1><span><b>Be a Pro.</b></span><span><b><span data-l="de">Oder lerne</span><span data-l="en">Or learn</span></b></span><span><b><span data-l="de">das Spiel.</span><span data-l="en">the game.</span></b></span></h1>
-    <div class="rotator fade d2">
-      <span data-l="de">Nicht nur zuschauen. <span class="w"><em class="on">Mitspielen.</em><em>Verstehen.</em><em>Mitfiebern.</em></span></span>
-      <span data-l="en">Don't just watch. <span class="w"><em class="on">Play.</em><em>Understand.</em><em>Be part of it.</em></span></span>
-    </div>
+    <h1><span><b><span data-l="de">Nicht nur</span><span data-l="en">Don&#39;t just</span></b></span><span><b><span data-l="de">zuschauen.</span><span data-l="en">watch.</span></b></span><span><b><span data-l="de" class="w"><em class="on">Mitspielen.</em><em>Verstehen.</em><em>Mitfiebern.</em></span><span data-l="en" class="w"><em class="on">Play.</em><em>Understand.</em><em>Feel it.</em></span></b></span></h1>
+    <div class="rotator fade d2"><span data-l="de">Be a Pro oder Learn the Game: zwei Wege ins Spiel.</span><span data-l="en">Be a Pro or Learn the Game: two ways into the game.</span></div>
     <div class="ctas fade d3">
       <a class="btn primary" href="#pro">Be a Pro <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a class="btn ghost" href="#show">Learn the Game</a>
@@ -398,7 +400,7 @@ addEventListener('scroll', () => nav.classList.toggle('solid', scrollY > 40), { 
 
 // Wortwechsel im Hero
 (function rotator() {
-  document.querySelectorAll('.rotator .w').forEach(w => {
+  document.querySelectorAll('.w').forEach(w => {
     const ws = [...w.querySelectorAll('em')];
     let i = 0;
     setInterval(() => { ws[i].classList.remove('on'); i = (i + 1) % ws.length; ws[i].classList.add('on'); }, 1900);
