@@ -57,7 +57,7 @@ nav .btn{height:42px;padding:0 18px;font-size:12px}
 .hero h1 span{display:block;overflow:hidden}
 .hero h1 span b{display:block;font-weight:900}
 .js .hero h1 span b{transform:translateY(105%);animation:rise 1s cubic-bezier(.2,.8,.2,1) forwards}
-.hero h1 span:nth-child(2) b{color:transparent;-webkit-text-stroke:2px var(--white)}
+.hero h1 span:nth-child(2) b{color:rgba(255,255,255,.5)}
 .hero h1 span:nth-child(3) b{color:var(--ice)}
 @keyframes rise{to{transform:none}}
 .js .hero h1 span:nth-child(2) b{animation-delay:.12s}.js .hero h1 span:nth-child(3) b{animation-delay:.24s}
@@ -130,7 +130,7 @@ section{position:relative}
 @media (max-width:860px){.doorgrid{grid-template-columns:1fr}}
 .door{position:relative;border-radius:18px;padding:44px 36px;min-height:420px;overflow:hidden;background:linear-gradient(160deg,#00305E,#001A36);border:1px solid rgba(255,255,255,.1);transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .3s}
 .door:hover{border-color:var(--ice)}
-.door .num{font-size:92px;font-weight:900;line-height:.8;color:transparent;-webkit-text-stroke:1.5px rgba(102,193,211,.45);position:absolute;right:26px;top:26px}
+.door .num{font-size:92px;font-weight:900;line-height:.8;color:rgba(102,193,211,.16);position:absolute;right:26px;top:26px}
 .door .tag{display:inline-block;background:rgba(102,193,211,.15);color:var(--ice);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .door h3{font-size:clamp(34px,4vw,50px);margin:26px 0 16px}
 .door p{color:var(--mist);font-weight:500;max-width:420px}
@@ -207,14 +207,50 @@ footer b{color:var(--white)}
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
   .reveal{opacity:1;transform:none}
 }
+
+/* Sprache: nur die aktive Sprache ist sichtbar */
+.js.static .step{opacity:1}
+.door{min-height:0 !important}
+html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !important}
+.navr{display:flex;align-items:center;gap:12px}
+.langs{display:flex;border:1px solid rgba(255,255,255,.25);border-radius:6px;overflow:hidden}
+.langs button{background:none;border:0;color:var(--mist);font:700 12px Montserrat,sans-serif;letter-spacing:.1em;padding:9px 11px;cursor:pointer}
+.langs button.on{background:var(--white);color:var(--navy)}
+.acct{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-radius:6px;border:2px solid rgba(255,255,255,.35);background:none;color:var(--white);font:800 12px Montserrat,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.acct i{width:24px;height:24px;border-radius:50%;background:var(--ice);color:var(--navy);display:none;align-items:center;justify-content:center;font-style:normal;font-size:11px}
+.acct.in i{display:inline-flex}
+@media (max-width:480px){.acct .lbl{display:none}.acct{padding:0 10px}.acct:not(.in)::before{content:'→';}}
+/* Login-Dialog */
+.dlg{position:fixed;inset:0;z-index:80;background:rgba(0,10,25,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.dlg.open{display:flex}
+.dlg .box{background:var(--navy);border:1px solid rgba(102,193,211,.35);border-radius:18px;padding:34px 30px;max-width:440px;width:100%;box-shadow:0 30px 90px -20px rgba(0,0,0,.7)}
+.dlg h3{font-size:30px;margin:12px 0 10px}
+.dlg p{color:var(--mist);font-size:15px;margin:0 0 18px}
+.dlg label{display:block;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ice);margin:14px 0 6px}
+.dlg input[type=text],.dlg input[type=email]{width:100%;height:50px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:var(--deep);color:var(--white);font:500 16px Montserrat,sans-serif;padding:0 14px}
+.dlg .chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mist);margin:16px 0 20px}
+.dlg .row2{display:flex;gap:10px;flex-wrap:wrap}
+.dlg .err{color:#FCA5A5;font-size:13px;min-height:18px;margin-top:8px}
+.dlg .note{font-size:12px;color:var(--mist);margin-top:14px}
+/* Rangliste */
+.board{background:var(--navy);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:28px 30px;margin-top:50px;max-width:640px}
+.board .r{display:flex;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700}
+.board .r:last-child{border:0}
+.board .r i{font-style:normal;width:28px;color:var(--ice);font-weight:900}
+.board .r em{font-style:normal;margin-left:auto;font-weight:900;font-variant-numeric:tabular-nums}
+.board .r.me{color:var(--ice)}
+.board .r small{color:var(--mist);font-weight:500;margin-left:8px;font-size:12px}
 </style>
-</head>
+
 <body>
 
 <nav id="nav"><div class="wrap">
   <a class="logo" href="#top"><i></i>HOCKEY VERSTEHEN</a>
-  <div class="navlinks"><a href="#problem">Die Idee</a><a href="#doors">Zwei Angebote</a><a href="#show">Learn the Game</a><a href="#data">Daten</a></div>
-  <a class="btn primary" href="#doors">Angebote<span class="long">&nbsp;ansehen</span></a>
+  <div class="navlinks"><a href="#pro">Be a Pro</a><a href="#show">Learn the Game</a><a href="#ranking"><span data-l="de">Rangliste</span><span data-l="en">Ranking</span></a></div>
+  <div class="navr">
+    <div class="langs" role="group" aria-label="Sprache / Language"><button data-setlang="de">DE</button><button data-setlang="en">EN</button></div>
+    <button class="acct" id="acctBtn"><i id="acctIni"></i><span class="lbl" id="acctLbl"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></span></button>
+  </div>
 </div></nav>
 
 <header class="hero" id="top">
@@ -230,138 +266,113 @@ footer b{color:var(--white)}
   </svg>
 
   <div class="count fade d3">
-    <div class="eyebrow">Bis zum 98. Spengler Cup</div>
-    <div class="t" id="countdown"><div><b>--</b><span>TAGE</span></div><div><b>--</b><span>STD</span></div><div><b>--</b><span>MIN</span></div><div><b>--</b><span>SEK</span></div></div>
+    <div class="eyebrow"><span data-l="de">Bis zum 98. Spengler Cup</span><span data-l="en">Until the 98th Spengler Cup</span></div>
+    <div class="t" id="countdown"><div><b>--</b><span><span data-l="de">TAGE</span><span data-l="en">DAYS</span></span></div><div><b>--</b><span><span data-l="de">STD</span><span data-l="en">HRS</span></span></div><div><b>--</b><span>MIN</span></div><div><b>--</b><span><span data-l="de">SEK</span><span data-l="en">SEC</span></span></div></div>
   </div>
 
   <div class="wrap">
-    <div class="eyebrow fade">Sport Innovation Challenge 2026 · Konzept für den Spengler Cup Davos</div>
-    <h1><span><b>Be a Pro.</b></span><span><b>Oder lerne</b></span><span><b>das Spiel.</b></span></h1>
-    <div class="rotator fade d2">Zwei Angebote, die jeden <span class="w" id="rot"><em class="on">Fan</em><em>Neuling</em><em>Pfiff</em><em>Pass</em></span> ins Spiel holen.</div>
+    <div class="eyebrow fade">Spengler Cup Davos · <span data-l="de">Konzept</span><span data-l="en">Concept</span> Sport Innovation Challenge 2026</div>
+    <h1><span><b>Be a Pro.</b></span><span><b><span data-l="de">Oder lerne</span><span data-l="en">Or learn</span></b></span><span><b><span data-l="de">das Spiel.</span><span data-l="en">the game.</span></b></span></h1>
+    <div class="rotator fade d2">
+      <span data-l="de">Nicht nur zuschauen. <span class="w"><em class="on">Mitspielen.</em><em>Verstehen.</em><em>Mitfiebern.</em></span></span>
+      <span data-l="en">Don't just watch. <span class="w"><em class="on">Play.</em><em>Understand.</em><em>Be part of it.</em></span></span>
+    </div>
     <div class="ctas fade d3">
-      <a class="btn primary" href="#doors">Zu den Angeboten <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      <a class="btn ghost" href="#problem">So funktioniert's</a>
+      <a class="btn primary" href="#pro">Be a Pro <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn ghost" href="#show">Learn the Game</a>
     </div>
   </div>
   <div class="scrollcue"></div>
 </header>
 
 <div class="mqclip"><div class="marquee" aria-hidden="true"><div class="track" id="mq">
-  <span>146 km/h härtester Schuss</span><span>37.8 km/h Top-Speed</span><span>112 Schüsse</span><span>9 Tore</span><span>4'458 Events pro Spiel</span><span>2.7 Mio. TV-Zuschauer</span><span>Echte Tracking-Daten</span>
+  <span>146 km/h <span data-l="de">härtester Schuss</span><span data-l="en">hardest shot</span></span><span>37.8 km/h Top-Speed</span><span>60 <span data-l="de">Pfiffe pro Spiel</span><span data-l="en">whistles per game</span></span><span><span data-l="de">Echte Tracking-Daten</span><span data-l="en">Real tracking data</span></span><span>Spengler Cup Davos</span>
 </div></div></div>
 
-<section class="sec problem" id="problem"><div class="wrap">
-  <div class="eyebrow reveal">Die Ausgangslage</div>
-  <h2 class="reveal d1" style="margin-top:18px">Millionen schauen zu.</h2>
-  <p class="lead reveal d2" style="margin-top:24px">Der Spengler Cup ist zwischen Weihnachten und Silvester ein Familienereignis. Viele, die zuschauen, schauen sonst kein Eishockey.</p>
-  <div class="big4">
-    <div class="reveal"><b><span data-count="2.7" data-dec="1">0</span><small> Mio.</small></b><span>TV-Zuschauer:innen live, +700'000 zum Vorjahr</span></div>
-    <div class="reveal d1"><b><span data-count="54.6" data-dec="1">0</span><small> %</small></b><span>Marktanteil des Finals auf SRF zwei</span></div>
-    <div class="reveal d2"><b><span data-count="1.2" data-dec="1">0</span><small> Mio.</small></b><span>Website-Besucher:innen, +40 %</span></div>
-    <div class="reveal d3"><b>&gt;<span data-count="1" data-dec="0">0</span><small> Mio.</small></b><span>davon auf dem Smartphone</span></div>
-  </div>
-  <p class="but reveal">Aber sie können nur zuschauen. <em>Fans können nicht mitspielen, Neulinge nicht folgen.</em></p>
-  <p class="fn reveal" style="margin-top:18px;color:var(--mist);font-size:12px">Quelle: Event-Report Spengler Cup 2025</p>
-</div></section>
-
-<section class="sec speed"><div class="wrap">
-  <div class="speedrow">
-    <div>
-      <div class="eyebrow reveal">Härtester Schuss im Final 2025</div>
-      <div class="kmh reveal d1"><span data-count="146" data-dec="0">0</span><small> km/h</small></div>
-      <div class="lane" id="lane"><div class="puck"></div><div class="net"></div></div>
-    </div>
-    <div class="factlist">
-      <div class="fact reveal"><b><span data-count="37.8" data-dec="1">0</span> km/h</b><span>Top-Speed eines Spielers auf dem Eis</span></div>
-      <div class="fact reveal d1"><b>&lt; 0.5 s</b><span>Zeit, die dem Goalie bei einem Schuss aus 18 Metern bleibt</span></div>
-      <div class="fact reveal d2"><b><span data-count="44" data-dec="0">0</span> s</b><span>dauert ein Einsatz im Schnitt, dann wird gewechselt</span></div>
-      <div class="fact reveal d3"><b><span data-count="4458" data-dec="0" data-sep="1">0</span></b><span>Events hat Wisehockey im Final erfasst, mit der Position aller 12 Spieler</span></div>
-    </div>
-  </div>
-</div></section>
-
 <section class="sec doors" id="doors"><div class="wrap">
-  <div class="eyebrow reveal">Unsere Lösung</div>
-  <h2 class="reveal d1" style="margin-top:18px">Zwei Angebote.<br>Zwei Zielgruppen.</h2>
-  <p class="lead reveal d2" style="margin-top:24px">Fans wollen zeigen, dass sie das Spiel lesen wie ein Profi. Neulinge wollen verstehen, was der Schiri gerade gepfiffen hat. Für beide gibt es ein eigenes Angebot.</p>
+  <div class="eyebrow reveal"><span data-l="de">Zwei Angebote</span><span data-l="en">Two offers</span></div>
+  <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Was für ein<br>Fan bist du?</span><span data-l="en">What kind of<br>fan are you?</span></h2>
   <div class="doorgrid">
-    <a class="door reveal" href="../index.html"><span class="glow"></span><span class="num">01</span>
-      <span class="tag">Für Fans</span>
-      <h3>Be a Pro.<br>Lies das Spiel.</h3>
-      <p>In der Drittelspause stoppt eine echte Szene. Du ziehst den nächsten Pass, die Daten zeigen, wie nah du am echten Spielzug warst.</p>
-      <ul><li>Schlüsselszenen aus dem letzten Drittel</li><li>Punkte nach Meter-Abweichung</li><li>Top 10 auf dem Videowürfel</li></ul>
+    <a class="door reveal" href="#pro"><span class="glow"></span><span class="num">01</span>
+      <span class="tag"><span data-l="de">Ich kenne mich aus</span><span data-l="en">I know hockey</span></span>
+      <h3>Be a Pro.</h3>
+      <p><span data-l="de">Du siehst den Pass, bevor er kommt? Beweis es. Sag in echten Spielszenen den nächsten Pass voraus.</span><span data-l="en">You see the pass before it happens? Prove it. Predict the next pass in real game scenes.</span></p>
     </a>
-    <a class="door reveal d1" href="../learn_the_game/Hockey-verstehen.html"><span class="glow"></span><span class="num">02</span>
-      <span class="tag">Für Neulinge</span>
-      <h3>Learn the Game.<br>Live verstehen.</h3>
-      <p>Der Schiri pfeift, und dein Handy erklärt sofort, was gepfiffen wurde und warum. Mit kurzer Animation und dem Handzeichen.</p>
-      <ul><li>Live während des Spiels</li><li>Icing, Abseits, Strafen, Tor</li><li>Schiri-Zeichen zum Nachschlagen</li></ul>
+    <a class="door reveal d1" href="#show"><span class="glow"></span><span class="num">02</span>
+      <span class="tag"><span data-l="de">Ich bin neu</span><span data-l="en">I am new to hockey</span></span>
+      <h3>Learn the Game.</h3>
+      <p><span data-l="de">Der Schiri pfeift, und du weisst nicht warum? Dein Handy erklärt es dir, live und in Sekunden.</span><span data-l="en">The referee blows the whistle and you do not know why? Your phone explains it, live and in seconds.</span></p>
     </a>
+  </div>
+</div></section>
+
+<section class="sec show" id="pro" style="background:linear-gradient(180deg,var(--deep),var(--navy))"><div class="wrap">
+  <div class="showgrid">
+    <div>
+      <div class="eyebrow reveal">Be a Pro</div>
+      <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Lies das Spiel<br>wie ein Profi.</span><span data-l="en">Read the game<br>like a pro.</span></h2>
+      <div class="steps" style="margin-top:30px">
+        <div class="step on" data-step><div class="k">01 · <span data-l="de">IN DER PAUSE</span><span data-l="en">IN THE BREAK</span></div><h3><span data-l="de">Die Szene stoppt</span><span data-l="en">The scene freezes</span></h3><p><span data-l="de">Echte Spielzüge aus dem letzten Drittel, genau im entscheidenden Moment angehalten.</span><span data-l="en">Real plays from the last period, frozen at the decisive moment.</span></p></div>
+        <div class="step" data-step><div class="k">02 · <span data-l="de">DEIN ZUG</span><span data-l="en">YOUR MOVE</span></div><h3><span data-l="de">Zieh den Pass</span><span data-l="en">Draw the pass</span></h3><p><span data-l="de">Wohin geht der Puck? Je näher am echten Pass, desto mehr Punkte.</span><span data-l="en">Where does the puck go? The closer to the real pass, the more points.</span></p></div>
+        <div class="step" data-step><div class="k">03 · <span data-l="de">NACH DER PAUSE</span><span data-l="en">AFTER THE BREAK</span></div><h3><span data-l="de">Top 10 im Stadion</span><span data-l="en">Top 10 in the arena</span></h3><p><span data-l="de">Die Besten erscheinen auf dem Videowürfel. Am Ende des Turniers warten Tickets für 2026.</span><span data-l="en">The best appear on the video cube. Tickets for 2026 await at the end of the tournament.</span></p></div>
+      </div>
+      <div style="margin-top:30px" class="reveal"><a class="btn primary" href="../index.html"><span data-l="de">Be a Pro spielen</span><span data-l="en">Play Be a Pro</span></a></div>
+    </div>
+    <div class="reveal" id="ranking">
+      <div class="eyebrow"><span data-l="de">Rangliste</span><span data-l="en">Ranking</span></div>
+      <div class="board" id="board" style="margin-top:14px"></div>
+      <div style="margin-top:18px"><button class="btn ghost" id="boardLogin"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button></div>
+      <p style="margin-top:12px;color:var(--mist);font-size:12px"><span data-l="de">Prototyp: «Demo»-Einträge sind Beispiele, Scores bleiben in diesem Browser.</span><span data-l="en">Prototype: “demo” entries are examples, scores stay in this browser.</span></p>
+    </div>
   </div>
 </div></section>
 
 <section class="sec show" id="show"><div class="wrap">
   <div class="showgrid">
     <div>
-      <div class="eyebrow reveal">Angebot 2 · Learn the Game</div>
-      <h2 class="reveal d1" style="margin-top:18px">Probier es aus.</h2>
-      <p class="lead reveal d2" style="margin-top:24px">Das Handy rechts ist der Prototyp, mit den Daten des Finals HCD gegen USC vom 31.12.2025. Die Pfiffe werden nachgespielt, als wäre das Spiel live.</p>
-      <div class="steps" style="margin-top:40px">
-        <div class="step" data-step><div class="k">01 · PFIFF</div><h3>Der Schiri unterbricht</h3><p>Das Spiel läuft live. Wisehockey meldet den Grund der Unterbrechung: Icing, Abseits, Strafe oder Tor.</p></div>
-        <div class="step" data-step><div class="k">02 · ERKLÄRUNG</div><h3>Du weisst sofort warum</h3><p>Ein Popup erklärt die Situation mit einer kurzen Animation und dem passenden Handzeichen des Schiris.</p></div>
-        <div class="step" data-step><div class="k">03 · SPICK</div><h3>Zeichen nachschlagen</h3><p>Am TV ein Handzeichen gesehen? Im Schiri-Spick sind die zwölf wichtigsten Zeichen und Begriffe erklärt.</p></div>
+      <div class="eyebrow reveal">Learn the Game</div>
+      <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Jeder Pfiff,<br>sofort erklärt.</span><span data-l="en">Every whistle,<br>explained instantly.</span></h2>
+      <div class="steps" style="margin-top:30px">
+        <div class="step" data-step><div class="k">01 · <span data-l="de">PFIFF</span><span data-l="en">WHISTLE</span></div><h3><span data-l="de">Der Schiri unterbricht</span><span data-l="en">The referee stops play</span></h3><p><span data-l="de">Icing, Abseits, Strafe oder Tor: Die Live-Daten kennen den Grund.</span><span data-l="en">Icing, offside, penalty or goal: the live data knows the reason.</span></p></div>
+        <div class="step" data-step><div class="k">02 · <span data-l="de">ERKLÄRUNG</span><span data-l="en">EXPLANATION</span></div><h3><span data-l="de">Du weisst warum</span><span data-l="en">You know why</span></h3><p><span data-l="de">Eine kurze Animation zeigt, was passiert ist, mit dem Handzeichen des Schiris.</span><span data-l="en">A short animation shows what happened, with the referee signal.</span></p></div>
+        <div class="step" data-step><div class="k">03 · <span data-l="de">MITREDEN</span><span data-l="en">JOIN IN</span></div><h3><span data-l="de">Du fieberst mit</span><span data-l="en">You are part of it</span></h3><p><span data-l="de">Nach ein paar Spielen verstehst du jeden Pfiff, auch ohne Handy.</span><span data-l="en">After a few games you understand every whistle, even without your phone.</span></p></div>
       </div>
+      <div style="margin-top:30px" class="reveal"><a class="btn primary" href="../learn_the_game/Hockey-verstehen.html"><span data-l="de">Regeln live lernen</span><span data-l="en">Learn the rules live</span></a></div>
     </div>
     <div class="phonecol reveal">
-      <div class="phone"><div class="screen"><iframe src="../learn_the_game/Hockey-verstehen.html" title="Prototyp Learn the Game" loading="lazy"></iframe></div><div class="hint">Live-Prototyp · interaktiv</div></div>
-    </div>
-  </div>
-</div></section>
-
-<section class="sec pipe" id="data"><div class="wrap">
-  <div class="eyebrow reveal">Läuft mit echten Daten</div>
-  <h2 class="reveal d1" style="margin-top:18px">Vom Chip im Puck<br>auf dein Handy.</h2>
-  <p class="lead reveal d2" style="margin-top:24px">Wisehockey erfasst bei jedem Spiel automatisch Positionen, Pässe, Schüsse und Unterbrechungen. Be a Pro macht daraus Spielszenen, Learn the Game Erklärungen, ohne Redaktionsaufwand.</p>
-  <div class="nodes">
-    <svg class="link" preserveAspectRatio="none" viewBox="0 0 100 10"><line x1="12" y1="5" x2="88" y2="5" vector-effect="non-scaling-stroke"/></svg>
-    <div class="node reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><ellipse cx="12" cy="9" rx="8" ry="3"/><path d="M4 9v5c0 1.7 3.6 3 8 3s8-1.3 8-3V9"/></svg></div><b>Tracking</b><span>Chip im Puck und Tags an den Spielern</span></div>
-    <div class="node reveal d1"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><b>Events</b><span>4'458 Ereignisse im Final, mit Position aller Spieler</span></div>
-    <div class="node reveal d2"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/></svg></div><b>Zwei Angebote</b><span>Pass-Szenen für Fans, Erklärungen für Neulinge</span></div>
-    <div class="node reveal d3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M15 14.2c3 0 6 1.6 6 4.8"/></svg></div><b>Fans</b><span>verstehen, bleiben länger, kommen wieder</span></div>
-  </div>
-</div></section>
-
-<section class="sec goals"><div class="wrap">
-  <div class="eyebrow reveal">Was es dem Spengler Cup bringt</div>
-  <h2 class="reveal d1" style="margin-top:18px">Länger bleiben.<br>Öfter kommen.</h2>
-  <div class="goalgrid">
-    <div class="goal reveal"><div class="arrow">↑</div><h3>Mehr Zeit auf der Seite</h3><p>Pass-Szenen in der Pause, Erklärungen während des Spiels: Statt kurz das Resultat zu checken, bleiben Fans dabei.</p><div class="src">Ziel: Verweildauer</div></div>
-    <div class="goal reveal d1"><div class="arrow">↻</div><h3>Ein Grund wiederzukommen</h3><p>Jede Drittelspause bringt neue Szenen, jedes Spiel neue Pfiffe zum Verstehen. 11 Spiele, 22 Runden.</p><div class="src">Ziel: wiederkehrende Besuche</div></div>
-    <div class="goal reveal d2"><div class="arrow">＋</div><h3>Registrierte Fans</h3><p>Wer in die Top 10 will, registriert sich. Die Key-Player-Wahl 2025 zeigt, dass das funktioniert: 3'210 Registrierungen.</p><div class="src">Ziel: Registrierungen</div></div>
-  </div>
-</div></section>
-
-<section class="sec prize"><div class="wrap">
-  <div>
-    <div class="eyebrow reveal" style="color:var(--navy)">Angebot 1 · Be a Pro</div>
-    <h2 class="reveal d1" style="margin-top:18px">Tippen.<br>Punkten.<br>Dabei sein.</h2>
-    <p class="lead reveal d2" style="margin-top:24px">In jeder Drittelspause den nächsten Pass voraussagen. Wer über das Turnier am genausten liest, kann Tickets für den nächsten Spengler Cup gewinnen.</p>
-    <div class="reveal d3" style="margin-top:34px"><a class="btn primary" href="../index.html">Be a Pro spielen</a></div>
-  </div>
-  <div class="reveal d2">
-    <div class="ticket">
-      <div class="e">Zu gewinnen · symbolisch</div>
-      <b>Spengler Cup<br>2026 Tickets</b>
-      <div class="row"><div><div class="e">Deine Genauigkeit</div><div class="score"><span data-count="87" data-dec="0">0</span> %</div></div><div class="e" style="text-align:right">Davos<br>26.–31.12.</div></div>
+      <div class="phone"><div class="screen"><iframe src="../learn_the_game/Hockey-verstehen.html" title="Learn the Game" loading="lazy"></iframe></div><div class="hint"><span data-l="de">Probier es aus</span><span data-l="en">Try it</span></div></div>
     </div>
   </div>
 </div></section>
 
 <footer><div class="wrap">
-  <div><b>Hockey verstehen</b><br>Prototyp für die Sport Innovation Challenge 2026.<br>Daten: Wisehockey, Final Spengler Cup vom 31.12.2025.</div>
-  <div style="max-width:420px">Konzept eines Studierendenteams, kein offizielles Angebot des Spengler Cup Davos. Preis und Gewinnspiel sind symbolisch.</div>
+  <div><b>Hockey verstehen</b><br><span data-l="de">Prototyp für die Sport Innovation Challenge 2026.</span><span data-l="en">Prototype for the Sport Innovation Challenge 2026.</span><br><span data-l="de">Daten: Wisehockey, Final Spengler Cup vom 31.12.2025.</span><span data-l="en">Data: Wisehockey, Spengler Cup final of 31.12.2025.</span></div>
+  <div style="max-width:420px"><span data-l="de">Konzept eines Studierendenteams, kein offizielles Angebot des Spengler Cup Davos. Preis und Gewinnspiel sind symbolisch.</span><span data-l="en">Concept by a student team, not an official offer of the Spengler Cup Davos. Prize and contest are symbolic.</span></div>
 </div></footer>
 
+<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <div class="box">
+    <div class="eyebrow">Be a Pro · Learn the Game</div>
+    <h3 id="dlgTitle"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></h3>
+    <p><span data-l="de">Mit deinem Namen werden deine Scores gespeichert und du erscheinst in der Rangliste.</span><span data-l="en">With your name, your scores are saved and you appear in the ranking.</span></p>
+    <form id="loginForm" novalidate>
+      <label for="lgName"><span data-l="de">Name in der Rangliste</span><span data-l="en">Name in the ranking</span></label>
+      <input type="text" id="lgName" autocomplete="nickname" maxlength="32" placeholder="z. B. Lena, Davos">
+      <label for="lgMail"><span data-l="de">E-Mail (optional, für Gewinnspiel)</span><span data-l="en">Email (optional, for the contest)</span></label>
+      <input type="email" id="lgMail" autocomplete="email" placeholder="name@example.ch">
+      <label class="chk" style="text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" id="lgOk"> <span data-l="de">Ich bin einverstanden, dass mein Name in der Rangliste erscheint.</span><span data-l="en">I agree that my name appears in the ranking.</span></label>
+      <div class="row2"><button class="btn primary" type="submit"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button><button class="btn ghost" type="button" data-close><span data-l="de">Abbrechen</span><span data-l="en">Cancel</span></button></div>
+      <div class="err" id="lgErr"></div>
+    </form>
+    <div id="loggedIn" hidden>
+      <p id="lgHello"></p>
+      <div class="row2"><button class="btn ghost" type="button" id="lgOut"><span data-l="de">Abmelden</span><span data-l="en">Log out</span></button><button class="btn primary" type="button" data-close><span data-l="de">Weiter</span><span data-l="en">Continue</span></button></div>
+    </div>
+    <div class="note"><span data-l="de">Prototyp: Es wird nichts gesendet, alles bleibt in diesem Browser.</span><span data-l="en">Prototype: nothing is sent, everything stays in this browser.</span></div>
+  </div>
+</div>
+
+<script src="../shared/hv-account.js"></script>
 <script>
 'use strict';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -387,9 +398,11 @@ addEventListener('scroll', () => nav.classList.toggle('solid', scrollY > 40), { 
 
 // Wortwechsel im Hero
 (function rotator() {
-  const ws = [...document.querySelectorAll('#rot em')];
-  let i = 0;
-  setInterval(() => { ws[i].classList.remove('on'); i = (i + 1) % ws.length; ws[i].classList.add('on'); }, 1900);
+  document.querySelectorAll('.rotator .w').forEach(w => {
+    const ws = [...w.querySelectorAll('em')];
+    let i = 0;
+    setInterval(() => { ws[i].classList.remove('on'); i = (i + 1) % ws.length; ws[i].classList.add('on'); }, 1900);
+  });
 })();
 
 // Marquee verdoppeln, damit die Schleife nahtlos läuft
@@ -458,6 +471,7 @@ if (STATIC) document.querySelectorAll('[data-count]').forEach(countUp);
 
 // Puck-Schuss über die Linie, sobald die Speed-Sektion sichtbar ist
 const lane = document.getElementById('lane');
+if (lane) 
 new IntersectionObserver(([en], o) => {
   if (en.isIntersecting) { lane.classList.add('go'); setInterval(() => { lane.classList.remove('go'); void lane.offsetWidth; lane.classList.add('go'); }, 3800); o.disconnect(); }
 }, { threshold: 0.6 }).observe(lane);
@@ -475,6 +489,68 @@ document.querySelectorAll('.door').forEach(d => {
   });
   d.addEventListener('pointerleave', () => (d.style.transform = ''));
 });
+
+// Sprache: ?lang=en, sonst gespeicherte Wahl, sonst Browsersprache
+(function lang() {
+  const pick = () => { try { return new URLSearchParams(location.search).get('lang') || localStorage.getItem('hv_lang'); } catch (e) { return null; } };
+  const set = l => {
+    l = l === 'en' ? 'en' : 'de';
+    document.documentElement.lang = l;
+    document.title = l === 'en' ? 'Be a Pro & Learn the Game – Concept for the Spengler Cup' : 'Be a Pro & Learn the Game – Konzept für den Spengler Cup';
+    document.querySelectorAll('[data-setlang]').forEach(b => b.classList.toggle('on', b.dataset.setlang === l));
+    try { localStorage.setItem('hv_lang', l); } catch (e) { /* egal */ }
+    renderAccount();
+  };
+  document.querySelectorAll('[data-setlang]').forEach(b => b.addEventListener('click', () => set(b.dataset.setlang)));
+  set(pick() || (navigator.language || 'de').slice(0, 2));
+})();
+
+// Demo-Login und Rangliste
+function t(de, en) { return document.documentElement.lang === 'en' ? en : de; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function renderAccount() {
+  if (!window.HVAccount) return;
+  const u = HVAccount.current();
+  const btn = document.getElementById('acctBtn');
+  btn.classList.toggle('in', !!u);
+  document.getElementById('acctIni').textContent = u ? u.name.trim().slice(0, 1).toUpperCase() : '';
+  document.getElementById('acctLbl').textContent = u ? u.name : t('Anmelden', 'Log in');
+  document.getElementById('boardLogin').textContent = u ? t('Abmelden', 'Log out') : t('Anmelden', 'Log in');
+  const rows = HVAccount.leaderboard('be-a-pro', 10);
+  document.getElementById('board').innerHTML = rows.map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><i>${i + 1}</i>${esc(r.name)}${r.demo ? '<small>Demo</small>' : ''}<em>${r.value}</em></div>`).join('')
+    + (u && HVAccount.best('be-a-pro') == null ? `<div class="r me"><i>–</i>${esc(u.name)}<small>${t('noch kein Score', 'no score yet')}</small><em>–</em></div>` : '');
+}
+(function account() {
+  const dlg = document.getElementById('dlg');
+  const open = () => {
+    const u = window.HVAccount && HVAccount.current();
+    document.getElementById('loginForm').hidden = !!u;
+    document.getElementById('loggedIn').hidden = !u;
+    document.getElementById('dlgTitle').textContent = u ? t('Angemeldet', 'Logged in') : t('Anmelden', 'Log in');
+    if (u) document.getElementById('lgHello').textContent = t(`Hallo ${u.name}. Deine Scores werden gespeichert.`, `Hi ${u.name}. Your scores are being saved.`);
+    dlg.classList.add('open');
+    setTimeout(() => (u ? document.getElementById('lgOut') : document.getElementById('lgName')).focus(), 30);
+  };
+  const close = () => dlg.classList.remove('open');
+  document.getElementById('acctBtn').addEventListener('click', open);
+  document.getElementById('boardLogin').addEventListener('click', () => { if (HVAccount.current()) HVAccount.logout(); else open(); });
+  dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-close]')) close(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  document.getElementById('loginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('lgName').value.trim(), mail = document.getElementById('lgMail').value.trim();
+    const err = document.getElementById('lgErr');
+    if (!name) { err.textContent = t('Bitte gib einen Namen ein.', 'Please enter a name.'); return; }
+    if (mail && !/^\S+@\S+\.\S+$/.test(mail)) { err.textContent = t('Bitte prüfe die E-Mail-Adresse.', 'Please check the email address.'); return; }
+    if (!document.getElementById('lgOk').checked) { err.textContent = t('Bitte bestätige, dass dein Name angezeigt werden darf.', 'Please confirm that your name may be shown.'); return; }
+    err.textContent = '';
+    HVAccount.login(name, mail); close();
+  });
+  document.getElementById('lgOut').addEventListener('click', () => { HVAccount.logout(); close(); });
+  if (window.HVAccount) HVAccount.onChange(renderAccount);
+  renderAccount();
+})();
 </script>
+
 </body>
 </html>

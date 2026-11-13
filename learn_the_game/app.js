@@ -1,10 +1,17 @@
-/* Hockey verstehen – Prototyp für die Sport Innovation Challenge 2026
- * Zwei Einstiege: Neulinge lernen die Regeln, Kenner sehen den Spielbericht mit Advanced Stats.
+/* Learn the Game – Prototyp für die Sport Innovation Challenge 2026
+ * Für Neulinge: Bei jedem Pfiff erklärt die App, was gepfiffen wurde und warum.
  * Daten: Wisehockey-Export, Final Spengler Cup 31.12.2025 (USC = Home, HCD = Away)
  */
 'use strict';
 
 const D = window.MATCH_DATA;
+
+// Sprache: ?lang=en, sonst dieselbe Wahl wie auf der Website, sonst Browsersprache
+const LANG = (() => {
+  try { return ((new URLSearchParams(location.search).get('lang') || localStorage.getItem('hv_lang') || navigator.language || 'de').slice(0, 2) === 'en') ? 'en' : 'de'; } catch (e) { return 'de'; }
+})();
+const tr = (de, en) => (LANG === 'en' ? en : de);
+document.documentElement.lang = LANG;
 const PL = D.players;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -12,7 +19,6 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmtClock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const pct = x => `${Math.round(x * 100)} %`;
 const TEAM_COL = { HCD: ['#1D4ED8', '#FFD200'], USC: ['#C8102E', '#FFFFFF'] };
-const PEN_DE = { Slashing: 'Stockschlags', CrossChecking: 'Crosschecks', HighSticking: 'hohen Stocks', Delay: 'Spielverzögerung' };
 const TEAM_NAME = { HCD: 'HC Davos', USC: 'U.S. Collegiate Selects' };
 const other = tm => (tm === 'HCD' ? 'USC' : 'HCD');
 const attackDir = (tm, p = 1) => (D.attack[String(p)] || D.attack['1'])[tm];
@@ -27,7 +33,7 @@ function nm(id) {
 /* ------------------------------------------------------------------ *
  * Daten-Feed. Der Prototyp lädt den Final aus der CSV (ReplayFeed).
  * Für künftige Spiele liefert Wisehockey die Events im selben Format;
- * dann wird nur die Quelle ersetzt, Spielbericht und Quiz bauen sich neu.
+ * dann wird nur die Quelle ersetzt, die Erklärungen erscheinen live.
  * ------------------------------------------------------------------ */
 class EventStore {
   constructor() {
@@ -139,7 +145,7 @@ function toast(html) {
 function modal(html) {
   const m = document.createElement('div');
   m.className = 'modal';
-  m.innerHTML = `<div class="box"><div class="grab"></div>${html}<button class="btn sec" style="margin-top:16px" data-close>Schliessen</button></div>`;
+  m.innerHTML = `<div class="box"><div class="grab"></div>${html}<button class="btn sec" style="margin-top:16px" data-close>${tr('Schliessen', 'Close')}</button></div>`;
   m.addEventListener('click', ev => { if (ev.target === m || ev.target.hasAttribute('data-close')) m.remove(); });
   document.body.appendChild(m);
   return m;
@@ -196,23 +202,23 @@ const SIG = (() => {
 })();
 
 const SIGNALS = [
-  { id: 'goal', name: 'Tor', text: 'Der Schiri zeigt mit ausgestrecktem Arm auf das Tor: Der Treffer zählt.' },
-  { id: 'washout', name: 'Kein Tor / aufgehoben', text: 'Beide Arme seitlich auf Schulterhöhe ausgestreckt, Handflächen nach unten. Das Tor zählt nicht – oder ein angezeigtes Icing bzw. Abseits ist aufgehoben.' },
-  { id: 'icing', name: 'Icing', text: 'Arme vor der Brust verschränkt. Der Puck wurde aus der eigenen Hälfte über die gegnerische Torlinie geschossen.' },
-  { id: 'armup', name: 'Angezeigte Strafe', text: 'Ein Arm hoch: Ein Foul ist passiert, gepfiffen wird aber erst, wenn das foulende Team den Puck berührt. Der Linienrichter zeigt so auch ein verzögertes Abseits an.' },
-  { id: 'slash', name: 'Stockschlag', text: 'Mit einer Hand auf den Unterarm der anderen Hand schlagen. Ein Spieler hat mit dem Stock auf den Gegner geschlagen.' },
-  { id: 'high', name: 'Hoher Stock', text: 'Beide Fäuste übereinander seitlich am Kopf. Der Stock war über Schulterhöhe.' },
-  { id: 'cross', name: 'Crosscheck', text: 'Beide Fäuste vor der Brust, mit einer Stossbewegung nach vorne. Der Gegner wurde mit dem quer gehaltenen Stock gestossen.' },
-  { id: 'hook', name: 'Haken', text: 'Mit beiden Armen eine Zieh-Bewegung zum Bauch. Ein Spieler hat den Gegner mit dem Stock zurückgehalten.' },
-  { id: 'hold', name: 'Halten', text: 'Das Handgelenk der Pfeifenhand vor der Brust mit der anderen Hand umfassen. Der Gegner wurde festgehalten.' },
-  { id: 'trip', name: 'Beinstellen', text: 'Mit der Hand unterhalb des Knies aufs Bein schlagen. Der Gegner wurde zu Fall gebracht.' },
-  { id: 'elbow', name: 'Ellbogencheck', text: 'Mit der Hand auf den Ellbogen des anderen Arms tippen. Der Gegner wurde mit dem Ellbogen gecheckt.' },
-  { id: 'board', name: 'Check gegen die Bande', text: 'Mit der Faust in die offene Handfläche schlagen. Der Gegner wurde gefährlich in die Bande gecheckt.' },
+  { id: 'goal', name: tr('Tor', 'Goal'), text: tr('Der Schiri zeigt mit ausgestrecktem Arm auf das Tor: Der Treffer zählt.', 'The referee points at the net with an outstretched arm: the goal counts.') },
+  { id: 'washout', name: tr('Kein Tor / aufgehoben', 'No goal / washed out'), text: tr('Beide Arme seitlich auf Schulterhöhe ausgestreckt, Handflächen nach unten. Das Tor zählt nicht, oder ein angezeigtes Icing bzw. Abseits ist aufgehoben.', 'Both arms swung out to the side at shoulder height, palms down. The goal does not count, or a pending icing or offside is cancelled.') },
+  { id: 'icing', name: 'Icing', text: tr('Arme vor der Brust verschränkt. Der Puck wurde aus der eigenen Hälfte über die gegnerische Torlinie geschossen.', 'Arms folded across the chest. The puck was shot from the own half across the opponent’s goal line.') },
+  { id: 'armup', name: tr('Angezeigte Strafe', 'Delayed penalty'), text: tr('Ein Arm hoch: Ein Foul ist passiert, gepfiffen wird aber erst, wenn das foulende Team den Puck berührt. Der Linienrichter zeigt so auch ein verzögertes Abseits an.', 'One arm raised: a foul happened, but play is stopped only when the offending team touches the puck. Linesmen use the same signal for a delayed offside.') },
+  { id: 'slash', name: tr('Stockschlag', 'Slashing'), text: tr('Mit einer Hand auf den Unterarm der anderen Hand schlagen. Ein Spieler hat mit dem Stock auf den Gegner geschlagen.', 'A chopping motion onto the opposite forearm. A player hit the opponent with the stick.') },
+  { id: 'high', name: tr('Hoher Stock', 'High-sticking'), text: tr('Beide Fäuste übereinander seitlich am Kopf. Der Stock war über Schulterhöhe.', 'Both fists held one above the other at the side of the head. The stick was above shoulder height.') },
+  { id: 'cross', name: 'Crosscheck', text: tr('Beide Fäuste vor der Brust, mit einer Stossbewegung nach vorne. Der Gegner wurde mit dem quer gehaltenen Stock gestossen.', 'Both fists in front of the chest, pushing forward. The opponent was pushed with the stick held across.') },
+  { id: 'hook', name: tr('Haken', 'Hooking'), text: tr('Mit beiden Armen eine Zieh-Bewegung zum Bauch. Ein Spieler hat den Gegner mit dem Stock zurückgehalten.', 'A pulling motion towards the stomach with both arms. A player held the opponent back with the stick.') },
+  { id: 'hold', name: tr('Halten', 'Holding'), text: tr('Das Handgelenk der Pfeifenhand vor der Brust mit der anderen Hand umfassen. Der Gegner wurde festgehalten.', 'Clasping the wrist of the whistle hand in front of the chest. The opponent was held.') },
+  { id: 'trip', name: tr('Beinstellen', 'Tripping'), text: tr('Mit der Hand unterhalb des Knies aufs Bein schlagen. Der Gegner wurde zu Fall gebracht.', 'Striking the leg below the knee with the hand. The opponent was tripped.') },
+  { id: 'elbow', name: tr('Ellbogencheck', 'Elbowing'), text: tr('Mit der Hand auf den Ellbogen des anderen Arms tippen. Der Gegner wurde mit dem Ellbogen gecheckt.', 'Tapping the elbow with the opposite hand. The opponent was checked with the elbow.') },
+  { id: 'board', name: tr('Check gegen die Bande', 'Boarding'), text: tr('Mit der Faust in die offene Handfläche schlagen. Der Gegner wurde gefährlich in die Bande gecheckt.', 'Pounding the fist into the open palm. The opponent was checked dangerously into the boards.') },
 ];
 const SIGMAP = Object.fromEntries(SIGNALS.map(s => [s.id, s]));
 function openSignal(id) {
   const s = SIGMAP[id];
-  modal(`<div class="bigsig">${SIG[id]}</div><div class="t2" style="text-align:center">${s.name}</div><p class="sub">${s.text}</p><div class="fn" style="text-align:center;margin-top:10px">Piktogramm vereinfacht</div>`);
+  modal(`<div class="bigsig">${SIG[id]}</div><div class="t2" style="text-align:center">${s.name}</div><p class="sub">${s.text}</p><div class="fn" style="text-align:center;margin-top:10px">${tr('Piktogramm vereinfacht', 'Simplified pictogram')}</div>`);
 }
 const sigTile = id => `<div class="sig" data-sig="${id}"><div class="pic">${SIG[id]}</div><div class="nm">${SIGMAP[id].name}</div></div>`;
 document.addEventListener('click', ev => { const s = ev.target.closest('[data-sig]'); if (s) openSignal(s.dataset.sig); });
@@ -282,13 +288,13 @@ class Rink {
     const lx = left ? -1 : 1;
     if (opt.zones) {
       ctx.fillStyle = 'rgba(15,23,42,.7)';
-      ctx.fillText('Angriffszone HCD', this.X(lx * 18.5), this.Y(12.4));
-      ctx.fillText('Neutrale Zone', this.X(0), this.Y(12.4));
-      ctx.fillText('Angriffszone USC', this.X(-lx * 18.5), this.Y(12.4));
+      ctx.fillText(tr('Angriffszone HCD', 'HCD attacking zone'), this.X(lx * 18.5), this.Y(12.4));
+      ctx.fillText(tr('Neutrale Zone', 'Neutral zone'), this.X(0), this.Y(12.4));
+      ctx.fillText(tr('Angriffszone USC', 'USC attacking zone'), this.X(-lx * 18.5), this.Y(12.4));
     }
     ctx.fillStyle = 'rgba(15,23,42,.45)';
-    ctx.fillText('Tor USC', this.X(lx * 23.5), this.Y(-12.6));
-    ctx.fillText('Tor HCD', this.X(-lx * 23.5), this.Y(-12.6));
+    ctx.fillText(tr('Tor USC', 'USC net'), this.X(lx * 23.5), this.Y(-12.6));
+    ctx.fillText(tr('Tor HCD', 'HCD net'), this.X(-lx * 23.5), this.Y(-12.6));
   }
   arrow(a, b) {
     const { ctx } = this;
@@ -338,7 +344,7 @@ class Rink {
     if (opt.counts) {
       const n = { USC: 0, HCD: 0 };
       players.forEach(p => { const i = PL[p.id]; if (i && !i.gk) n[i.tm]++; });
-      const label = `Feldspieler  USC ${n.USC} : ${n.HCD} HCD`;
+      const label = `${tr('Feldspieler', 'Skaters')}  USC ${n.USC} : ${n.HCD} HCD`;
       ctx.font = `800 ${Math.max(11, 1.4 * k)}px -apple-system,sans-serif`;
       const w = ctx.measureText(label).width + 16;
       ctx.fillStyle = 'rgba(11,18,32,.85)'; ctx.beginPath(); ctx.roundRect(this.w / 2 - w / 2, this.pad + 4, w, 22, 8); ctx.fill();
@@ -377,70 +383,14 @@ function openPlayer(id) {
   const p = PL[id];
   if (!p) return;
   const [fill, num] = TEAM_COL[p.tm];
-  const rows = p.gk ? [['Position', 'Torhüter']] : [
-    ['Top-Speed', `${p.spd.toFixed(1)} km/h`], ['Härtester Schuss', p.sht ? `${p.sht.toFixed(0)} km/h` : '–'],
-    ['Gelaufene Distanz', `${(p.dist / 1000).toFixed(1)} km`], ['Eiszeit', `${Math.round(p.toi / 60)} min`],
-    ['Tore / Assists', `${p.g} / ${p.a}`], ['Torchancen (xG)', p.xg.toFixed(2)],
+  const rows = p.gk ? [['Position', tr('Torhüter', 'Goalie')]] : [
+    ['Top-Speed', `${p.spd.toFixed(1)} km/h`], [tr('Härtester Schuss', 'Hardest shot'), p.sht ? `${p.sht.toFixed(0)} km/h` : '–'],
+    [tr('Gelaufene Distanz', 'Distance skated'), `${(p.dist / 1000).toFixed(1)} km`], [tr('Eiszeit', 'Ice time'), `${Math.round(p.toi / 60)} min`],
+    [tr('Tore / Assists', 'Goals / assists'), `${p.g} / ${p.a}`],
   ];
   modal(`<div class="row"><span class="badge" style="width:48px;height:48px;font-size:17px;background:${fill};color:${num}">${p.no}</span>
     <div><div class="t2" style="margin:0">${p.n}</div><div class="fn">${TEAM_NAME[p.tm]}</div></div></div>
     <div class="group" style="background:var(--fill);margin-top:16px">${rows.map(([k, v]) => `<div class="cell" style="min-height:48px"><span class="grow sub">${k}</span><span class="val">${v}</span></div>`).join('')}</div>`);
-}
-
-/* ------------------------------------------------------------------ *
- * Clip-Player: spielt einen Ausschnitt mit Untertiteln ab.
- * hold = Sekunden, die der Clip bei jedem Untertitel anhält (Erklärmodus)
- * ------------------------------------------------------------------ */
-const CLIPS = [];
-class Clip {
-  constructor(root) {
-    root.innerHTML = `<div class="rinkwrap"><canvas class="rink"></canvas></div>
-      <div class="clipbar"><button class="playbtn" aria-label="Abspielen">${ICON.play}</button>
-      <div class="scrub"><i></i></div>
-      <div class="seg" style="flex:none"><button data-r="1">Echtzeit</button><button data-r="0.45">Zeitlupe</button></div></div>
-      <div class="cap"><div class="k"></div><div class="x"></div></div>`;
-    this.root = root;
-    this.rink = new Rink($('canvas', root));
-    this.btn = $('.playbtn', root);
-    this.btn.onclick = () => (this.playing ? this.pause() : this.play());
-    $$('[data-r]', root).forEach(b => (b.onclick = () => { this.setRate(+b.dataset.r); if (!this.playing) this.play(); }));
-    CLIPS.push(this);
-  }
-  setRate(r) { this.rate = r; $$('[data-r]', this.root).forEach(x => x.classList.toggle('on', +x.dataset.r === r)); }
-  icon(n, label) { this.btn.innerHTML = ICON[n]; this.btn.setAttribute('aria-label', label); }
-  load(spec, autoplay) {
-    this.spec = spec;
-    this.t = spec.from; this.cur = null; this.hold = 0;
-    this.setRate(spec.rate || 1);
-    this.setCap(spec.intro || { k: 'Bereit', x: 'Drücke Play.' });
-    this.playing = false; this.icon('play', 'Abspielen');
-    if (autoplay) this.play();
-  }
-  play() { if (this.t >= this.spec.to) { this.t = this.spec.from; this.cur = null; } this.playing = true; this.icon('pause', 'Pause'); }
-  pause() { this.playing = false; this.icon('play', 'Abspielen'); }
-  setCap(c) { $('.k', this.root).textContent = c.k; $('.x', this.root).textContent = c.x; }
-  visible() { return this.root.offsetParent !== null; }
-  tick(dt) {
-    if (!this.spec || !this.visible()) return;
-    const sp = this.spec;
-    if (this.playing) {
-      if (this.hold > 0) this.hold -= dt;
-      else {
-        this.t += dt * this.rate;
-        for (const c of sp.caps || []) {
-          if (c.g <= this.t && c !== this.cur && (!this.cur || c.g > this.cur.g)) {
-            this.cur = c; this.setCap(c);
-            if (sp.hold && this.rate < 1) { this.hold = sp.hold; this.t = c.g; }
-            break;
-          }
-        }
-        if (this.t >= sp.to) { this.t = sp.to; this.playing = false; this.icon('replay', 'Nochmal'); }
-      }
-    }
-    $('.scrub i', this.root).style.width = `${((this.t - sp.from) / (sp.to - sp.from)) * 100}%`;
-    const deco = this.cur && this.t - this.cur.g < 3.5;
-    this.rink.draw(this.t, { ...sp.opts, ring: deco ? this.cur.ring : null, arrow: deco && this.cur.arrow ? this.cur.arrow : sp.opts && sp.opts.arrow });
-  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -500,7 +450,7 @@ const sceneClip = (sc, extra = {}) => ({ from: sc.start, to: sc.end, intro: sc.k
  * Navigation
  * ------------------------------------------------------------------ */
 const views = {};
-let active = 'start';
+let active = 'learn';
 function show(v) {
   if (views[active] && views[active].leave) views[active].leave();
   active = v;
@@ -511,15 +461,6 @@ function show(v) {
 }
 $$('nav.tabs button').forEach(b => (b.onclick = () => show(b.dataset.v)));
 document.addEventListener('click', ev => { const g = ev.target.closest('[data-go]'); if (g) show(g.dataset.go); });
-
-views.start = {
-  enter() {
-    const n = Object.keys(S.watched || {}).length;
-    $('#doorProg').classList.toggle('hidden', !n);
-    $('#doorProg .bar i').style.width = `${(n / MOMENTS.length) * 100}%`;
-    $('#doorProg .fn').textContent = n === MOMENTS.length ? 'Ganzes Spiel geschaut' : `${n} von ${MOMENTS.length} Momenten gesehen`;
-  },
-};
 
 /* ------------------------------------------------------------------ *
  * Erklär-Animationen: schematische Mini-Szenen auf dem Eis.
@@ -556,8 +497,8 @@ class Schematic extends Rink {
       ctx.fillStyle = 'rgba(14,26,43,.6)'; ctx.font = `600 ${Math.max(10, 1.1 * k)}px -apple-system,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(label, this.X((x0 + x1) / 2), this.Y((y0 + y1) / 2));
     };
-    if (a.box) area(-3.5, -14.8, 3.5, -11.6, 'Strafbank');
-    if (a.bench) area(-14, 11.6, 2, 14.8, 'Spielerbank');
+    if (a.box) area(-3.5, -14.8, 3.5, -11.6, tr('Strafbank', 'Penalty box'));
+    if (a.bench) area(-14, 11.6, 2, 14.8, tr('Spielerbank', 'Bench'));
     for (const [t0, t1, x, y] of a.marks || []) {
       if (t < t0 || t > t1) continue;
       const r = (1.6 + Math.sin(t * 6) * 0.4) * k;
@@ -606,34 +547,34 @@ const ANIM = {
       still('R', 0, 3), { c: 'A', p: [[0, -1.3, 0], [2, -1.3, 0], [3.5, -6, -3]] }, { c: 'B', p: [[0, 1.3, 0]] },
       still('A', -5, 7), still('A', -5, -7), still('B', 5, 7), still('B', 5, -7), still('AG', 26.6, 0), still('BG', -26.6, 0)],
     puck: [[0, 0, 2], [1.4, 0, 2], [1.8, 0, 0], [2.2, 0, 0], [3.5, -7, -3.5]],
-    labels: [[0, 1.8, 'Der Schiri wirft den Puck ein', 'info'], [2.2, 6, 'Blau gewinnt das Bully', 'ok']] },
+    labels: [[0, 1.8, tr('Der Schiri wirft den Puck ein', 'The referee drops the puck'), 'info'], [2.2, 6, tr('Blau gewinnt das Bully', 'Blue wins the faceoff'), 'ok']] },
 
   icing: { dur: 7, opts: { goalLine: true }, tokens: [
       { c: 'A', p: [[0, 14, -6]], hi: [0.4, 2.2] }, still('A', 8, 6), ...lineupA().slice(0, 1),
       { c: 'B', p: [[0, 4, -3], [3, 2, -6]] }, { c: 'B', p: [[0, 6, 8], [3, 3, 7]] }, still('BG', -26.6, 0)],
     puck: [[0, 13, -5.5], [1, 13, -5.5], [3.2, -29, 5]],
     marks: [[4.2, 7, 20, -7]],
-    labels: [[0, 1, 'Blau in der eigenen Hälfte', 'info'], [1, 3.2, 'Weitschuss übers ganze Feld …', 'info'], [3.2, 4.2, '… über die Torlinie: Icing!', 'bad'], [4.2, 7, 'Bully vor dem eigenen Tor', 'info']] },
+    labels: [[0, 1, tr('Blau in der eigenen Hälfte', 'Blue in its own half'), 'info'], [1, 3.2, tr('Weitschuss übers ganze Feld …', 'A long shot across the ice …'), 'info'], [3.2, 4.2, tr('… über die Torlinie: Icing!', '… over the goal line: icing!'), 'bad'], [4.2, 7, tr('Bully vor dem eigenen Tor', 'Faceoff in front of the own net'), 'info']] },
 
   offside: { dur: 10, opts: { blue: true }, tokens: [
       { c: 'A', p: [[0, 3, -2], [3, -9, -2], [5, -9, -2], [5, 3, -2], [8, -9, -2]] },
       { c: 'A', p: [[0, -2, 6], [1.6, -11, 6], [5, -11, 6], [5, -2, 6], [6.6, -2, 6], [8.4, -11, 6]], hi: [0, 3] },
       ...lineupB()],
     puck: [[0, 2, -2.6], [3, -10, -2.6], [5, -10, -2.6], [5, 2, -2.6], [8, -10, -2.6]],
-    labels: [[0, 1.4, 'Achte auf die blaue Linie', 'info'], [1.4, 4.9, 'Abseits: Spieler vor dem Puck', 'bad'], [5, 6.8, 'So ist es richtig …', 'info'], [6.8, 10, 'Puck zuerst: korrekt', 'ok']] },
+    labels: [[0, 1.4, tr('Achte auf die blaue Linie', 'Watch the blue line'), 'info'], [1.4, 4.9, tr('Abseits: Spieler vor dem Puck', 'Offside: player ahead of the puck'), 'bad'], [5, 6.8, tr('So ist es richtig …', 'This is how it works …'), 'info'], [6.8, 10, tr('Puck zuerst: korrekt', 'Puck first: onside'), 'ok']] },
 
   penalty: { dur: 8, box: true, tokens: [
       still('R', 2, 9), ...lineupA(), still('A', -10, -4), still('A', -6, 5), still('A', 2, -6),
       still('BG', -26.6, 0), still('B', -18, 5), still('B', -16, -6), still('B', -8, -2),
       { c: 'B', p: [[0, -4, 3], [2.5, -4, 3], [4.5, 0, -13.2]], hi: [1, 4.5] }],
-    labels: [[0, 1.2, 'Foul von Rot', 'bad'], [1.2, 2.5, 'Schiri hebt den Arm', 'info'], [2.5, 4.5, 'Ab auf die Strafbank: 2 Minuten', 'info'], [4.5, 8, 'Powerplay: 5 gegen 4 für Blau', 'ok']] },
+    labels: [[0, 1.2, tr('Foul von Rot', 'Foul by red'), 'bad'], [1.2, 2.5, tr('Schiri hebt den Arm', 'Referee raises the arm'), 'info'], [2.5, 4.5, tr('Ab auf die Strafbank: 2 Minuten', 'Off to the box: 2 minutes'), 'info'], [4.5, 8, tr('Powerplay: 5 gegen 4 für Blau', 'Power play: 5 on 4 for blue'), 'ok']] },
 
   ppgoal: { dur: 8, box: true, tokens: [
       ...lineupA(), { c: 'A', p: [[0, -14, -7], [1.2, -15, -7]] }, { c: 'A', p: [[0, -18, 7], [1.2, -20, 4]], hi: [1, 2.6] }, still('A', -10, 1), still('A', -8, -9),
       still('BG', -26.6, 0), still('B', -20, -3), still('B', -16, 6), still('B', -12, -4),
       { c: 'B', p: [[0, 0, -13.2], [3.6, 0, -13.2], [6, 5, -6]], hi: [3.4, 6] }],
     puck: [[0, -14, -6.5], [1.2, -15, -6.5], [1.6, -20, 3.5], [2.2, -20, 3.5], [2.6, -26.5, 0.4]],
-    labels: [[0, 2.6, 'Blau im Powerplay', 'info'], [2.6, 3.6, 'Tor!', 'ok'], [3.6, 8, 'Strafe vorbei: wieder 5 gegen 5', 'info']] },
+    labels: [[0, 2.6, tr('Blau im Powerplay', 'Blue on the power play'), 'info'], [2.6, 3.6, tr('Tor!', 'Goal!'), 'ok'], [3.6, 8, tr('Strafe vorbei: wieder 5 gegen 5', 'Penalty over: back to 5 on 5'), 'info']] },
 
   emptynet: { dur: 9, bench: true, tokens: [
       { c: 'BG', p: [[0, -26.6, 0], [0.6, -26.6, 0], [3, -8, 13.2]], until: 3 },
@@ -641,7 +582,7 @@ const ANIM = {
       still('B', 12, -4), still('B', 16, 7), still('B', 8, -9), still('B', 18, -1),
       { c: 'A', p: [[0, 14, -8]], hi: [5.2, 6.8] }, still('A', 20, 4), still('AG', 26.6, 0)],
     puck: [[0, 15, -8.3], [5.6, 15, -8.3], [7, -26.6, 0.2]],
-    labels: [[0, 3, 'Rot holt den Goalie vom Eis', 'info'], [3, 5.4, 'Dafür ein 6. Feldspieler', 'info'], [5.4, 7, 'Schuss aus der eigenen Hälfte …', 'info'], [7, 9, '… ins leere Tor!', 'ok']] },
+    labels: [[0, 3, tr('Rot holt den Goalie vom Eis', 'Red pulls the goalie'), 'info'], [3, 5.4, tr('Dafür ein 6. Feldspieler', 'A 6th skater comes on'), 'info'], [5.4, 7, tr('Schuss aus der eigenen Hälfte …', 'A shot from the own half …'), 'info'], [7, 9, tr('… ins leere Tor!', '… into the empty net!'), 'ok']] },
 
   // Nahaufnahme der Torlinie: halb drüber zählt nicht
   goalline: { dur: 7, custom(s, t) {
@@ -662,8 +603,8 @@ const ANIM = {
     const x = W * 0.2 + Math.min(1, tt / 1.2) * (target - W * 0.2);
     ctx.beginPath(); ctx.arc(x, H / 2, pr, 0, 7); ctx.fillStyle = '#0B0B0B'; ctx.fill();
     ctx.fillStyle = 'rgba(14,26,43,.55)'; ctx.font = `600 ${Math.max(11, H * 0.06)}px -apple-system,sans-serif`; ctx.textAlign = 'center';
-    ctx.fillText('Torlinie', lx, H - 10);
-    if (tt > 1.3) s.pill(phase ? 'Ganz über der Linie: Tor' : 'Auf der Linie: kein Tor', phase ? 'ok' : 'bad', 10);
+    ctx.fillText(tr('Torlinie', 'Goal line'), lx, H - 10);
+    if (tt > 1.3) s.pill(phase ? tr('Ganz über der Linie: Tor', 'Fully over the line: goal') : tr('Auf der Linie: kein Tor', 'On the line: no goal'), phase ? 'ok' : 'bad', 10);
   } },
 };
 
@@ -686,33 +627,42 @@ const finalWhistle = EV[EV.length - 1];
 const avgShift = Math.round(SKATERS.reduce((s, p) => s + p.avgs, 0) / SKATERS.length);
 
 const MOMENTS = [
-  { from: EV[0].g - 0.5, to: EV[0].g + 4, title: 'Das Bully', anim: 'bully',
-    seen: 'Spielbeginn: Der Schiri wirft den Puck ein.',
-    text: `Jedes Drittel und jede Unterbrechung startet mit einem Bully. Gespielt werden 3 × 20 Minuten, pro Team stehen 5 Feldspieler und ein Torhüter auf dem Eis. Gewechselt wird mitten im Spiel, ein Einsatz dauert nur rund ${avgShift} Sekunden.` },
+  { from: EV[0].g - 0.5, to: EV[0].g + 4, title: tr('Das Bully', 'The faceoff'), anim: 'bully',
+    seen: tr('Spielbeginn: Der Schiri wirft den Puck ein.', 'Start of the game: the referee drops the puck.'),
+    text: tr(`Jedes Drittel und jede Unterbrechung startet mit einem Bully. Gespielt werden 3 × 20 Minuten, pro Team stehen 5 Feldspieler und ein Torhüter auf dem Eis. Gewechselt wird mitten im Spiel, ein Einsatz dauert nur rund ${avgShift} Sekunden.`,
+      `Every period and every stoppage starts with a faceoff. A game has 3 × 20 minutes, each team has 5 skaters and a goalie on the ice. Lines change on the fly, a shift lasts only about ${avgShift} seconds.`) },
   { from: icingDump.g - 6, to: icingStop.g + 0.2, title: 'Icing', anim: 'icing', sig: 'icing',
-    seen: `${nm(icingDump.pl)} (${icingDump.tm}) hat den Puck aus der eigenen Hälfte bis hinter die gegnerische Torlinie geschossen.`,
-    text: 'Ein Weitschuss aus der eigenen Hälfte über die gegnerische Torlinie, den niemand berührt, ist Icing. Die Folge: Bully vor dem eigenen Tor, und das Team darf vorher nicht wechseln. In Unterzahl ist der Befreiungsschlag erlaubt.' },
-  { from: ppPenalty.g - 9, to: ppPenalty.g + 0.2, title: 'Strafe', anim: 'penalty', sig: 'slash',
-    seen: `${nm(ppPenalty.pl)} (${ppPenalty.tm}) hat mit dem Stock zugeschlagen.`,
-    text: `Bei einem Foul hebt der Schiri den Arm und pfeift, sobald das foulende Team den Puck berührt. Der Spieler muss 2 Minuten auf die Strafbank, ${ppPenalty.tm} spielt in Unterzahl. Für ${other(ppPenalty.tm)} heisst das Powerplay.` },
-  { from: ppPenalty.g + 0.5, to: ppScene.goal.g + 0.6, title: 'Tor im Powerplay', anim: 'ppgoal', sig: 'goal',
-    seen: `${nm(ppScene.goal.pl)} trifft nur drei Sekunden nach dem Bully zum ${ppScene.sc.USC}:${ppScene.sc.HCD}.`,
-    text: 'Trifft das Team im Powerplay, ist die 2-Minuten-Strafe sofort vorbei. Der bestrafte Spieler darf zurück aufs Eis, es steht wieder 5 gegen 5.' },
-  { from: walsh.shot.g - 12, to: walsh.goal.g + 0.6, title: 'Wann zählt ein Tor?', anim: 'goalline', sig: 'goal',
-    seen: `${nm(walsh.goal.pl)} lenkt den Puck direkt vor dem Tor ab: ${walsh.sc.USC}:${walsh.sc.HCD}.`,
-    text: 'Ein Tor zählt nur, wenn der Puck die Torlinie vollständig überquert hat. Liegt er auf der Linie, geht das Spiel weiter. In knappen Fällen prüfen die Schiris das Video.' },
-  { from: offside.g - 10, to: offside.g + 0.2, title: 'Abseits', anim: 'offside', sig: 'armup',
-    seen: `Ein Angreifer von ${offsideTeam} war vor dem Puck in der Angriffszone.`,
-    text: 'Angreifer dürfen die blaue Linie erst nach dem Puck überqueren. Ist einer zu früh in der Angriffszone, pfeift der Linienrichter ab. Das Bully gibt es dann ausserhalb der Zone.' },
-  { from: hsPenalty.g - 9, to: hsPenalty.g + 0.2, title: 'Hoher Stock', anim: 'penalty', sig: 'high',
-    seen: `${nm(hsPenalty.pl)} (${hsPenalty.tm}) hat einen Gegner mit dem Stock über Schulterhöhe getroffen.`,
-    text: `Der Stock war über Schulterhöhe. Das gibt normalerweise 2 Minuten, bei einer Verletzung 2+2 Minuten.${hsDouble ? ` ${nm(hsPenalty.pl)} bekam 2+2 Minuten.` : ''}` },
-  { from: enScene.shot.g - 16, to: enScene.goal.g + 0.6, title: 'Leeres Tor', anim: 'emptynet',
-    seen: `${nm(enScene.goal.pl)} trifft aus der eigenen Hälfte ins leere Tor: ${enScene.sc.USC}:${enScene.sc.HCD}.`,
-    text: 'Kurz vor Schluss nehmen Teams im Rückstand oft den Torhüter vom Eis und bringen einen sechsten Feldspieler. Mehr Angreifer, aber das eigene Tor ist leer.' },
-  { from: finalWhistle.g - 8, to: finalWhistle.g, title: 'Schlusspfiff', end: true,
-    seen: 'HC Davos gewinnt den Final 6:3 und den 97. Spengler Cup.',
-    text: 'Du hast gerade die wichtigsten Regeln an echten Szenen gesehen: Bully, Icing, Strafen, Powerplay, Tor, Abseits und das leere Tor. Damit verstehst du jeden Pfiff.' },
+    seen: tr(`${nm(icingDump.pl)} (${icingDump.tm}) hat den Puck aus der eigenen Hälfte bis hinter die gegnerische Torlinie geschossen.`, `${nm(icingDump.pl)} (${icingDump.tm}) shot the puck from the defensive half past the opponent’s goal line.`),
+    text: tr('Ein Weitschuss aus der eigenen Hälfte über die gegnerische Torlinie, den niemand berührt, ist Icing. Die Folge: Bully vor dem eigenen Tor, und das Team darf vorher nicht wechseln. In Unterzahl ist der Befreiungsschlag erlaubt.',
+      'A shot from the own half across the opponent’s goal line that nobody touches is icing. The faceoff then takes place in front of the own net, and the team may not change lines. A short-handed team is allowed to ice the puck.') },
+  { from: ppPenalty.g - 9, to: ppPenalty.g + 0.2, title: tr('Strafe', 'Penalty'), anim: 'penalty', sig: 'slash',
+    seen: tr(`${nm(ppPenalty.pl)} (${ppPenalty.tm}) hat mit dem Stock zugeschlagen.`, `${nm(ppPenalty.pl)} (${ppPenalty.tm}) slashed an opponent.`),
+    text: tr(`Bei einem Foul hebt der Schiri den Arm und pfeift, sobald das foulende Team den Puck berührt. Der Spieler muss 2 Minuten auf die Strafbank, ${ppPenalty.tm} spielt in Unterzahl. Für ${other(ppPenalty.tm)} heisst das Powerplay.`,
+      `After a foul the referee raises his arm and blows the whistle once the offending team touches the puck. The player sits 2 minutes in the penalty box, ${ppPenalty.tm} plays short-handed. For ${other(ppPenalty.tm)} that means a power play.`) },
+  { from: ppPenalty.g + 0.5, to: ppScene.goal.g + 0.6, title: tr('Tor im Powerplay', 'Power-play goal'), anim: 'ppgoal', sig: 'goal',
+    seen: tr(`${nm(ppScene.goal.pl)} trifft nur drei Sekunden nach dem Bully zum ${ppScene.sc.USC}:${ppScene.sc.HCD}.`, `${nm(ppScene.goal.pl)} scores only three seconds after the faceoff: ${ppScene.sc.USC}:${ppScene.sc.HCD}.`),
+    text: tr('Trifft das Team im Powerplay, ist die 2-Minuten-Strafe sofort vorbei. Der bestrafte Spieler darf zurück aufs Eis, es steht wieder 5 gegen 5.',
+      'If the team on the power play scores, the 2-minute penalty ends at once. The penalised player returns to the ice, it is 5 on 5 again.') },
+  { from: walsh.shot.g - 12, to: walsh.goal.g + 0.6, title: tr('Wann zählt ein Tor?', 'When does a goal count?'), anim: 'goalline', sig: 'goal',
+    seen: tr(`${nm(walsh.goal.pl)} lenkt den Puck direkt vor dem Tor ab: ${walsh.sc.USC}:${walsh.sc.HCD}.`, `${nm(walsh.goal.pl)} deflects the puck right in front of the net: ${walsh.sc.USC}:${walsh.sc.HCD}.`),
+    text: tr('Ein Tor zählt nur, wenn der Puck die Torlinie vollständig überquert hat. Liegt er auf der Linie, geht das Spiel weiter. In knappen Fällen prüfen die Schiris das Video.',
+      'A goal counts only when the puck has fully crossed the goal line. If it is on the line, play goes on. In close cases the referees check the video.') },
+  { from: offside.g - 10, to: offside.g + 0.2, title: tr('Abseits', 'Offside'), anim: 'offside', sig: 'armup',
+    seen: tr(`Ein Angreifer von ${offsideTeam} war vor dem Puck in der Angriffszone.`, `A ${offsideTeam} forward entered the attacking zone ahead of the puck.`),
+    text: tr('Angreifer dürfen die blaue Linie erst nach dem Puck überqueren. Ist einer zu früh in der Angriffszone, pfeift der Linienrichter ab. Das Bully gibt es dann ausserhalb der Zone.',
+      'Attackers may cross the blue line only after the puck. If one is in the attacking zone too early, the linesman stops play. The faceoff then takes place outside the zone.') },
+  { from: hsPenalty.g - 9, to: hsPenalty.g + 0.2, title: tr('Hoher Stock', 'High-sticking'), anim: 'penalty', sig: 'high',
+    seen: tr(`${nm(hsPenalty.pl)} (${hsPenalty.tm}) hat einen Gegner mit dem Stock über Schulterhöhe getroffen.`, `${nm(hsPenalty.pl)} (${hsPenalty.tm}) hit an opponent with the stick above shoulder height.`),
+    text: tr(`Der Stock war über Schulterhöhe. Das gibt normalerweise 2 Minuten, bei einer Verletzung 2+2 Minuten.${hsDouble ? ` ${nm(hsPenalty.pl)} bekam 2+2 Minuten.` : ''}`,
+      `The stick was above shoulder height. That usually means 2 minutes, 2+2 minutes if the opponent is injured.${hsDouble ? ` ${nm(hsPenalty.pl)} got 2+2 minutes.` : ''}`) },
+  { from: enScene.shot.g - 16, to: enScene.goal.g + 0.6, title: tr('Leeres Tor', 'Empty net'), anim: 'emptynet',
+    seen: tr(`${nm(enScene.goal.pl)} trifft aus der eigenen Hälfte ins leere Tor: ${enScene.sc.USC}:${enScene.sc.HCD}.`, `${nm(enScene.goal.pl)} scores from the defensive half into the empty net: ${enScene.sc.USC}:${enScene.sc.HCD}.`),
+    text: tr('Kurz vor Schluss nehmen Teams im Rückstand oft den Torhüter vom Eis und bringen einen sechsten Feldspieler. Mehr Angreifer, aber das eigene Tor ist leer.',
+      'Late in the game, a trailing team often pulls the goalie for a sixth skater. More attackers, but their own net is empty.') },
+  { from: finalWhistle.g - 8, to: finalWhistle.g, title: tr('Schlusspfiff', 'Final whistle'), end: true,
+    seen: tr('HC Davos gewinnt den Final 6:3 und den 97. Spengler Cup.', 'HC Davos wins the final 6:3 and the 97th Spengler Cup.'),
+    text: tr('Du hast die wichtigsten Pfiffe an echten Szenen gesehen: Bully, Icing, Strafen, Powerplay, Tor, Abseits und das leere Tor. Damit verstehst du jeden Pfiff.',
+      'You have seen the key whistles in real scenes: faceoff, icing, penalties, power play, goal, offside and the empty net. Now you understand every whistle.') },
 ];
 
 views.learn = (() => {
@@ -723,9 +673,9 @@ views.learn = (() => {
     for (let k = lastIdx; k >= 0; k--) {
       const e = EV[k];
       if (e.g > g || e.hg === undefined) continue;
-      if (e.hg === false && e.ag === false) return 'Beide Tore leer';
-      if (e.hg === false) return 'USC ohne Goalie';
-      if (e.ag === false) return 'HCD ohne Goalie';
+      if (e.hg === false && e.ag === false) return tr('Beide Tore leer', 'Both nets empty');
+      if (e.hg === false) return tr('USC ohne Goalie', 'USC without goalie');
+      if (e.ag === false) return tr('HCD ohne Goalie', 'HCD without goalie');
       if (e.sty === 'AwayPowerplay') return 'Powerplay HCD';
       if (e.sty === 'HomePowerplay') return 'Powerplay USC';
       return '';
@@ -739,11 +689,11 @@ views.learn = (() => {
     const e = EV[lastIdx], s = scoreAt(t);
     $('#wScore').innerHTML = `<span class="tm"><span class="dot" style="background:var(--usc)"></span>USC</span><span class="res">${s.USC}:${s.HCD}</span><span class="tm">HCD<span class="dot" style="background:var(--hcd)"></span></span>`;
     const st = strengthAt(t);
-    $('#wClock').textContent = `${e.p}. Drittel · ${fmtClock(e.c)}${st ? ' · ' + st : ''}`;
+    $('#wClock').textContent = `${tr(`${e.p}. Drittel`, `Period ${e.p}`)} · ${fmtClock(e.c)}${st ? ' · ' + st : ''}`;
   }
   function dots() {
     $('#wDots').innerHTML = MOMENTS.map((m, i) => `<span class="${i === mi ? 'cur' : (S.watched || {})[i] ? 'on' : ''}"></span>`).join('');
-    $('#wNext').textContent = `Nächster Halt: ${MOMENTS[mi].title}`;
+    $('#wNext').textContent = `${tr('Nächster Pfiff', 'Next whistle')}: ${MOMENTS[mi].title}`;
   }
   function load(i, autoplay) {
     mi = i; t = MOMENTS[i].from; dots(); board();
@@ -757,18 +707,19 @@ views.learn = (() => {
   function openPop() {
     const m = MOMENTS[mi];
     S.watched = S.watched || {}; S.watched[mi] = 1; save(); dots();
+    if (window.HVAccount && HVAccount.current()) HVAccount.saveScore('learn-the-game', Object.keys(S.watched).length, { moments: MOMENTS.length });
     const el = document.createElement('div');
     el.className = 'modal';
     const last = mi + 1 >= MOMENTS.length;
     el.innerHTML = `<div class="box"><div class="grab"></div>
-      <div class="fn">${mi + 1} von ${MOMENTS.length} · ${$('#wClock').textContent}</div>
+      <div class="fn">${mi + 1} ${tr('von', 'of')} ${MOMENTS.length} · ${$('#wClock').textContent}</div>
       <div class="t2" style="margin:4px 0 8px">${m.title}</div>
       <div class="seen">${m.seen}</div>
       ${m.anim ? `<div class="rinkwrap" style="margin-top:14px"><canvas class="rink"></canvas></div>` : ''}
       <p class="lesson" style="margin:14px 0 0">${m.text}</p>
-      ${m.sig ? `<button class="cell sigrow" data-sig="${m.sig}"><span class="sigpic">${SIG[m.sig]}</span><span class="grow"><span class="hl">So zeigt es der Schiri</span><br><span class="fn">${SIGMAP[m.sig].name}</span></span><span class="chev">›</span></button>` : ''}
-      ${last ? `<button class="btn" style="margin-top:18px" data-w="quiz">Zum Quiz</button><button class="btn sec" style="margin-top:8px" data-w="report">Spielbericht ansehen</button>`
-        : `<button class="btn" style="margin-top:18px" data-w="next">Weiter schauen</button><button class="btn sec" style="margin-top:8px" data-w="again">Szene nochmal</button>`}
+      ${m.sig ? `<button class="cell sigrow" data-sig="${m.sig}"><span class="sigpic">${SIG[m.sig]}</span><span class="grow"><span class="hl">${tr('So zeigt es der Schiri', 'The referee signal')}</span><br><span class="fn">${SIGMAP[m.sig].name}</span></span><span class="chev">›</span></button>` : ''}
+      ${last ? `<button class="btn" style="margin-top:18px" data-w="spick">${tr('Zum Schiri-Spick', 'Referee signals')}</button><button class="btn sec" style="margin-top:8px" data-w="restart">${tr('Nochmal von vorne', 'Start again')}</button>`
+        : `<button class="btn" style="margin-top:18px" data-w="next">${tr('Weiter schauen', 'Keep watching')}</button><button class="btn sec" style="margin-top:8px" data-w="again">${tr('Szene nochmal', 'Replay scene')}</button>`}
     </div>`;
     document.body.appendChild(el);
     pop = { el, sch: m.anim ? new Schematic($('canvas', el)) : null, a: ANIM[m.anim], t: 0 };
@@ -778,6 +729,7 @@ views.learn = (() => {
       close();
       if (b.dataset.w === 'next') load(mi + 1, true);
       else if (b.dataset.w === 'again') load(mi, true);
+      else if (b.dataset.w === 'restart') { S.watched = {}; save(); load(0, true); }
       else show(b.dataset.w);
     });
   }
@@ -804,278 +756,38 @@ views.learn = (() => {
 })();
 
 /* ------------------------------------------------------------------ *
- * Tür 2: Spielbericht – ein Thema pro Ansicht
- * ------------------------------------------------------------------ */
-views.report = (() => {
-  const fin = scoreAt(Infinity);
-  $('#score').innerHTML = `<span class="tm"><span class="dot" style="background:var(--usc)"></span>USC</span><span class="res">${fin.USC}:${fin.HCD}</span><span class="tm">HCD<span class="dot" style="background:var(--hcd)"></span></span>`;
-  let panel = 'goals';
-  const clip = new Clip($('#goalClip'));
-  $('#repSeg').addEventListener('click', ev => {
-    const b = ev.target.closest('[data-p]'); if (!b) return;
-    panel = b.dataset.p;
-    $$('#repSeg button').forEach(x => x.classList.toggle('on', x === b));
-    $$('[data-panel]').forEach(p => p.classList.toggle('hidden', p.dataset.panel !== panel));
-    if (panel !== 'goals') clip.pause();
-    if (panel === 'shots') drawShots();
-  });
-
-  // Tore
-  let sel = 0;
-  function renderGoals() {
-    $('#goalList').innerHTML = SCENES.map(s => `<button class="gl ${s.n === sel ? 'on' : ''}" data-g="${s.n}">
-      <span class="t">${s.goal.p}. ${fmtClock(s.goal.c)}</span><span class="dot" style="background:var(--${s.tm.toLowerCase()})"></span>
-      <span class="s">${s.sc.USC}:${s.sc.HCD}</span><span class="grow">${nm(s.goal.pl)}</span>
-      <span class="chip">${s.tag === '5 gegen 5' ? (s.shot.xg != null ? 'xG ' + pct(s.shot.xg) : '') : s.tag}</span></button>`).join('');
-  }
-  $('#goalList').addEventListener('click', ev => {
-    const g = ev.target.closest('[data-g]'); if (!g) return;
-    sel = +g.dataset.g; renderGoals(); clip.load(sceneClip(SCENES[sel]), true);
-    $('#goalClip').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-  renderGoals(); clip.load(sceneClip(SCENES[0]));
-
-  // xG-Verlauf
-  (function xgChart() {
-    const W = 340, H = 180, L = 22, R = 6, T = 8, B = 24;
-    const maxX = 60, series = {};
-    let maxY = 0;
-    for (const tm of ['HCD', 'USC']) {
-      let c = 0; const pts = [[0, 0]];
-      for (const s of SHOTS) if (s.tm === tm && s.xg != null) { c += s.xg; pts.push([minuteOf(s), c]); }
-      pts.push([maxX, c]); series[tm] = pts; maxY = Math.max(maxY, c);
-    }
-    maxY = Math.ceil(maxY);
-    const X = m => L + (m / maxX) * (W - L - R), Y = v => H - B - (v / maxY) * (H - T - B);
-    const step = pts => pts.map((p, i) => (i ? `H${X(p[0]).toFixed(1)}V${Y(p[1]).toFixed(1)}` : `M${X(p[0])},${Y(p[1])}`)).join('');
-    let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="xG-Verlauf: HCD ${teamSum('HCD', 'xg').toFixed(1)}, USC ${teamSum('USC', 'xg').toFixed(1)}">`;
-    for (let v = 0; v <= maxY; v++) svg += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" style="stroke:var(--line)"/><text x="${L - 6}" y="${Y(v) + 4}" font-size="11" text-anchor="end" style="fill:var(--ink2)">${v}</text>`;
-    ['1. Drittel', '2. Drittel', '3. Drittel'].forEach((t, i) => (svg += `<text x="${X(i * 20 + 10)}" y="${H - 6}" font-size="11" text-anchor="middle" style="fill:var(--ink2)">${t}</text>`));
-    for (const m of [20, 40]) svg += `<line x1="${X(m)}" x2="${X(m)}" y1="${T}" y2="${H - B}" style="stroke:var(--line)" stroke-dasharray="3 3"/>`;
-    for (const tm of ['USC', 'HCD']) svg += `<path d="${step(series[tm])}" fill="none" stroke-width="2.5" style="stroke:var(--${tm.toLowerCase()})"/>`;
-    const valAt = (tm, m) => { let v = 0; for (const p of series[tm]) if (p[0] <= m) v = p[1]; return v; };
-    for (const [g] of GOALS) svg += `<circle cx="${X(minuteOf(g))}" cy="${Y(valAt(g.tm, minuteOf(g)))}" r="4.5" stroke-width="2" style="fill:var(--${g.tm.toLowerCase()});stroke:var(--surface)"/>`;
-    $('#xgChart').innerHTML = svg + '</svg>';
-    $('#xgInfo').innerHTML = `HCD erspielte <b>${teamSum('HCD', 'xg').toFixed(1)} xG</b> und traf <b>6-mal</b>. USC kam auf ${teamSum('USC', 'xg').toFixed(1)} xG und traf 3-mal. HCD war deutlich effizienter, als die Chancen erwarten liessen.`;
-  })();
-
-  // Shot-Map
-  const shotRink = new Rink($('#c-shots'));
-  let filter = 'all';
-  function drawShots() {
-    shotRink.fit(); if (!shotRink.w) return;
-    shotRink.ice();
-    const { ctx, k } = shotRink;
-    for (const s of SHOTS) {
-      if (!s.s || (filter !== 'all' && s.tm !== filter)) continue;
-      const r = Math.max(3, Math.sqrt(s.xg || 0.02) * 2.6 * k);
-      ctx.beginPath(); ctx.arc(shotRink.X(s.s[0]), shotRink.Y(s.s[1]), r, 0, 7);
-      ctx.fillStyle = s.tm === 'HCD' ? 'rgba(29,78,216,.5)' : 'rgba(200,16,46,.5)'; ctx.fill();
-      if (s.res === 'Goal') { ctx.lineWidth = 3; ctx.strokeStyle = '#F5B800'; ctx.stroke(); }
-    }
-    const list = SHOTS.filter(s => filter === 'all' || s.tm === filter);
-    const goals = list.filter(s => s.res === 'Goal').length;
-    const near = list.filter(s => s.s && Math.abs(Math.abs(s.s[0]) - 26) < 9 && Math.abs(s.s[1]) < 7);
-    $('#shotInfo').innerHTML = `<b>${list.length} Schüsse, ${goals} Tore.</b> ${near.length} Schüsse kamen aus dem Slot direkt vor dem Tor, dort fielen ${near.filter(s => s.res === 'Goal').length} der ${goals} Tore.`;
-  }
-  $$('#shotFilter button').forEach(b => (b.onclick = () => { filter = b.dataset.f; $$('#shotFilter button').forEach(x => x.classList.toggle('on', x === b)); drawShots(); }));
-
-  // Team-Vergleich
-  const shotsBy = tm => SHOTS.filter(s => s.tm === tm).length;
-  const rows = [
-    ['Schüsse', shotsBy('USC'), shotsBy('HCD'), v => v],
-    ['Torchancen (xG)', teamSum('USC', 'xg'), teamSum('HCD', 'xg'), v => v.toFixed(1)],
-    ['Pass-Quote', teamSum('USC', 'pas') / teamSum('USC', 'pasall'), teamSum('HCD', 'pas') / teamSum('HCD', 'pasall'), pct],
-    ['Bullys gewonnen', teamSum('USC', 'fow'), teamSum('HCD', 'fow'), v => v],
-    ['Zweikämpfe gewonnen', teamSum('USC', 'pcw') / teamSum('USC', 'pc'), teamSum('HCD', 'pcw') / teamSum('HCD', 'pc'), pct],
-    ['Geblockte Schüsse', teamSum('USC', 'bks'), teamSum('HCD', 'bks'), v => v],
-    ['Strafminuten', teamSum('USC', 'pim'), teamSum('HCD', 'pim'), v => v],
-    ['Gelaufene Distanz', teamSum('USC', 'dist') / 1000, teamSum('HCD', 'dist') / 1000, v => `${v.toFixed(0)} km`],
-  ];
-  $('#compare').innerHTML = rows.map(([lab, u, h, f]) => {
-    const tot = u + h || 1;
-    return `<div class="r"><div class="l"><b>${f(u)}</b><span>${lab}</span><b>${f(h)}</b></div>
-      <div class="bars"><i style="width:${(u / tot) * 100}%;background:var(--usc)"></i><i style="width:${(h / tot) * 100}%;background:var(--hcd)"></i></div></div>`;
-  }).join('');
-
-  // Spieler-Ranglisten
-  const LB = [['spd', 'Speed', p => `${p.spd.toFixed(1)} km/h`], ['sht', 'Schuss', p => `${p.sht.toFixed(0)} km/h`], ['dist', 'Distanz', p => `${(p.dist / 1000).toFixed(1)} km`], ['toi', 'Eiszeit', p => fmtClock(p.toi)], ['xg', 'xG', p => p.xg.toFixed(2)]];
-  let lb = 'spd';
-  function renderLB() {
-    $('#lbSeg').innerHTML = LB.map(([k, n]) => `<button data-k="${k}" class="${k === lb ? 'on' : ''}">${n}</button>`).join('');
-    const [k, , f] = LB.find(x => x[0] === lb);
-    $('#lbList').innerHTML = [...SKATERS].sort((a, b) => b[k] - a[k]).slice(0, 5).map((p, i) => `<button class="cell" data-pid="${p.id}">
-      <span class="fn" style="width:14px">${i + 1}</span><span class="badge" style="background:${TEAM_COL[p.tm][0]};color:${TEAM_COL[p.tm][1]}">${p.no}</span>
-      <span class="grow">${p.n}</span><span class="val">${f(p)}</span></button>`).join('');
-  }
-  $('#lbSeg').addEventListener('click', ev => { const b = ev.target.closest('[data-k]'); if (b) { lb = b.dataset.k; renderLB(); } });
-  $('#lbList').addEventListener('click', ev => { const l = ev.target.closest('[data-pid]'); if (l) openPlayer(l.dataset.pid); });
-  renderLB();
-
-  return {
-    leave() { clip.pause(); },
-    tick() { if (panel === 'shots' && shotRink.c.parentElement.clientWidth !== shotRink.w) drawShots(); },
-  };
-})();
-
-/* ------------------------------------------------------------------ *
- * Gewinnspiel: Schätz- und Spielerfragen nach dem Spiel
- * ------------------------------------------------------------------ */
-views.game = (() => {
-  const top = k => [...SKATERS].sort((a, b) => b[k] - a[k]);
-  const shuffle = a => [...a].sort(() => Math.random() - 0.5);
-  const pick = (right, pool) => shuffle([right, ...shuffle(pool.filter(p => p.id !== right.id)).slice(0, 3)]);
-  const scorers = SKATERS.filter(p => p.g > 0);
-
-  function questions() {
-    const sht = top('sht'), spd = top('spd'), dist = top('dist');
-    const two = scorers.find(p => p.g === 2);
-    return [
-      { ty: 'num', q: 'Wie schnell war der härteste Schuss im Final?', unit: 'km/h', min: 60, max: 180, step: 1, real: sht[0].sht, tol: 30, dec: 0,
-        why: 'Aus 18 Metern bleibt dem Goalie bei diesem Tempo weniger als eine halbe Sekunde. Wer so hart schiesst? Nächste Frage.' },
-      { ty: 'pick', q: `Wer hat den härtesten Schuss abgefeuert (${sht[0].sht.toFixed(0)} km/h)?`, right: sht[0], opts: pick(sht[0], sht.slice(1, 10)),
-        why: `${sht[0].n}, knapp vor ${sht[1].n} mit ${sht[1].sht.toFixed(1)} km/h.` },
-      { ty: 'num', q: 'Wie schnell war der schnellste Spieler auf dem Eis?', unit: 'km/h', min: 20, max: 50, step: 0.5, real: spd[0].spd, tol: 6, dec: 1,
-        why: 'In jeder 30er-Zone wärst du geblitzt worden, auf Schlittschuhen und mit voller Ausrüstung.' },
-      { ty: 'pick', q: `Wer erreichte die ${spd[0].spd.toFixed(1)} km/h?`, right: spd[0], opts: pick(spd[0], spd.slice(1, 10)),
-        why: `${spd[0].n}. Platz 2: ${spd[1].n} mit ${spd[1].spd.toFixed(1)} km/h.` },
-      { ty: 'num', q: 'Wie viele Kilometer lief der fleissigste Spieler im Final?', unit: 'km', min: 1, max: 10, step: 0.1, real: dist[0].dist / 1000, tol: 2, dec: 1,
-        why: `In nur ${Math.round(dist[0].toi / 60)} Minuten Eiszeit, fast nur Sprints.` },
-      { ty: 'pick', q: 'Wer lief die meisten Kilometer?', right: dist[0], opts: pick(dist[0], dist.slice(1, 10)),
-        why: `${dist[0].n} stand auch am längsten auf dem Eis: ${Math.round(dist[0].toi / 60)} Minuten.` },
-      { ty: 'num', q: 'Wie lange bleibt ein Spieler im Schnitt am Stück auf dem Eis?', unit: 's', min: 10, max: 180, step: 5, real: avgShift, tol: 30, dec: 0,
-        why: 'Danach geht es auf die Bank. Eishockey ist ein Sprint, kein Marathon.' },
-      { ty: 'num', q: 'Wie viele Schüsse gaben beide Teams zusammen ab, inklusive geblockter und verfehlter?', unit: 'Schüsse', min: 20, max: 200, step: 1, real: SHOTS.length, tol: 40, dec: 0,
-        why: `${SHOTS.length} Schüsse, ${GOALS.length} Tore: Nur etwa jeder ${Math.round(SHOTS.length / GOALS.length)}. Schuss geht rein.` },
-      { ty: 'num', q: 'HCD traf 6-mal. Wie viele Tore liessen die Torchancen (xG) erwarten?', unit: 'Tore', min: 0, max: 10, step: 0.1, real: teamSum('HCD', 'xg'), tol: 2.5, dec: 1,
-        why: `HCD traf deutlich öfter als erwartet. USC kam auf ${teamSum('USC', 'xg').toFixed(1)} xG bei 3 Toren.` },
-      { ty: 'pick', q: 'Wer schoss im Final als Einziger zwei Tore?', right: two, opts: pick(two, scorers), why: 'Zwei Tore im Final, ein Kandidat für die Three Stars.' },
-    ];
-  }
-
-  let qs = [], qi = 0, score = 0, answered = false;
-  const box = $('#sqBox');
-  function head() {
-    $('#sqProg').textContent = qi < qs.length ? `Frage ${qi + 1} von ${qs.length} · ${score} Punkte` : `${score} Punkte`;
-    $('#sqBar').style.width = `${(Math.min(qi, qs.length) / qs.length) * 100}%`;
-  }
-  function render() {
-    const q = qs[qi]; answered = false; head();
-    if (q.ty === 'num') {
-      // Regler startet ohne Wert, damit die Mitte nicht zufällig ein Treffer ist
-      box.innerHTML = `<div class="hl">${q.q}</div>
-        <div class="big"><span id="sqv">?</span> <small>${q.unit}</small></div>
-        <input type="range" id="sqr" min="${q.min}" max="${q.max}" step="${q.step}" value="${q.min}" aria-label="${q.q}">
-        <div class="row fn" style="justify-content:space-between"><span>${q.min}</span><span>${q.max}</span></div>
-        <button class="btn" style="margin-top:16px" data-sq="go" disabled>Tipp abgeben</button><div id="sqRes"></div>`;
-      $('#sqr').oninput = e => { $('#sqv').textContent = (+e.target.value).toFixed(q.dec); $('[data-sq=go]', box).disabled = false; };
-    } else {
-      box.innerHTML = `<div class="hl" style="margin-bottom:12px">${q.q}</div>${q.opts.map(p => `<button class="opt" data-pid="${p.id}"><span class="pl">
-        <span class="badge" style="background:${TEAM_COL[p.tm][0]};color:${TEAM_COL[p.tm][1]}">${p.no}</span><span>${p.n}<br><span class="fn">${TEAM_NAME[p.tm]}</span></span></span></button>`).join('')}<div id="sqRes"></div>`;
-    }
-  }
-  function reveal(pts, head2) {
-    answered = true; score += pts;
-    $('#sqRes').innerHTML = `<div class="cap"><div class="k">${head2}</div><div class="x">${qs[qi].why}</div></div>
-      <button class="btn" style="margin-top:8px" data-sq="next">${qi + 1 < qs.length ? 'Nächste Frage' : 'Zur Auswertung'}</button>`;
-    head();
-  }
-  box.addEventListener('click', ev => {
-    const q = qs[qi];
-    const o = ev.target.closest('[data-pid]');
-    if (o && !answered) {
-      const ok = o.dataset.pid === q.right.id;
-      $$('.opt', box).forEach(b => { b.disabled = true; if (b.dataset.pid === q.right.id) b.classList.add('right'); });
-      if (!ok) o.classList.add('wrong');
-      reveal(ok ? 10 : 0, ok ? 'Richtig · +10' : `Es war ${q.right.n} · +0`);
-      return;
-    }
-    const b = ev.target.closest('[data-sq]');
-    if (!b) return;
-    const a = b.dataset.sq;
-    if (a === 'go' && !answered) {
-      const g = +$('#sqr').value, diff = Math.abs(g - q.real);
-      const pts = Math.max(0, Math.round(10 - (10 * diff) / q.tol));
-      b.remove(); $('#sqr').disabled = true;
-      $('.big', box).innerHTML = `${q.real.toFixed(q.dec)} <small>${q.unit}</small>`;
-      reveal(pts, `Dein Tipp: ${g.toFixed(q.dec)} ${q.unit} · ${pts >= 9 ? 'Volltreffer' : pts >= 5 ? 'Nah dran' : 'Daneben'} · +${pts}`);
-    } else if (a === 'next') { qi++; qi < qs.length ? render() : done(); }
-    else if (a === 'enter') enter();
-    else if (a === 'again') begin();
-  });
-  const FANS = [['Lena, Davos', 88], ['Marco, Chur', 81], ['Sandra, Zürich', 76], ['Nico, Klosters', 70], ['Jonas, Bern', 63]];
-  function done() {
-    head();
-    S.best = Math.max(S.best, score); save();
-    const all = [...FANS, ['Du', score, true]].sort((a, b) => b[1] - a[1]);
-    const rank = all.findIndex(f => f[2]) + 1;
-    box.innerHTML = `<div class="fn" style="text-align:center">Dein Endstand</div>
-      <div class="big" style="margin-top:4px">${score} <small>von ${qs.length * 10}</small></div>
-      <div class="hl" style="text-align:center">${score >= 80 ? 'Hockey-Experte.' : score >= 50 ? 'Starker Auftritt.' : 'Guter Start. Jetzt kennst du die Zahlen.'}</div>
-      <div class="fn" style="text-align:center;margin-top:4px">Platz ${rank} von ${all.length} in der Rangliste zum Final</div>
-      <div class="fn" style="margin:20px 0 6px">Rangliste zum Final (Demo)</div>
-      <div class="group" style="background:var(--fill)">${all.map((f, i) => `<div class="cell" style="min-height:44px;${f[2] ? 'font-weight:700' : ''}"><span class="fn" style="width:14px">${i + 1}</span><span class="grow">${f[0]}</span><span class="val">${f[1]}</span></div>`).join('')}</div>
-      <div class="group pad" style="background:var(--fill);margin-top:16px"><div class="hl">Tickets für den Spengler Cup 2026</div><div class="sub">Sammle über alle 11 Spiele Punkte. Die Besten kommen in die Verlosung (symbolisch).</div></div>
-      <div class="fn" style="margin:20px 0 0">Teilnehmen</div>
-      ${S.entered ? '<div class="fb"><b>Du bist dabei.</b> Nach dem nächsten Spiel gibt es ein neues Quiz.</div>' : `
-      <input class="field" id="gName" placeholder="Vorname" autocomplete="given-name">
-      <input class="field" id="gMail" type="email" placeholder="E-Mail" autocomplete="email">
-      <label class="chk"><input type="checkbox" id="gOk"> Ich akzeptiere die Teilnahmebedingungen und möchte ans nächste Quiz erinnert werden.</label>
-      <button class="btn" data-sq="enter">An der Verlosung teilnehmen</button>
-      <div class="fn" style="margin-top:8px">Prototyp: Es wird nichts gesendet oder gespeichert.</div>`}
-      <button class="btn sec" style="margin-top:10px" data-sq="again">Nochmal spielen</button>`;
-  }
-  function enter() {
-    const name = $('#gName').value.trim(), mail = $('#gMail').value.trim();
-    if (!name) return toast('Bitte gib deinen Vornamen ein.');
-    if (!/^\S+@\S+\.\S+$/.test(mail)) return toast('Bitte gib eine gültige E-Mail-Adresse ein.');
-    if (!$('#gOk').checked) return toast('Bitte akzeptiere die Teilnahmebedingungen.');
-    S.entered = true; save(); toast(`Danke, ${name}. Du bist dabei.`); done();
-  }
-  function begin() { $('#gameIntro').classList.add('hidden'); $('#gamePlay').classList.remove('hidden'); qs = questions(); qi = 0; score = 0; render(); }
-  $('#gameStart').onclick = begin;
-  return { enter() { if (!qs.length) { $('#gameIntro').classList.remove('hidden'); $('#gamePlay').classList.add('hidden'); } } };
-})();
-
-/* ------------------------------------------------------------------ *
  * Schiri-Spick und Begriffe
  * ------------------------------------------------------------------ */
 $('#sigGrid').innerHTML = SIGNALS.map(s => sigTile(s.id)).join('');
-const GLOSS_NEW = [
-  ['Bully', 'Der Schiri wirft den Puck zwischen zwei Spieler ein. So beginnt jedes Drittel und jede Unterbrechung.'],
-  ['Powerplay und Unterzahl', 'Nach einer Strafe spielt ein Team mit einem Mann mehr (Powerplay), das andere mit einem weniger (Unterzahl).'],
-  ['Icing', 'Puck aus der eigenen Hälfte über die gegnerische Torlinie, ohne Berührung. Bully vor dem eigenen Tor.'],
-  ['Abseits', 'Ein Angreifer ist vor dem Puck über die blaue Linie gefahren. Bully ausserhalb der Zone.'],
-  ['Slot', 'Der Raum direkt vor dem Tor. Von hier fallen die meisten Tore.'],
-  ['Assist', 'Die Vorlage zum Tor. Bis zu zwei Spieler bekommen einen Assist.'],
-  ['Empty Net', 'Das leere Tor, wenn ein Team den Goalie für einen Feldspieler vom Eis genommen hat.'],
+const GLOSS = [
+  ['Bully', 'Faceoff', 'Der Schiri wirft den Puck zwischen zwei Spieler ein. So beginnt jedes Drittel und jede Unterbrechung.', 'The referee drops the puck between two players. Every period and every stoppage starts this way.'],
+  ['Powerplay und Unterzahl', 'Power play and short-handed', 'Nach einer Strafe spielt ein Team mit einem Mann mehr (Powerplay), das andere mit einem weniger (Unterzahl).', 'After a penalty one team plays with an extra skater (power play), the other with one fewer (short-handed).'],
+  ['Icing', 'Icing', 'Puck aus der eigenen Hälfte über die gegnerische Torlinie, ohne Berührung. Bully vor dem eigenen Tor.', 'The puck goes from the own half across the opponent’s goal line untouched. Faceoff in front of the own net.'],
+  ['Abseits', 'Offside', 'Ein Angreifer ist vor dem Puck über die blaue Linie gefahren. Bully ausserhalb der Zone.', 'An attacker crossed the blue line ahead of the puck. Faceoff outside the zone.'],
+  ['Slot', 'Slot', 'Der Raum direkt vor dem Tor. Von hier fallen die meisten Tore.', 'The area right in front of the net. Most goals are scored from here.'],
+  ['Assist', 'Assist', 'Die Vorlage zum Tor. Bis zu zwei Spieler bekommen einen Assist.', 'The pass that sets up a goal. Up to two players get an assist.'],
+  ['Empty Net', 'Empty net', 'Das leere Tor, wenn ein Team den Goalie für einen Feldspieler vom Eis genommen hat.', 'The empty net when a team has pulled its goalie for an extra skater.'],
 ];
-const GLOSS_PRO = [
-  ['xG (Expected Goals)', 'Wahrscheinlichkeit, dass ein Schuss ein Tor wird. Wisehockey berücksichtigt Distanz, Winkel, Pässe davor, Screens und die Position des Goalies.'],
-  ['Corsi (CF %)', 'Anteil aller Schussversuche bei 5 gegen 5, während ein Spieler auf dem Eis ist. Über 50 % heisst: Sein Team hat mehr vom Spiel.'],
-  ['Fenwick (FF %)', 'Wie Corsi, aber ohne geblockte Schüsse.'],
-  ['PDO', 'Schussquote plus Fangquote bei 5 gegen 5. Werte weit über 1.0 deuten oft auf Glück hin.'],
-  ['EPV', 'Expected Possession Value: Wie wahrscheinlich ein Puckbesitz in den nächsten 8 Sekunden zu einem Tor führt.'],
-  ['Pressure', 'Wie stark ein Spieler beim Pass oder Schuss bedrängt wird: Distanz, Position und Bewegung des Gegners.'],
-];
-const gl = list => list.map(([t, d]) => `<details><summary>${t}</summary><p>${d}</p></details>`).join('');
-$('#glossNew').innerHTML = gl(GLOSS_NEW);
-$('#glossPro').innerHTML = gl(GLOSS_PRO);
+$('#glossNew').innerHTML = GLOSS.map(([td, te, dd, de]) => `<details><summary>${tr(td, te)}</summary><p>${tr(dd, de)}</p></details>`).join('');
 
 /* ------------------------------------------------------------------ */
-views.start.enter();
-// Direktlinks für Screenshots: ?demo=watch | report | spick
+// Sprachwahl in der App: gleiche Einstellung wie auf der Website
+$$('[data-setlang]').forEach(b => {
+  b.classList.toggle('on', b.dataset.setlang === LANG);
+  b.onclick = () => { try { localStorage.setItem('hv_lang', b.dataset.setlang); } catch (e) { /* egal */ } const u = new URL(location.href); u.searchParams.set('lang', b.dataset.setlang); location.href = u.toString(); };
+});
+show('learn');
+// Direktlinks für Screenshots: ?demo=watch | watch-pp | spick
 (function demo() {
   const d = new URLSearchParams(location.search).get('demo');
-  if (d === 'watch') { show('learn'); views.learn._demo(1, 3.6); }
-  else if (d === 'watch-pp') { show('learn'); views.learn._demo(2, 6); }
+  if (d === 'watch') views.learn._demo(1, 3.6);
+  else if (d === 'watch-pp') views.learn._demo(2, 6);
   else if (d && document.getElementById('v-' + d)) show(d);
 })();
 let lastTs = performance.now();
 function loop(ts) {
   const dt = Math.min(0.1, (ts - lastTs) / 1000);
   lastTs = ts;
-  CLIPS.forEach(c => c.tick(dt));
   const v = views[active];
   if (v && v.tick) v.tick(dt);
   requestAnimationFrame(loop);

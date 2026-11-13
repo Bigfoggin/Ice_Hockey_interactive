@@ -2,7 +2,7 @@
 
 Prototyp für Einsteiger:innen: Sobald der Schiri pfeift, erklärt die App, **was** gepfiffen wurde und **warum**, mit kurzer Animation und dem Handzeichen. Im Prototyp werden die Pfiffe des Finals HCD – USC (31.12.2025) nachgespielt, als wäre das Spiel live.
 
-Weitere Bereiche im Prototyp: Spielbericht (Tore als 2D-Replay), Schiri-Spick.
+Zwei Bereiche: **Live** (Pfiffe mit Erklärung) und **Spick** (Schiri-Zeichen und Begriffe). Deutsch und Englisch (Umschalter oben oder `?lang=en`). Mit dem Login der Website wird der Fortschritt gespeichert (siehe `shared/`).
 
 ## Starten
 
@@ -22,8 +22,8 @@ Liegen die CSV-Dateien woanders: `HOCKEY_DATA=/pfad/zum/ordner python3 build_dat
 | Datei | Inhalt |
 |---|---|
 | `index.html` | Oberfläche und Design |
-| `app.js` | Logik: Datenspeicher, Eisfeld, Erklär-Popups, Spielbericht |
+| `app.js` | Logik: Datenspeicher, Eisfeld, Erklär-Popups, Spick, Texte DE/EN |
 | `build_data.py` | Wandelt die Wisehockey-CSV in `data.js` um |
-| `bundle.py` | Packt alles in eine einzelne Datei `Hockey-verstehen.html` |
+| `bundle.py` | Packt alles (inkl. `shared/hv-account.js`) in eine einzelne Datei `Hockey-verstehen.html` |
 
 `data.js` und `Hockey-verstehen.html` enthalten die Spieldaten und werden deshalb nicht committet.

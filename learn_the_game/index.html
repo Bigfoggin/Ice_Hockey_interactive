@@ -4,27 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Hockey verstehen</title>
+<title>Learn the Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* Tokens: eine Farbe = eine Bedeutung.
    ink = Text & Hauptaktion · usc/hcd = nur Teams · gold = nur Hervorhebung auf dem Eis */
 :root{
-  --bg:#F1F4F8; --surface:#FFFFFF; --fill:#E9EEF4; --line:#DFE5EC;
-  --ink:#0E1A2B; --ink2:#4A5568; --on-ink:#FFFFFF;
-  --usc:#C8102E; --hcd:#1D4ED8; --gold:#F5B800;
-  --ok:#15803D; --bad:#B91C1C;
+  --bg:#00142B; --surface:#001F3F; --fill:#00284F; --line:#1B3556;
+  --ink:#FFFFFF; --ink2:#B8C7D9; --on-ink:#001F3F; --ice:#66C1D3;
+  --usc:#F0526A; --hcd:#6B9BFF; --gold:#F5B800;
+  --ok:#4ADE80; --bad:#F87171;
   --r:16px;
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#0B1018; --surface:#151C27; --fill:#1E2734; --line:#263142;
-    --ink:#F1F5F9; --ink2:#A3AEC2; --on-ink:#0B1018;
-    --usc:#F0526A; --hcd:#6B9BFF;
-    --ok:#4ADE80; --bad:#F87171;
-  }
-}
+html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !important}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.47 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Montserrat,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(120% 60% at 80% 0%,#003366 0%,var(--bg) 60%) fixed;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
 #app{max-width:560px;margin:0 auto;min-height:100vh;padding:0 0 96px}
 .view{display:none;padding:0 16px}
@@ -32,7 +27,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .hidden{display:none !important}
 
 /* Typo-Skala: 34 Large Title · 22 Title · 17 Body/Headline · 15 Subhead · 13 Footnote */
-.lt{font-size:34px;line-height:1.12;font-weight:700;letter-spacing:-.4px;margin:12px 0 6px}
+.lt{font-size:32px;line-height:1.05;font-weight:900;text-transform:uppercase;letter-spacing:-.2px;margin:14px 0 8px}
 .t2{font-size:22px;line-height:1.25;font-weight:700;margin:0 0 6px}
 .hl{font-weight:600}
 .sub{font-size:15px;color:var(--ink2);margin:0}
@@ -60,7 +55,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .ico svg{width:100%;height:100%}
 
 /* Buttons: Hauptaktion = Tinte, sonst neutral gefüllt */
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:14px;font-weight:600;background:var(--ink);color:var(--on-ink);width:100%}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:8px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:14px;background:var(--ice);color:var(--on-ink);width:100%}
 .btn.sec{background:var(--fill);color:var(--ink)}
 .btn.inline{width:auto;min-height:40px;padding:0 16px;border-radius:12px;font-size:15px}
 .btn:disabled{opacity:.35}
@@ -78,7 +73,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .rinkwrap{position:relative;border-radius:14px;overflow:hidden;background:#EEF4FA}
 canvas.rink{display:block;width:100%;height:auto;touch-action:manipulation}
 .clipbar{display:flex;gap:10px;align-items:center;margin-top:10px}
-.playbtn{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:flex;align-items:center;justify-content:center;flex:none}
+.playbtn{width:44px;height:44px;border-radius:50%;background:var(--ice);color:var(--on-ink);display:flex;align-items:center;justify-content:center;flex:none}
 .playbtn svg{width:18px;height:18px}
 .scrub{flex:1;height:4px;background:var(--fill);border-radius:2px;overflow:hidden}
 .scrub i{display:block;height:100%;background:var(--ink);width:0}
@@ -117,6 +112,7 @@ canvas.rink{display:block;width:100%;height:auto;touch-action:manipulation}
 .sig{background:#F7F9FC !important}
 .sig{background:var(--surface);border-radius:14px;padding:12px 6px 10px;text-align:center}
 .sig .pic{width:72px;height:72px;margin:0 auto}
+.sig .nm{color:#0E1A2B}
 .sig .nm{font-size:13px;font-weight:600;margin-top:6px;line-height:1.25}
 details{border-top:1px solid var(--line)}
 details:first-child{border-top:0}
@@ -175,145 +171,54 @@ nav.tabs .in{display:flex;max-width:560px;margin:0 auto}
 nav.tabs button{flex:1;padding:7px 0 9px;font-size:11px;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px}
 nav.tabs svg{width:26px;height:26px}
 nav.tabs button.on{color:var(--ink)}
+
+.apphead{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 0}
+.apphead .brand{font-weight:900;letter-spacing:.06em;font-size:14px;text-transform:uppercase}
+.apphead .brand b{color:var(--ice)}
+.langs{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.langs button{color:var(--ink2);font-weight:700;font-size:12px;letter-spacing:.1em;padding:7px 10px}
+.langs button.on{background:var(--ink);color:var(--on-ink)}
+.eyebrow{color:var(--ice);text-transform:uppercase;letter-spacing:.16em;font-weight:800;font-size:12px}
 </style>
 </head>
 <body>
 <div id="app">
+  <header class="apphead"><span class="brand">Learn <b>the Game</b></span>
+    <div class="langs" role="group" aria-label="Sprache / Language"><button data-setlang="de">DE</button><button data-setlang="en">EN</button></div></header>
 
-  <!-- START -->
-  <section class="view active" id="v-start">
-    <div class="iceband"></div>
-    <div class="fn" style="margin-top:18px">Spengler Cup Davos · Final 2025</div>
-    <h1 class="lt">Wie gut kennst du Eishockey?</h1>
-    <p class="sub">Wähle deinen Einstieg.</p>
-
-    <button class="door" data-go="learn">
-      <span class="ico" data-icon="learn"></span>
-      <div class="tt">Ich bin neu</div>
-      <p class="sub">Schau den Final mit. Wir halten an, wenn etwas passiert, und erklären es dir.</p>
-      <div class="prog hidden" id="doorProg"><div class="bar"><i></i></div><div class="fn" style="margin-top:6px"></div></div>
-      <div class="go">Mitschauen <span>›</span></div>
-    </button>
-
-    <button class="door" data-go="report">
-      <span class="ico" data-icon="report"></span>
-      <div class="tt">Ich kenne mich aus</div>
-      <p class="sub">Der Spielbericht mit Advanced Stats: Tore als Replay, xG, Shot-Map.</p>
-      <div class="go">Zum Spielbericht <span>›</span></div>
-    </button>
-
-    <div class="eyebrow">Für alle</div>
-    <div class="group">
-      <button class="cell" data-go="game"><span class="ico" data-icon="game"></span><span class="grow"><span class="hl">Gewinnspiel</span><br><span class="fn">10 Fragen zum Final</span></span><span class="chev">›</span></button>
-      <button class="cell" data-go="spick"><span class="ico" data-icon="spick"></span><span class="grow"><span class="hl">Schiri-Spick</span><br><span class="fn">Handzeichen nachschlagen</span></span><span class="chev">›</span></button>
-    </div>
-  </section>
-
-  <!-- MITSCHAUEN -->
-  <section class="view" id="v-learn">
-    <h1 class="lt">Mitschauen</h1>
-    <p class="sub">Der Final in 9 Momenten. Das Spiel hält an, wenn etwas passiert, das du wissen solltest.</p>
+  <!-- LIVE -->
+  <section class="view active" id="v-learn">
+    <h1 class="lt"><span data-l="de">Jeder Pfiff, sofort erklärt.</span><span data-l="en">Every whistle, explained instantly.</span></h1>
+    <p class="sub"><span data-l="de">Der Final HCD – USC, nachgespielt wie live. Sobald der Schiri pfeift, siehst du was und warum.</span><span data-l="en">The final HCD – USC, replayed as if live. As soon as the referee blows the whistle, you see what and why.</span></p>
     <div class="wdots" id="wDots"></div>
     <div class="group" style="margin-top:14px">
       <div class="score" id="wScore" style="padding:14px 16px 0"></div>
       <div class="fn" id="wClock" style="text-align:center;padding:2px 16px 12px"></div>
       <div style="padding:0 12px"><div class="rinkwrap"><canvas class="rink" id="c-watch"></canvas></div></div>
-      <div class="clipbar" style="padding:12px 12px 14px"><button class="playbtn" id="wPlay" aria-label="Abspielen"></button><span class="grow fn" id="wNext"></span>
-        <div class="seg" id="wRate" style="flex:none"><button data-r="1" class="on">Echtzeit</button><button data-r="0.45">Zeitlupe</button></div></div>
+      <div class="clipbar" style="padding:12px 12px 14px"><button class="playbtn" id="wPlay" aria-label="Play"></button><span class="grow fn" id="wNext"></span>
+        <div class="seg" id="wRate" style="flex:none"><button data-r="1" class="on"><span data-l="de">Echtzeit</span><span data-l="en">Real time</span></button><button data-r="0.45"><span data-l="de">Zeitlupe</span><span data-l="en">Slow-mo</span></button></div></div>
     </div>
-    <button class="btn sec" id="wSkip" style="margin-top:12px">Direkt zur Erklärung</button>
-    <p class="fn" style="margin:12px 4px">Im Echtbetrieb erscheinen die Erklärungen live, sobald die Wisehockey-Daten eine Situation melden.</p>
-  </section>
-
-  <!-- SPIELBERICHT -->
-  <section class="view" id="v-report">
-    <h1 class="lt">Spielbericht</h1>
-    <div class="group">
-      <div class="score" id="score"></div>
-      <div class="fn" style="text-align:center;padding:0 16px 16px">Final · 31.12.2025 · HC Davos gewinnt den 97. Spengler Cup</div>
-    </div>
-    <div class="seg" id="repSeg" style="margin:16px 0 12px">
-      <button data-p="goals" class="on">Tore</button><button data-p="xg">Verlauf</button><button data-p="shots">Schüsse</button><button data-p="teams">Teams</button><button data-p="players">Spieler</button>
-    </div>
-
-    <div data-panel="goals">
-      <div class="group pad"><div id="goalClip"></div></div>
-      <div class="group" id="goalList" style="margin-top:12px"></div>
-    </div>
-    <div data-panel="xg" class="hidden">
-      <div class="group pad">
-        <div class="hl">Torchancen über das Spiel</div>
-        <div class="fn" style="margin-bottom:10px">Summe der Expected Goals (xG), Punkte = Tore</div>
-        <div id="xgChart"></div>
-        <div class="legend"><span><span class="dot" style="background:var(--hcd)"></span> HCD</span><span><span class="dot" style="background:var(--usc)"></span> USC</span></div>
-        <div class="note" id="xgInfo"></div>
-      </div>
-    </div>
-    <div data-panel="shots" class="hidden">
-      <div class="group pad">
-        <div class="seg" id="shotFilter" style="margin-bottom:12px"><button data-f="all" class="on">Alle</button><button data-f="HCD">HCD</button><button data-f="USC">USC</button></div>
-        <div class="rinkwrap"><canvas class="rink" id="c-shots"></canvas></div>
-        <div class="legend"><span>Grösse = Torchance</span><span><span class="dot" style="background:var(--gold)"></span> Tor</span></div>
-        <div class="note" id="shotInfo"></div>
-      </div>
-    </div>
-    <div data-panel="teams" class="hidden">
-      <div class="group">
-        <div class="row" style="padding:14px 16px 0;justify-content:space-between;font-weight:700"><span style="color:var(--usc)">USC</span><span style="color:var(--hcd)">HCD</span></div>
-        <div class="cmp" id="compare"></div>
-      </div>
-    </div>
-    <div data-panel="players" class="hidden">
-      <div class="seg" id="lbSeg" style="margin-bottom:12px"></div>
-      <div class="group lb" id="lbList"></div>
-      <div class="fn" style="margin:8px 4px">Tippe auf einen Spieler für alle Werte.</div>
-    </div>
-
-    <div class="eyebrow">Hast du aufgepasst?</div>
-    <button class="btn" data-go="game">Zum Gewinnspiel</button>
-  </section>
-
-  <!-- GEWINNSPIEL -->
-  <section class="view" id="v-game">
-    <div id="gameIntro">
-      <h1 class="lt">Gewinnspiel</h1>
-      <p class="sub">10 Fragen zum Final mit echten Tracking-Daten. Je näher dein Tipp, desto mehr Punkte.</p>
-      <div class="group pad" style="margin-top:20px">
-        <div class="fn">Zu gewinnen</div>
-        <div class="t2" style="margin-top:4px">Tickets für den Spengler Cup 2026</div>
-        <p class="sub">Nach jedem der 11 Spiele gibt es ein neues Quiz. Wer am Ende die meisten Punkte hat, ist in der Verlosung dabei.</p>
-        <div class="fn" style="margin-top:8px">Preis symbolisch, Details offen.</div>
-      </div>
-      <button class="btn" style="margin-top:20px" id="gameStart">Quiz starten</button>
-    </div>
-    <div id="gamePlay" class="hidden">
-      <div class="row" style="margin-top:18px"><span class="fn grow" id="sqProg"></span></div>
-      <div class="bar" style="margin:8px 0 16px"><i id="sqBar"></i></div>
-      <div class="group pad" id="sqBox"></div>
-    </div>
+    <button class="btn sec" id="wSkip" style="margin-top:12px"><span data-l="de">Zum nächsten Pfiff</span><span data-l="en">Jump to the next whistle</span></button>
+    <p class="fn" style="margin:12px 4px"><span data-l="de">Im Live-Betrieb erscheinen die Erklärungen automatisch, sobald die Wisehockey-Daten einen Pfiff melden.</span><span data-l="en">Live, the explanations appear automatically as soon as the Wisehockey data reports a whistle.</span></p>
   </section>
 
   <!-- SPICK -->
   <section class="view" id="v-spick">
-    <h1 class="lt">Schiri-Spick</h1>
-    <p class="sub">Ein Zeichen am TV gesehen? Tippe es an.</p>
+    <h1 class="lt"><span data-l="de">Schiri-Spick</span><span data-l="en">Referee signals</span></h1>
+    <p class="sub"><span data-l="de">Ein Zeichen am TV gesehen? Tippe es an.</span><span data-l="en">Saw a signal on TV? Tap it.</span></p>
     <div class="siggrid" id="sigGrid" style="margin-top:18px"></div>
-    <div class="fn" style="margin:8px 4px">Vereinfacht nach den Handzeichen im IIHF-Regelbuch.</div>
-    <div class="eyebrow">Begriffe</div>
+    <div class="fn" style="margin:8px 4px"><span data-l="de">Vereinfacht nach den Handzeichen im IIHF-Regelbuch.</span><span data-l="en">Simplified from the IIHF rule book signals.</span></div>
+    <div class="eyebrow" style="margin:26px 4px 8px"><span data-l="de">Begriffe</span><span data-l="en">Terms</span></div>
     <div class="group" id="glossNew"></div>
-    <div class="eyebrow">Für Kenner</div>
-    <div class="group" id="glossPro"></div>
   </section>
 </div>
 
 <nav class="tabs"><div class="in">
-  <button data-v="start" class="on"><span data-icon="home"></span>Start</button>
-  <button data-v="learn"><span data-icon="learn"></span>Schauen</button>
-  <button data-v="report"><span data-icon="report"></span>Spiel</button>
-  <button data-v="game"><span data-icon="game"></span>Quiz</button>
-  <button data-v="spick"><span data-icon="spick"></span>Spick</button>
+  <button data-v="learn" class="on"><span data-icon="learn"></span>Live</button>
+  <button data-v="spick"><span data-icon="spick"></span><span data-l="de">Spick</span><span data-l="en">Signals</span></button>
 </div></nav>
 
+<script src="../shared/hv-account.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>

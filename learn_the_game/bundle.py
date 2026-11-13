@@ -1,10 +1,10 @@
-"""Packt index.html, app.js und data.js in eine einzige Datei (Hockey-verstehen.html),
-die man per Mail/Teams verschicken und per Doppelklick öffnen kann."""
+"""Packt index.html, app.js, data.js und den gemeinsamen Login (shared/hv-account.js)
+in eine einzige Datei (Hockey-verstehen.html), die man per Doppelklick öffnen kann."""
 from pathlib import Path
 
 HERE = Path(__file__).parent
 html = (HERE / "index.html").read_text(encoding="utf-8")
-for name in ("data.js", "app.js"):
+for name in ("../shared/hv-account.js", "data.js", "app.js"):
     js = (HERE / name).read_text(encoding="utf-8").replace("</script", "<\\/script")
     html = html.replace(f'<script src="{name}"></script>', f"<script>\n{js}\n</script>")
 out = HERE / "Hockey-verstehen.html"

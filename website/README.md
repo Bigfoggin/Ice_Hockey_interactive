@@ -1,6 +1,6 @@
 # Website
 
-Landing Page, die beide Angebote nebeneinander vorstellt. Sie verlinkt nur, der Code der Angebote bleibt in den eigenen Ordnern:
+Landing Page für Fans, Deutsch und Englisch (Umschalter oben oder `?lang=en`), mit Demo-Login und Be-a-Pro-Rangliste (siehe `shared/`). Sie stellt beide Angebote nebeneinander vor. Sie verlinkt nur, der Code der Angebote bleibt in den eigenen Ordnern:
 
 - **Be a Pro** → `../index.html` (Pass-Spiel, betreut von deiccoalessi)
 - **Learn the Game** → `../learn_the_game/Hockey-verstehen.html`
