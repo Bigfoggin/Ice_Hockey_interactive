@@ -667,7 +667,7 @@ const MOMENTS = [
 
 views.learn = (() => {
   const rink = new Rink($('#c-watch'));
-  let mi = 0, t = MOMENTS[0].from, playing = false, rate = 1, pop = null;
+  let mi = 0, t = MOMENTS[0].from, playing = false, pop = null;
   const seen = () => Object.keys(S.watched || {}).length;
   function strengthAt(g) {
     for (let k = lastIdx; k >= 0; k--) {
@@ -692,17 +692,15 @@ views.learn = (() => {
     $('#wClock').textContent = `${tr(`${e.p}. Drittel`, `Period ${e.p}`)} · ${fmtClock(e.c)}${st ? ' · ' + st : ''}`;
   }
   function dots() {
-    $('#wDots').innerHTML = MOMENTS.map((m, i) => `<span class="${i === mi ? 'cur' : (S.watched || {})[i] ? 'on' : ''}"></span>`).join('');
-    $('#wNext').textContent = `${tr('Nächster Pfiff', 'Next whistle')}: ${MOMENTS[mi].title}`;
+    // Live: Was als Nächstes passiert, ist unbekannt – also nichts ankündigen
+    $('#wNext').innerHTML = `<span class="live"><i></i>LIVE</span> · ${playing ? tr('Spiel läuft', 'Game on') : tr('Pausiert', 'Paused')}`;
   }
   function load(i, autoplay) {
     mi = i; t = MOMENTS[i].from; dots(); board();
     setPlaying(!!autoplay);
   }
-  function setPlaying(p) { playing = p; $('#wPlay').innerHTML = p ? ICON.pause : ICON.play; }
+  function setPlaying(p) { playing = p; $('#wPlay').innerHTML = p ? ICON.pause : ICON.play; dots(); }
   $('#wPlay').onclick = () => setPlaying(!playing);
-  $$('#wRate button').forEach(b => (b.onclick = () => { rate = +b.dataset.r; $$('#wRate button').forEach(x => x.classList.toggle('on', x === b)); }));
-  $('#wSkip').onclick = () => { t = MOMENTS[mi].to; };
 
   function openPop() {
     const m = MOMENTS[mi];
@@ -712,7 +710,7 @@ views.learn = (() => {
     el.className = 'modal';
     const last = mi + 1 >= MOMENTS.length;
     el.innerHTML = `<div class="box"><div class="grab"></div>
-      <div class="fn">${mi + 1} ${tr('von', 'of')} ${MOMENTS.length} · ${$('#wClock').textContent}</div>
+      <div class="fn">${tr('Pfiff', 'Whistle')} · ${$('#wClock').textContent}</div>
       <div class="t2" style="margin:4px 0 8px">${m.title}</div>
       <div class="seen">${m.seen}</div>
       ${m.anim ? `<div class="rinkwrap" style="margin-top:14px"><canvas class="rink"></canvas></div>` : ''}
@@ -745,7 +743,7 @@ views.learn = (() => {
     _demo(i, animT) { load(i, false); t = MOMENTS[i].to; board(); openPop(); if (pop) pop.t = animT; },
     tick(dt) {
       if (playing && !pop) {
-        t += dt * rate;
+        t += dt;
         if (t >= MOMENTS[mi].to) { t = MOMENTS[mi].to; setPlaying(false); board(); openPop(); }
       }
       board();

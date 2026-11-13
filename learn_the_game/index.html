@@ -179,6 +179,9 @@ nav.tabs button.on{color:var(--ink)}
 .langs button{color:var(--ink2);font-weight:700;font-size:12px;letter-spacing:.1em;padding:7px 10px}
 .langs button.on{background:var(--ink);color:var(--on-ink)}
 .eyebrow{color:var(--ice);text-transform:uppercase;letter-spacing:.16em;font-weight:800;font-size:12px}
+.live{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:var(--ink)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--usc);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
 </style>
 </head>
 <body>
@@ -190,15 +193,12 @@ nav.tabs button.on{color:var(--ink)}
   <section class="view active" id="v-learn">
     <h1 class="lt"><span data-l="de">Jeder Pfiff, sofort erklärt.</span><span data-l="en">Every whistle, explained instantly.</span></h1>
     <p class="sub"><span data-l="de">Der Final HCD – USC, nachgespielt wie live. Sobald der Schiri pfeift, siehst du was und warum.</span><span data-l="en">The final HCD – USC, replayed as if live. As soon as the referee blows the whistle, you see what and why.</span></p>
-    <div class="wdots" id="wDots"></div>
     <div class="group" style="margin-top:14px">
       <div class="score" id="wScore" style="padding:14px 16px 0"></div>
       <div class="fn" id="wClock" style="text-align:center;padding:2px 16px 12px"></div>
       <div style="padding:0 12px"><div class="rinkwrap"><canvas class="rink" id="c-watch"></canvas></div></div>
-      <div class="clipbar" style="padding:12px 12px 14px"><button class="playbtn" id="wPlay" aria-label="Play"></button><span class="grow fn" id="wNext"></span>
-        <div class="seg" id="wRate" style="flex:none"><button data-r="1" class="on"><span data-l="de">Echtzeit</span><span data-l="en">Real time</span></button><button data-r="0.45"><span data-l="de">Zeitlupe</span><span data-l="en">Slow-mo</span></button></div></div>
+      <div class="clipbar" style="padding:12px 12px 14px"><button class="playbtn" id="wPlay" aria-label="Play"></button><span class="grow fn" id="wNext"></span></div>
     </div>
-    <button class="btn sec" id="wSkip" style="margin-top:12px"><span data-l="de">Zum nächsten Pfiff</span><span data-l="en">Jump to the next whistle</span></button>
     <p class="fn" style="margin:12px 4px"><span data-l="de">Im Live-Betrieb erscheinen die Erklärungen automatisch, sobald die Wisehockey-Daten einen Pfiff melden.</span><span data-l="en">Live, the explanations appear automatically as soon as the Wisehockey data reports a whistle.</span></p>
   </section>
 
