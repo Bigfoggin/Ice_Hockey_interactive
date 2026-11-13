@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Be a Pro &amp; Learn the Game – Konzept für den Spengler Cup</title>
+<title>In the Game – Learn the Game &amp; Be a Pro</title>
 <!-- Ohne JavaScript bleibt alles sichtbar; Ein-Animationen nur mit .js -->
 <script>document.documentElement.classList.add('js')</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -215,6 +215,11 @@ footer b{color:var(--white)}
 .hero.has-game .rinklines{display:none}
 .hero.has-game::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,20,43,.92) 0%,rgba(0,20,43,.55) 55%,rgba(0,20,43,.2) 100%);pointer-events:none}
 .hero .wrap,.hero .count,.hero .scrollcue{z-index:3}
+
+/* Logo: ruhiges Wortlogo, der Punkt steht für den Puck */
+.logo{gap:10px;letter-spacing:.14em;font-size:14px}
+.logo i{width:10px;height:10px;border:0;border-radius:50%;background:var(--ice);box-shadow:0 0 0 4px rgba(102,193,211,.18)}
+.logo i::before,.logo i::after{display:none}
 /* Headline: drittes Wort wechselt */
 .hero h1 .w{position:relative}
 .hero h1 .w em{font-style:normal;display:block;position:absolute;left:0;top:0;opacity:0;transform:translateY(40%);transition:opacity .25s,transform .55s cubic-bezier(.2,.8,.2,1)}
@@ -256,7 +261,7 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 <body>
 
 <nav id="nav"><div class="wrap">
-  <a class="logo" href="#top"><i></i>HOCKEY VERSTEHEN</a>
+  <a class="logo" href="#top" aria-label="In the Game"><i></i>IN THE GAME</a>
   <div class="navlinks"><a href="#learn">Learn the Game</a><a href="#pro">Be a Pro</a><a href="#ranking"><span data-l="de">Rangliste</span><span data-l="en">Ranking</span></a></div>
   <div class="navr">
     <div class="langs" role="group" aria-label="Sprache / Language"><button data-setlang="de">DE</button><button data-setlang="en">EN</button></div>
@@ -353,7 +358,7 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 </div></section>
 
 <footer><div class="wrap">
-  <div><b>Hockey verstehen</b><br><span data-l="de">Prototyp für die Sport Innovation Challenge 2026.</span><span data-l="en">Prototype for the Sport Innovation Challenge 2026.</span><br><span data-l="de">Daten: Wisehockey, Final Spengler Cup vom 31.12.2025.</span><span data-l="en">Data: Wisehockey, Spengler Cup final of 31.12.2025.</span></div>
+  <div><b>In the Game</b><br><span data-l="de">Prototyp für die Sport Innovation Challenge 2026.</span><span data-l="en">Prototype for the Sport Innovation Challenge 2026.</span><br><span data-l="de">Daten: Wisehockey, Final Spengler Cup vom 31.12.2025.</span><span data-l="en">Data: Wisehockey, Spengler Cup final of 31.12.2025.</span></div>
   <div style="max-width:420px"><span data-l="de">Konzept eines Studierendenteams, kein offizielles Angebot des Spengler Cup Davos. Preis und Gewinnspiel sind symbolisch.</span><span data-l="en">Concept by a student team, not an official offer of the Spengler Cup Davos. Prize and contest are symbolic.</span></div>
 </div></footer>
 
@@ -572,7 +577,7 @@ document.querySelectorAll('.door').forEach(d => {
   const set = l => {
     l = l === 'en' ? 'en' : 'de';
     document.documentElement.lang = l;
-    document.title = l === 'en' ? 'Be a Pro & Learn the Game – Concept for the Spengler Cup' : 'Be a Pro & Learn the Game – Konzept für den Spengler Cup';
+    document.title = l === 'en' ? 'In the Game – Learn the Game & Be a Pro' : 'In the Game – Learn the Game & Be a Pro';
     document.querySelectorAll('[data-setlang]').forEach(b => b.classList.toggle('on', b.dataset.setlang === l));
     try { localStorage.setItem('hv_lang', l); } catch (e) { /* egal */ }
     renderAccount();
