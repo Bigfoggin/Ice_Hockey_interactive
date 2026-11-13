@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Hockey verstehen</title>
+<style>
+/* Tokens: eine Farbe = eine Bedeutung.
+   ink = Text & Hauptaktion · usc/hcd = nur Teams · gold = nur Hervorhebung auf dem Eis */
+:root{
+  --bg:#F1F4F8; --surface:#FFFFFF; --fill:#E9EEF4; --line:#DFE5EC;
+  --ink:#0E1A2B; --ink2:#4A5568; --on-ink:#FFFFFF;
+  --usc:#C8102E; --hcd:#1D4ED8; --gold:#F5B800;
+  --ok:#15803D; --bad:#B91C1C;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0B1018; --surface:#151C27; --fill:#1E2734; --line:#263142;
+    --ink:#F1F5F9; --ink2:#A3AEC2; --on-ink:#0B1018;
+    --usc:#F0526A; --hcd:#6B9BFF;
+    --ok:#4ADE80; --bad:#F87171;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.47 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding:0 0 96px}
+.view{display:none;padding:0 16px}
+.view.active{display:block}
+.hidden{display:none !important}
+
+/* Typo-Skala: 34 Large Title · 22 Title · 17 Body/Headline · 15 Subhead · 13 Footnote */
+.lt{font-size:34px;line-height:1.12;font-weight:700;letter-spacing:-.4px;margin:12px 0 6px}
+.t2{font-size:22px;line-height:1.25;font-weight:700;margin:0 0 6px}
+.hl{font-weight:600}
+.sub{font-size:15px;color:var(--ink2);margin:0}
+.fn{font-size:13px;color:var(--ink2)}
+.eyebrow{font-size:13px;font-weight:600;color:var(--ink2);margin:28px 4px 8px}
+
+/* Signatur: das Eisfeld. Oben als schmales Band mit den Linien des Rinks */
+.iceband{position:relative;height:76px;margin-top:16px;border-radius:38px;border:2px solid #C9D3DF;background:
+  linear-gradient(90deg,transparent calc(50% - 1.5px),#C8102E calc(50% - 1.5px),#C8102E calc(50% + 1.5px),transparent calc(50% + 1.5px)),
+  linear-gradient(90deg,transparent calc(36% - 2.5px),#1D4ED8 calc(36% - 2.5px),#1D4ED8 calc(36% + 2.5px),transparent calc(36% + 2.5px),transparent calc(64% - 2.5px),#1D4ED8 calc(64% - 2.5px),#1D4ED8 calc(64% + 2.5px),transparent calc(64% + 2.5px)),
+  linear-gradient(90deg,transparent calc(7% - 1px),#C8102E calc(7% - 1px),#C8102E calc(7% + 1px),transparent calc(7% + 1px),transparent calc(93% - 1px),#C8102E calc(93% - 1px),#C8102E calc(93% + 1px),transparent calc(93% + 1px)),
+  #EEF4FA}
+.iceband::after{content:'';position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:2px solid #1D4ED8;border-radius:50%}
+.iceband::before{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;background:#0B0B0B;border-radius:50%;box-shadow:0 0 0 2px #fff;z-index:1}
+
+.group{background:var(--surface);border-radius:var(--r);overflow:hidden}
+.group + .group{margin-top:12px}
+.pad{padding:16px}
+.row{display:flex;gap:12px;align-items:center}
+.grow{flex:1;min-width:0}
+.cell{display:flex;gap:14px;align-items:center;padding:14px 16px;width:100%;text-align:left;min-height:56px}
+.cell + .cell{border-top:1px solid var(--line)}
+.cell .chev{color:var(--ink2);font-size:22px;line-height:1}
+.ico{display:block;width:28px;height:28px;flex:none;color:var(--ink)}
+.ico svg{width:100%;height:100%}
+
+/* Buttons: Hauptaktion = Tinte, sonst neutral gefüllt */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:14px;font-weight:600;background:var(--ink);color:var(--on-ink);width:100%}
+.btn.sec{background:var(--fill);color:var(--ink)}
+.btn.inline{width:auto;min-height:40px;padding:0 16px;border-radius:12px;font-size:15px}
+.btn:disabled{opacity:.35}
+.seg{display:flex;background:var(--fill);border-radius:10px;padding:2px;gap:2px}
+.seg button{flex:1;min-height:32px;padding:0 6px;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* Start */
+.door{display:block;width:100%;text-align:left;background:var(--surface);border-radius:20px;padding:20px;margin-top:12px}
+.door .tt{font-size:22px;font-weight:700;margin:12px 0 4px}
+.door .go{margin-top:14px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.door .prog{margin-top:12px}
+
+/* Eis + Clip */
+.rinkwrap{position:relative;border-radius:14px;overflow:hidden;background:#EEF4FA}
+canvas.rink{display:block;width:100%;height:auto;touch-action:manipulation}
+.clipbar{display:flex;gap:10px;align-items:center;margin-top:10px}
+.playbtn{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:flex;align-items:center;justify-content:center;flex:none}
+.playbtn svg{width:18px;height:18px}
+.scrub{flex:1;height:4px;background:var(--fill);border-radius:2px;overflow:hidden}
+.scrub i{display:block;height:100%;background:var(--ink);width:0}
+.cap{margin-top:12px;min-height:72px}
+.cap .k{font-size:13px;font-weight:600;color:var(--ink2)}
+.cap .x{font-size:17px;margin-top:2px}
+
+/* Kurs */
+.bar{height:4px;background:var(--fill);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);transition:width .3s}
+.num{width:30px;height:30px;border-radius:50%;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex:none}
+.done .num{background:var(--ink);color:var(--on-ink)}
+.lesson{font-size:17px}
+.lesson p{margin:0 0 12px}
+.lesson ul{margin:0 0 12px;padding-left:20px}
+.lesson li{margin:6px 0}
+.rule{border-left:3px solid var(--ink);padding:2px 0 2px 14px;margin:16px 0;font-weight:600}
+.opt{display:block;width:100%;text-align:left;background:var(--fill);border-radius:12px;padding:14px 16px;font-weight:500;border:2px solid transparent;min-height:50px}
+.opt + .opt{margin-top:8px}
+.opt.right{border-color:var(--ok)} .opt.wrong{border-color:var(--bad)}
+.opt .pl{display:flex;gap:12px;align-items:center}
+.fb{margin-top:12px;font-size:15px}
+.fb b{color:var(--ok)} .fb.bad b{color:var(--bad)}
+
+/* Mitschauen */
+.wdots{display:flex;gap:6px;margin-top:16px}
+.wdots span{flex:1;height:4px;border-radius:2px;background:var(--fill)}
+.wdots span.on{background:var(--ink2)} .wdots span.cur{background:var(--ink)}
+#wScore .res{font-size:34px}
+.seen{font-size:15px;color:var(--ink2);border-left:3px solid var(--gold);padding-left:12px}
+.sigrow{background:var(--fill);border-radius:14px;margin-top:16px}
+.sigpic{width:64px;height:64px;flex:none;background:#F7F9FC;border-radius:12px}
+
+/* Spick */
+.siggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sig{background:#F7F9FC !important}
+.sig{background:var(--surface);border-radius:14px;padding:12px 6px 10px;text-align:center}
+.sig .pic{width:72px;height:72px;margin:0 auto}
+.sig .nm{font-size:13px;font-weight:600;margin-top:6px;line-height:1.25}
+details{border-top:1px solid var(--line)}
+details:first-child{border-top:0}
+summary{list-style:none;padding:14px 16px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';color:var(--ink2)}
+details[open] summary::after{content:'–'}
+details p{margin:0;padding:0 16px 14px;color:var(--ink2);font-size:15px}
+
+/* Spielbericht */
+.score{display:flex;align-items:center;justify-content:center;gap:18px;padding:20px 16px 8px}
+.score .tm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px}
+.score .res{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.gl{display:flex;gap:12px;align-items:center;padding:12px 16px;width:100%;text-align:left}
+.gl + .gl{border-top:1px solid var(--line)}
+.gl.on{background:var(--fill)}
+.gl .t{font-size:13px;color:var(--ink2);width:58px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.gl .s{font-weight:700;width:34px;font-variant-numeric:tabular-nums}
+.chip{font-size:13px;color:var(--ink2)}
+svg.chart{width:100%;height:auto;display:block}
+.cmp{padding:6px 16px 14px}
+.cmp .r{padding:10px 0}
+.cmp .r + .r{border-top:1px solid var(--line)}
+.cmp .l{display:flex;justify-content:space-between;align-items:baseline}
+.cmp .l span{font-size:15px;color:var(--ink2)}
+.cmp .l b{font-variant-numeric:tabular-nums;width:60px}
+.cmp .l b:last-child{text-align:right}
+.cmp .bars{display:flex;gap:3px;height:6px;margin-top:6px}
+.cmp .bars i{display:block;height:100%;border-radius:3px}
+.lb .cell{padding:10px 16px;min-height:52px}
+.badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.val{font-weight:600;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--ink2);margin-top:10px;flex-wrap:wrap}
+.note{font-size:15px;color:var(--ink2);margin-top:12px}
+.note b{color:var(--ink)}
+
+/* Quiz */
+.big{font-size:48px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;margin:18px 0 6px}
+.big small{font-size:17px;color:var(--ink2);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--ink);height:32px}
+.field{width:100%;min-height:50px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;margin-top:8px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--ink2);margin:12px 0}
+.chk input{width:22px;height:22px;margin:0;flex:none}
+
+/* Sheet, Toast */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal .box{background:var(--surface);width:min(560px,100%);border-radius:20px 20px 0 0;padding:8px 20px 32px;max-height:85vh;overflow:auto}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.bigsig{width:150px;height:150px;margin:4px auto 10px;background:#F7F9FC;border-radius:20px}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--on-ink);border-radius:14px;padding:12px 16px;font-size:15px;font-weight:600;max-width:calc(100% - 32px)}
+
+/* Tab-Bar */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--line);z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .in{display:flex;max-width:560px;margin:0 auto}
+nav.tabs button{flex:1;padding:7px 0 9px;font-size:11px;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px}
+nav.tabs svg{width:26px;height:26px}
+nav.tabs button.on{color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- START -->
+  <section class="view active" id="v-start">
+    <div class="iceband"></div>
+    <div class="fn" style="margin-top:18px">Spengler Cup Davos · Final 2025</div>
+    <h1 class="lt">Wie gut kennst du Eishockey?</h1>
+    <p class="sub">Wähle deinen Einstieg.</p>
+
+    <button class="door" data-go="learn">
+      <span class="ico" data-icon="learn"></span>
+      <div class="tt">Ich bin neu</div>
+      <p class="sub">Schau den Final mit. Wir halten an, wenn etwas passiert, und erklären es dir.</p>
+      <div class="prog hidden" id="doorProg"><div class="bar"><i></i></div><div class="fn" style="margin-top:6px"></div></div>
+      <div class="go">Mitschauen <span>›</span></div>
+    </button>
+
+    <button class="door" data-go="report">
+      <span class="ico" data-icon="report"></span>
+      <div class="tt">Ich kenne mich aus</div>
+      <p class="sub">Der Spielbericht mit Advanced Stats: Tore als Replay, xG, Shot-Map.</p>
+      <div class="go">Zum Spielbericht <span>›</span></div>
+    </button>
+
+    <div class="eyebrow">Für alle</div>
+    <div class="group">
+      <button class="cell" data-go="game"><span class="ico" data-icon="game"></span><span class="grow"><span class="hl">Gewinnspiel</span><br><span class="fn">10 Fragen zum Final</span></span><span class="chev">›</span></button>
+      <button class="cell" data-go="spick"><span class="ico" data-icon="spick"></span><span class="grow"><span class="hl">Schiri-Spick</span><br><span class="fn">Handzeichen nachschlagen</span></span><span class="chev">›</span></button>
+    </div>
+  </section>
+
+  <!-- MITSCHAUEN -->
+  <section class="view" id="v-learn">
+    <h1 class="lt">Mitschauen</h1>
+    <p class="sub">Der Final in 9 Momenten. Das Spiel hält an, wenn etwas passiert, das du wissen solltest.</p>
+    <div class="wdots" id="wDots"></div>
+    <div class="group" style="margin-top:14px">
+      <div class="score" id="wScore" style="padding:14px 16px 0"></div>
+      <div class="fn" id="wClock" style="text-align:center;padding:2px 16px 12px"></div>
+      <div style="padding:0 12px"><div class="rinkwrap"><canvas class="rink" id="c-watch"></canvas></div></div>
+      <div class="clipbar" style="padding:12px 12px 14px"><button class="playbtn" id="wPlay" aria-label="Abspielen"></button><span class="grow fn" id="wNext"></span>
+        <div class="seg" id="wRate" style="flex:none"><button data-r="1" class="on">Echtzeit</button><button data-r="0.45">Zeitlupe</button></div></div>
+    </div>
+    <button class="btn sec" id="wSkip" style="margin-top:12px">Direkt zur Erklärung</button>
+    <p class="fn" style="margin:12px 4px">Im Echtbetrieb erscheinen die Erklärungen live, sobald die Wisehockey-Daten eine Situation melden.</p>
+  </section>
+
+  <!-- SPIELBERICHT -->
+  <section class="view" id="v-report">
+    <h1 class="lt">Spielbericht</h1>
+    <div class="group">
+      <div class="score" id="score"></div>
+      <div class="fn" style="text-align:center;padding:0 16px 16px">Final · 31.12.2025 · HC Davos gewinnt den 97. Spengler Cup</div>
+    </div>
+    <div class="seg" id="repSeg" style="margin:16px 0 12px">
+      <button data-p="goals" class="on">Tore</button><button data-p="xg">Verlauf</button><button data-p="shots">Schüsse</button><button data-p="teams">Teams</button><button data-p="players">Spieler</button>
+    </div>
+
+    <div data-panel="goals">
+      <div class="group pad"><div id="goalClip"></div></div>
+      <div class="group" id="goalList" style="margin-top:12px"></div>
+    </div>
+    <div data-panel="xg" class="hidden">
+      <div class="group pad">
+        <div class="hl">Torchancen über das Spiel</div>
+        <div class="fn" style="margin-bottom:10px">Summe der Expected Goals (xG), Punkte = Tore</div>
+        <div id="xgChart"></div>
+        <div class="legend"><span><span class="dot" style="background:var(--hcd)"></span> HCD</span><span><span class="dot" style="background:var(--usc)"></span> USC</span></div>
+        <div class="note" id="xgInfo"></div>
+      </div>
+    </div>
+    <div data-panel="shots" class="hidden">
+      <div class="group pad">
+        <div class="seg" id="shotFilter" style="margin-bottom:12px"><button data-f="all" class="on">Alle</button><button data-f="HCD">HCD</button><button data-f="USC">USC</button></div>
+        <div class="rinkwrap"><canvas class="rink" id="c-shots"></canvas></div>
+        <div class="legend"><span>Grösse = Torchance</span><span><span class="dot" style="background:var(--gold)"></span> Tor</span></div>
+        <div class="note" id="shotInfo"></div>
+      </div>
+    </div>
+    <div data-panel="teams" class="hidden">
+      <div class="group">
+        <div class="row" style="padding:14px 16px 0;justify-content:space-between;font-weight:700"><span style="color:var(--usc)">USC</span><span style="color:var(--hcd)">HCD</span></div>
+        <div class="cmp" id="compare"></div>
+      </div>
+    </div>
+    <div data-panel="players" class="hidden">
+      <div class="seg" id="lbSeg" style="margin-bottom:12px"></div>
+      <div class="group lb" id="lbList"></div>
+      <div class="fn" style="margin:8px 4px">Tippe auf einen Spieler für alle Werte.</div>
+    </div>
+
+    <div class="eyebrow">Hast du aufgepasst?</div>
+    <button class="btn" data-go="game">Zum Gewinnspiel</button>
+  </section>
+
+  <!-- GEWINNSPIEL -->
+  <section class="view" id="v-game">
+    <div id="gameIntro">
+      <h1 class="lt">Gewinnspiel</h1>
+      <p class="sub">10 Fragen zum Final mit echten Tracking-Daten. Je näher dein Tipp, desto mehr Punkte.</p>
+      <div class="group pad" style="margin-top:20px">
+        <div class="fn">Zu gewinnen</div>
+        <div class="t2" style="margin-top:4px">Tickets für den Spengler Cup 2026</div>
+        <p class="sub">Nach jedem der 11 Spiele gibt es ein neues Quiz. Wer am Ende die meisten Punkte hat, ist in der Verlosung dabei.</p>
+        <div class="fn" style="margin-top:8px">Preis symbolisch, Details offen.</div>
+      </div>
+      <button class="btn" style="margin-top:20px" id="gameStart">Quiz starten</button>
+    </div>
+    <div id="gamePlay" class="hidden">
+      <div class="row" style="margin-top:18px"><span class="fn grow" id="sqProg"></span></div>
+      <div class="bar" style="margin:8px 0 16px"><i id="sqBar"></i></div>
+      <div class="group pad" id="sqBox"></div>
+    </div>
+  </section>
+
+  <!-- SPICK -->
+  <section class="view" id="v-spick">
+    <h1 class="lt">Schiri-Spick</h1>
+    <p class="sub">Ein Zeichen am TV gesehen? Tippe es an.</p>
+    <div class="siggrid" id="sigGrid" style="margin-top:18px"></div>
+    <div class="fn" style="margin:8px 4px">Vereinfacht nach den Handzeichen im IIHF-Regelbuch.</div>
+    <div class="eyebrow">Begriffe</div>
+    <div class="group" id="glossNew"></div>
+    <div class="eyebrow">Für Kenner</div>
+    <div class="group" id="glossPro"></div>
+  </section>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button data-v="start" class="on"><span data-icon="home"></span>Start</button>
+  <button data-v="learn"><span data-icon="learn"></span>Schauen</button>
+  <button data-v="report"><span data-icon="report"></span>Spiel</button>
+  <button data-v="game"><span data-icon="game"></span>Quiz</button>
+  <button data-v="spick"><span data-icon="spick"></span>Spick</button>
+</div></nav>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
