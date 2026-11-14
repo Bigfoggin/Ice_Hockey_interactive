@@ -314,6 +314,10 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 .board .r .nm{display:flex;flex-direction:column}.board .r small.bd{margin:2px 0 0;font-weight:600}
 .showgrid.pro{grid-template-columns:1fr 1.1fr}
 @media (max-width:900px){.showgrid.pro{grid-template-columns:1fr}}
+.rewards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rewards div{background:var(--navy);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 12px;display:flex;flex-direction:column;gap:6px}
+.rewards b{font-size:22px;font-weight:900;color:#F5B800}.rewards b::after{content:' P';font-size:13px;color:var(--mist)}
+.rewards span{font-size:13px;color:var(--mist);line-height:1.35}
 </style>
 
 <body>
@@ -323,7 +327,7 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="navlinks"><a href="#day"><span data-l="de">Spieltag</span><span data-l="en">Game day</span></a><a href="#learn">Learn the Game</a><a href="#pro">Be a Pro</a><a href="#ranking">Hockey-IQ</a></div>
   <div class="navr">
     <div class="langs" role="group" aria-label="Sprache / Language"><button data-setlang="de">DE</button><button data-setlang="en">EN</button></div>
-    <button class="acct" id="acctBtn"><i id="acctIni"></i><span class="lbl" id="acctLbl"><span data-l="de">Einchecken</span><span data-l="en">Check in</span></span></button>
+    <button class="acct" id="acctBtn"><i id="acctIni"></i><span class="lbl" id="acctLbl"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></span></button>
   </div>
 </div></nav>
 
@@ -335,7 +339,7 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="wrap">
     <div class="eyebrow fade">Spengler Cup Davos</div>
     <h1><span><b><span data-l="de">Nicht nur</span><span data-l="en">Don&#39;t just</span></b></span><span><b><span data-l="de">zuschauen.</span><span data-l="en">watch.</span></b></span><span><b><span data-l="de" class="w"><em class="on">Mitspielen.</em><em>Verstehen.</em><em>Mitfiebern.</em></span><span data-l="en" class="w"><em class="on">Play.</em><em>Understand.</em><em>Feel it.</em></span></b></span></h1>
-    <div class="rotator fade d2"><span data-l="de">Ein Spiel für Neulinge und Kenner. Live am Spengler Cup.</span><span data-l="en">One game for newcomers and experts. Live at the Spengler Cup.</span></div>
+    <div class="rotator fade d2"><span data-l="de">Ein Spiel für Neulinge und Kenner. Mittendrin am Spengler Cup.</span><span data-l="en">One game for newcomers and experts. Right in the middle of the Spengler Cup.</span></div>
     <div class="ctas fade d3">
       <a class="btn primary" href="#learn">Learn the Game <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a class="btn ghost" href="#pro">Be a Pro</a>
@@ -350,11 +354,11 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="eyebrow reveal"><span data-l="de">Dein Spieltag</span><span data-l="en">Your game day</span></div>
   <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Ein Spiel. Von Anpfiff bis Schlusspfiff.</span><span data-l="en">One game. From faceoff to final whistle.</span></h2>
   <ol class="daysteps reveal d2">
-    <li><b>01</b><strong><span data-l="de">Einchecken</span><span data-l="en">Check in</span></strong><span><span data-l="de">Code im Stadion oder im TV-Bild scannen. Live dabei heisst volle Punkte.</span><span data-l="en">Scan the code in the arena or on TV. Live means full points.</span></span></li>
-    <li class="lg"><b>02 · <span data-l="de">Während der Drittel</span><span data-l="en">During the periods</span></b><strong>Learn the Game</strong><span><span data-l="de">Jeder Pfiff erklärt. Jede neue Regel hebt deinen Multiplikator.</span><span data-l="en">Every whistle explained. Every new rule raises your multiplier.</span></span></li>
-    <li class="bp"><b>03 · <span data-l="de">In den Pausen und danach</span><span data-l="en">In the breaks and after</span></b><strong>Be a Pro</strong><span><span data-l="de">Schlüsselszenen einfrieren, Pass ziehen, Punkte holen.</span><span data-l="en">Freeze key scenes, draw the pass, score points.</span></span></li>
-    <li><b>04</b><strong>Hockey-IQ</strong><span><span data-l="de">Punkte × Regeln. Wer liegt vorne, du oder deine Freunde?</span><span data-l="en">Points × rules. Who is ahead, you or your friends?</span></span></li>
-    <li><b>05</b><strong><span data-l="de">Nächstes Spiel</span><span data-l="en">Next game</span></strong><span><span data-l="de">11 Spiele in 6 Tagen. Neue Regeln, neue Szenen, Revanche.</span><span data-l="en">11 games in 6 days. New rules, new scenes, rematch.</span></span></li>
+    <li class="lg"><b>01 · <span data-l="de">Während der Drittel</span><span data-l="en">During the periods</span></b><strong>Learn the Game</strong><span><span data-l="de">Jeder Pfiff erklärt. Jede neue Regel: +10 Punkte.</span><span data-l="en">Every whistle explained. Every new rule: +10 points.</span></span></li>
+    <li class="bp"><b>02 · <span data-l="de">In den Pausen und danach</span><span data-l="en">In the breaks and after</span></b><strong>Be a Pro</strong><span><span data-l="de">Schlüsselszenen einfrieren, Pass ziehen: bis 100 Punkte.</span><span data-l="en">Freeze key scenes, draw the pass: up to 100 points.</span></span></li>
+    <li><b>03 · <span data-l="de">Nach dem Spiel</span><span data-l="en">After the game</span></b><strong>Hockey-IQ</strong><span><span data-l="de">Alle Punkte zusammen. Wer liegt vorne, du oder deine Freunde?</span><span data-l="en">All points together. Who is ahead, you or your friends?</span></span></li>
+    <li><b>04 · <span data-l="de">Jederzeit</span><span data-l="en">Any time</span></b><strong><span data-l="de">Prämien</span><span data-l="en">Rewards</span></strong><span><span data-l="de">Punkte einlösen: Rabattcodes, virtuelle und echte Preise.</span><span data-l="en">Redeem points: discount codes, virtual and real prizes.</span></span></li>
+    <li><b>05 · <span data-l="de">Nächstes Spiel</span><span data-l="en">Next game</span></b><strong><span data-l="de">Revanche</span><span data-l="en">Rematch</span></strong><span><span data-l="de">11 Spiele in 6 Tagen. Neue Regeln, neue Szenen.</span><span data-l="en">11 games in 6 days. New rules, new scenes.</span></span></li>
   </ol>
 </div></section>
 
@@ -395,16 +399,21 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="eyebrow reveal">Hockey-IQ</div>
   <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Erst beides macht dich zum Profi.</span><span data-l="en">Only both make you a pro.</span></h2>
   <div class="formula reveal d2">
-    <div><b><span data-l="de">Pass-Punkte</span><span data-l="en">Pass points</span></b><span>Be a Pro</span></div><i>×</i>
-    <div><b><span data-l="de">Regel-Multiplikator</span><span data-l="en">Rule multiplier</span></b><span>Learn the Game</span></div><i>=</i>
+    <div><b><span data-l="de">Regel-Punkte</span><span data-l="en">Rule points</span></b><span><span data-l="de">Learn the Game · 10 pro Regel</span><span data-l="en">Learn the Game · 10 per rule</span></span></div><i>+</i>
+    <div><b><span data-l="de">Pass-Punkte</span><span data-l="en">Pass points</span></b><span><span data-l="de">Be a Pro · bis 100 pro Szene</span><span data-l="en">Be a Pro · up to 100 per scene</span></span></div><i>=</i>
     <div class="res"><b><span data-l="de">Dein Hockey-IQ</span><span data-l="en">Your Hockey IQ</span></b><span><span data-l="de">eine Bestenliste</span><span data-l="en">one leaderboard</span></span></div>
   </div>
-  <p class="lead reveal d2"><span data-l="de">Neulinge sammeln Regeln, Kenner lesen Pässe. Nach oben kommt nur, wer beides kann. Live eingecheckt zählt alles voll, später nachgeschaut die Hälfte.</span><span data-l="en">Newcomers collect rules, experts read passes. Only those who do both reach the top. Checked in live, everything counts fully; caught up later, half.</span></p>
+  <p class="lead reveal d2"><span data-l="de">Neulinge sammeln Regeln, Kenner lesen Pässe. Nach oben kommt nur, wer beides kann. Und deine Punkte sind etwas wert: Du löst sie gegen Prämien ein.</span><span data-l="en">Newcomers collect rules, experts read passes. Only those who do both reach the top. And your points are worth something: you redeem them for rewards.</span></p>
   <div class="iqgrid">
     <div class="board reveal" id="board"></div>
     <div class="reveal">
-      <p class="prizeline"><span data-l="de"><b>Zu gewinnen:</b> Fanartikel und ein Ticket für den Final.</span><span data-l="en"><b>To win:</b> fan merchandise and a ticket for the final.</span></p>
-      <div style="margin-top:18px"><button class="btn primary" id="boardLogin"><span data-l="de">Einchecken</span><span data-l="en">Check in</span></button></div>
+      <div class="rewards">
+        <div><b>150</b><span><span data-l="de">Digitales Fan-Abzeichen</span><span data-l="en">Digital fan badge</span></span></div>
+        <div><b>300</b><span><span data-l="de">10 % Rabatt im Fan-Shop</span><span data-l="en">10 % off in the fan shop</span></span></div>
+        <div><b>500</b><span><span data-l="de">Los für ein Final-Ticket</span><span data-l="en">Draw ticket for the final</span></span></div>
+      </div>
+      <p class="prizeline"><span data-l="de"><b>Beispiel-Prämien.</b> Welche es wirklich gibt, entscheidet der Spengler Cup.</span><span data-l="en"><b>Example rewards.</b> The Spengler Cup decides which ones are real.</span></p>
+      <div style="margin-top:18px"><button class="btn primary" id="boardLogin"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button></div>
       <p style="margin-top:14px;color:var(--mist);font-size:12px"><span data-l="de">Prototyp: «Demo»-Einträge sind Beispiele, alles bleibt in diesem Browser.</span><span data-l="en">Prototype: “demo” entries are examples, everything stays in this browser.</span></p>
     </div>
   </div>
@@ -432,15 +441,15 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 <div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
   <div class="box">
     <div class="eyebrow">Be a Pro · Learn the Game</div>
-    <h3 id="dlgTitle"><span data-l="de">Einchecken</span><span data-l="en">Check in</span></h3>
-    <p><span data-l="de">Im Stadion oder vor dem TV scannst du den Code des Spiels. Damit bist du live dabei: volle Punkte, dein Spielstand ist gespeichert und du nimmst am Gewinnspiel teil. Im Prototyp checkst du hier ein.</span><span data-l="en">In the arena or in front of the TV, you scan the code of the game. Then you are live: full points, your progress is saved and you enter the prize draw. In the prototype, you check in here.</span></p>
+    <h3 id="dlgTitle"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></h3>
+    <p><span data-l="de">Mit deinem Namen sammelst du Punkte in beiden Spielen, löst sie gegen Prämien ein und erscheinst in der Bestenliste.</span><span data-l="en">With your name, you collect points in both games, redeem them for rewards and appear on the leaderboard.</span></p>
     <form id="loginForm" novalidate>
       <label for="lgName"><span data-l="de">Name in der Rangliste</span><span data-l="en">Name in the ranking</span></label>
       <input type="text" id="lgName" autocomplete="nickname" maxlength="32" placeholder="z. B. Lena, Davos">
       <label for="lgMail"><span data-l="de">E-Mail (optional, für Gewinnspiel)</span><span data-l="en">Email (optional, for the contest)</span></label>
       <input type="email" id="lgMail" autocomplete="email" placeholder="name@example.ch">
       <label class="chk" style="text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" id="lgOk"> <span data-l="de">Ich bin einverstanden, dass mein Name in der Rangliste erscheint und ich am Gewinnspiel teilnehme.</span><span data-l="en">I agree that my name appears in the ranking and that I take part in the prize draw.</span></label>
-      <div class="row2"><button class="btn primary" type="submit"><span data-l="de">Live dabei sein</span><span data-l="en">Go live</span></button><button class="btn ghost" type="button" data-close><span data-l="de">Abbrechen</span><span data-l="en">Cancel</span></button></div>
+      <div class="row2"><button class="btn primary" type="submit"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button><button class="btn ghost" type="button" data-close><span data-l="de">Abbrechen</span><span data-l="en">Cancel</span></button></div>
       <div class="err" id="lgErr"></div>
     </form>
     <div id="loggedIn" hidden>
@@ -566,11 +575,10 @@ function renderAccount() {
   const btn = document.getElementById('acctBtn');
   btn.classList.toggle('in', !!u);
   document.getElementById('acctIni').textContent = u ? u.name.trim().slice(0, 1).toUpperCase() : '';
-  const live = HVAccount.isLive();
-  document.getElementById('acctLbl').textContent = u ? u.name + (live ? ' · LIVE' : '') : t('Einchecken', 'Check in');
-  document.getElementById('boardLogin').textContent = u ? (live ? t('Abmelden', 'Log out') : t('Einchecken', 'Check in')) : t('Einchecken', 'Check in');
+  document.getElementById('acctLbl').textContent = u ? u.name : t('Anmelden', 'Log in');
+  document.getElementById('boardLogin').textContent = u ? t('Abmelden', 'Log out') : t('Anmelden', 'Log in');
   const rows = HVAccount.board(8);
-  const fmt = r => `${r.rules} ${t('Regeln', 'rules')} ×${r.multiplier.toFixed(1)} · ${r.pass} ${t('Punkte', 'points')}`;
+  const fmt = r => `${r.rules} ${t('Regeln', 'rules')} (${r.rulePoints}) + ${r.pass} ${t('Pass-Punkte', 'pass points')}`;
   document.getElementById('board').innerHTML = `<div class="r h"><i>#</i>${t('Name', 'Name')}<em>Hockey-IQ</em></div>` + rows.map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><i>${i + 1}</i><span class="nm">${esc(r.name)}${r.demo ? '<small>Demo</small>' : ''}<small class="bd">${fmt(r)}</small></span><em>${r.iq}</em></div>`).join('');
 }
 (function account() {
@@ -579,14 +587,14 @@ function renderAccount() {
     const u = window.HVAccount && HVAccount.current();
     document.getElementById('loginForm').hidden = !!u;
     document.getElementById('loggedIn').hidden = !u;
-    document.getElementById('dlgTitle').textContent = u ? t('Eingecheckt', 'Checked in') : t('Einchecken', 'Check in');
-    if (u) document.getElementById('lgHello').textContent = t(`Hallo ${u.name}. Du bist live dabei: volle Punkte, dein Spielstand ist gespeichert und du bist im Gewinnspiel.`, `Hi ${u.name}. You are live: full points, your progress is saved and you are in the prize draw.`);
+    document.getElementById('dlgTitle').textContent = u ? t('Angemeldet', 'Logged in') : t('Anmelden', 'Log in');
+    if (u) document.getElementById('lgHello').textContent = t(`Hallo ${u.name}. Deine Punkte werden gespeichert, du kannst sie gegen Prämien einlösen.`, `Hi ${u.name}. Your points are saved, and you can redeem them for rewards.`);
     dlg.classList.add('open');
     setTimeout(() => (u ? document.getElementById('lgOut') : document.getElementById('lgName')).focus(), 30);
   };
   const close = () => dlg.classList.remove('open');
   document.getElementById('acctBtn').addEventListener('click', open);
-  document.getElementById('boardLogin').addEventListener('click', () => { const u = HVAccount.current(); if (u && HVAccount.isLive()) HVAccount.logout(); else if (u) HVAccount.checkIn(); else open(); });
+  document.getElementById('boardLogin').addEventListener('click', () => { if (HVAccount.current()) HVAccount.logout(); else open(); });
   dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-close]')) close(); });
   addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   document.getElementById('loginForm').addEventListener('submit', e => {
@@ -597,7 +605,7 @@ function renderAccount() {
     if (mail && !/^\S+@\S+\.\S+$/.test(mail)) { err.textContent = t('Bitte prüfe die E-Mail-Adresse.', 'Please check the email address.'); return; }
     if (!document.getElementById('lgOk').checked) { err.textContent = t('Bitte bestätige, dass dein Name angezeigt werden darf.', 'Please confirm that your name may be shown.'); return; }
     err.textContent = '';
-    HVAccount.login(name, mail); HVAccount.checkIn(); close();
+    HVAccount.login(name, mail); close();
   });
   document.getElementById('lgOut').addEventListener('click', () => { HVAccount.logout(); close(); });
   if (window.HVAccount) HVAccount.onChange(renderAccount);

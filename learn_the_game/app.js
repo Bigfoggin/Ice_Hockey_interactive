@@ -712,7 +712,7 @@ const MOMENTS = [
 ];
 
 // Regelbuch: die 30 Regeln, die man braucht, um einem Spiel zu folgen.
-// Jede Regel wird beim ersten echten Pfiff dieser Art gesammelt und hebt den Multiplikator für den Hockey-IQ.
+// Jede Regel wird beim ersten echten Pfiff dieser Art gesammelt und bringt einmalig 10 Punkte für den Hockey-IQ.
 const CATS = [['stop', tr('Unterbrechungen', 'Stoppages')], ['pen', tr('Strafen', 'Penalties')], ['sit', tr('Spielsituationen', 'Game situations')]];
 const RULEBOOK = [
   ['faceoff', 'stop', 'Bully', 'Faceoff', '', 'Jedes Drittel und jede Unterbrechung beginnt mit einem Bully.', 'Every period and every stoppage starts with a faceoff.'],
@@ -748,44 +748,24 @@ const RULEBOOK = [
 ].map(([id, cat, de, en, sig, wde, wen]) => ({ id, cat, name: tr(de, en), sig, why: tr(wde, wen) }));
 const RB = Object.fromEntries(RULEBOOK.map(r => [r.id, r]));
 const ACC = () => window.HVAccount;
-const stats = () => (ACC() ? ACC().stats() : { rules: 0, multiplier: 1, pass: 0, iq: 0 });
-const isLive = () => !!(ACC() && ACC().isLive());
-const mult = m => '×' + m.toFixed(1);
-function renderCheckin() {
-  const el = $('#checkin'); if (!el) return;
-  el.innerHTML = isLive()
-    ? `<span class="live"><i></i>${tr('Eingecheckt', 'Checked in')}</span><span class="fn">${tr('Live dabei: volle Punkte', 'Live: full points')}</span>`
-    : `<span class="fn">${tr('Nicht eingecheckt: Regeln zählen nur halb.', 'Not checked in: rules count half.')}</span><button class="btn inline" data-checkin>${tr('Code scannen', 'Scan code')}</button>`;
-}
+const stats = () => (ACC() ? ACC().stats() : { rules: 0, rulePoints: 0, pass: 0, iq: 0 });
 function renderRules() {
   const st = stats(), got = st.rules, total = RULEBOOK.length, have = ACC() ? ACC().rules() : {};
   const bar = `<div class="rulebar"><i style="width:${Math.round(got / total * 100)}%"></i></div>`;
-  const head = `<div class="ruleshead"><b>${got}/${total}</b> ${tr('Regeln im Regelbuch', 'rules in your rulebook')}<span class="mult">${mult(st.multiplier)}</span></div>`;
-  $('#rulesLive').innerHTML = head + bar + `<div class="fn">${tr('Jede neue Regel hebt deinen Multiplikator für den Hockey-IQ.', 'Every new rule raises your multiplier for the Hockey IQ.')}</div>`;
+  const head = `<div class="ruleshead"><b>${got}/${total}</b> ${tr('Regeln im Regelbuch', 'rules in your rulebook')}<span class="mult">${st.rulePoints} ${tr('Pkt.', 'pts')}</span></div>`;
+  $('#rulesLive').innerHTML = head + bar + `<div class="fn">${tr('Jede neue Regel bringt 10 Punkte für deinen Hockey-IQ.', 'Every new rule earns 10 points for your Hockey IQ.')}</div>`;
   $('#rulesList').innerHTML = head + bar + CATS.map(([cat, label]) => {
     const rs = RULEBOOK.filter(r => r.cat === cat);
     const n = rs.filter(r => r.id in have).length;
     return `<div class="rbcat">${label} <span>${n}/${rs.length}</span></div>` + rs.map(r => (r.id in have)
-      ? `<details><summary>${r.name}${have[r.id] ? '' : `<em class="late">${tr('nachgeschaut', 'caught up')}</em>`}</summary><p>${r.why}${r.sig ? `<br><button class="linkbtn" style="text-align:left;padding:8px 0 0" data-sig="${r.sig}">${tr('Schiri-Zeichen ansehen', 'See the referee signal')} ›</button>` : ''}</p></details>`
+      ? `<details><summary>${r.name}<em class="late">+10</em></summary><p>${r.why}${r.sig ? `<br><button class="linkbtn" style="text-align:left;padding:8px 0 0" data-sig="${r.sig}">${tr('Schiri-Zeichen ansehen', 'See the referee signal')} ›</button>` : ''}</p></details>`
       : `<div class="cell locked"><span class="lock">🔒</span><span class="grow">${r.name}</span><span class="fn">${tr('noch nicht erlebt', 'not seen yet')}</span></div>`).join('');
   }).join('');
-  renderCheckin();
 }
-function checkInFlow() {
-  const A = ACC(); if (!A) return;
-  const done = () => { A.checkIn(); renderRules(); };
-  if (A.current()) { done(); return; }
-  const m = modal(`<div class="t2">${tr('Einchecken', 'Check in')}</div><p class="sub">${tr('Im Stadion oder vor dem TV: Code scannen, Name eingeben, live dabei. (Prototyp: hier direkt.)', 'In the arena or in front of the TV: scan the code, enter your name, you are live. (Prototype: right here.)')}</p>
-    <input id="ciName" class="field" maxlength="24" placeholder="${tr('Dein Name', 'Your name')}"><button class="btn" style="margin-top:12px" id="ciGo">${tr('Live dabei sein', 'Go live')}</button>`);
-  $('#ciGo', m).onclick = () => { const v = $('#ciName', m).value.trim(); if (!v) return; A.login(v); m.remove(); done(); };
-}
-document.addEventListener('click', ev => { if (ev.target.closest('[data-checkin]')) checkInFlow(); });
-// Demo-Links: ?checkin=1 (Code gescannt), &as=Name (eingeloggt als)
-(function demoCheckin() {
+// Demo-Link: &as=Name (eingeloggt als)
+(function demoLogin() {
   const q = new URLSearchParams(location.search), A = ACC();
-  if (!A) return;
-  if (q.get('as')) A.login(q.get('as'));
-  if (q.get('checkin')) A.checkIn();
+  if (A && q.get('as')) A.login(q.get('as'));
 })();
 
 views.learn = (() => {
@@ -837,8 +817,7 @@ views.learn = (() => {
     const total = RULEBOOK.length;
     el.innerHTML = `<div class="box"><div class="grab"></div>
       <div class="pophead"><span class="fn">${tr('Pfiff', 'Whistle')} · ${$('#wClock').textContent}</span>
-        ${isNew ? `<span class="newrule">${tr('Neue Regel', 'New rule')} · ${res.count}/${total} · ${mult(res.multiplier)}</span>` : ''}</div>
-      ${isNew && !res.live ? `<div class="fn late-note">${tr('Nicht eingecheckt: Diese Regel zählt nur halb.', 'Not checked in: this rule counts half.')}</div>` : ''}
+        ${isNew ? `<span class="newrule">${tr('Neue Regel', 'New rule')} ${res.count}/${total} · +10 ${tr('Pkt.', 'pts')}</span>` : ''}</div>
       <div class="t2" style="margin:6px 0 10px">${m.title}</div>
       <div class="qa"><span class="k">${tr('Was', 'What')}</span><span>${m.seen}</span></div>
       <div class="qa"><span class="k">${tr('Warum', 'Why')}</span><span class="hl">${m.why}</span></div>

@@ -1,9 +1,9 @@
-/* In the Game: Konto, Check-in und Hockey-IQ für Learn the Game und Be a Pro.
+/* In the Game: Konto und Hockey-IQ für Learn the Game und Be a Pro.
  *
  * Ein Spiel, ein Punktestand:
- *   Hockey-IQ = Pass-Punkte (Be a Pro) × Regel-Multiplikator (Learn the Game)
- *   Multiplikator = 1 + 0.1 pro Regel im Regelbuch (max. 30 Regeln → ×4.0)
- *   Live dabei (eingecheckt): volle Punkte. Später nachgeschaut: 50 %.
+ *   Hockey-IQ = Regel-Punkte (Learn the Game, 10 pro gelernter Regel, max. 30 Regeln)
+ *             + Pass-Punkte (Be a Pro, 0–100 pro Szene, bester Versuch zählt)
+ *   Die Punkte sind zugleich Währung für Prämien (Rabattcodes, virtuelle und echte Preise).
  *
  * Prototyp: alles liegt im localStorage des Browsers, ohne Passwort und ohne Server.
  * Für eine echte Rangliste wird nur der Speicher (STORE) gegen eine API getauscht.
@@ -11,10 +11,9 @@
  * Einbinden:  <script src="../shared/hv-account.js"></script>
  * Nutzen:     HVAccount.current()                  → { name } oder null
  *             HVAccount.login(name, email) / logout()
- *             HVAccount.checkIn(gameId) / isLive(gameId)
- *             HVAccount.addRule(ruleId, gameId)     → { isNew, count, multiplier, live }
- *             HVAccount.addPass(sceneId, points, gameId)
- *             HVAccount.stats(name?)                → { rules, ruleValue, multiplier, pass, iq }
+ *             HVAccount.addRule(ruleId)             → { isNew, count, rulePoints, iq }
+ *             HVAccount.addPass(sceneId, points)
+ *             HVAccount.stats(name?)                → { rules, rulePoints, pass, iq }
  *             HVAccount.board(n)                    → Rangliste nach Hockey-IQ
  *             HVAccount.saveScore('be-a-pro', 83)   → wie bisher (zählt als Pass-Punkte)
  *             HVAccount.onChange(fn)
@@ -23,7 +22,7 @@
   'use strict';
   const KEY = 'hv_account_v2';
   const GAME = 'SC-G11'; // Prototyp: das eine Spiel, das wir nachspielen
-  const LATE = 0.5;      // Anteil der Punkte, wenn nicht live eingecheckt
+  const RULE_POINTS = 10; // Punkte pro gelernter Regel
 
   const STORE = {
     read() {
@@ -47,15 +46,13 @@
   const save = () => { STORE.write(state); emit(); };
   const me = () => (state.user ? state.user.name : '_guest');
   const prog = (name = me()) => (state.prog[name] = state.prog[name] || { rules: {}, passes: {}, checkins: {} });
-  const round1 = x => Math.round(x * 10) / 10;
 
   function stats(name = me()) {
     const p = prog(name);
     const rules = Object.keys(p.rules).length;
-    const ruleValue = Object.values(p.rules).reduce((s, live) => s + (live ? 1 : LATE), 0);
-    const multiplier = round1(1 + 0.1 * ruleValue);
+    const rulePoints = rules * RULE_POINTS;
     const pass = Math.round(Object.values(p.passes).reduce((s, v) => s + v, 0));
-    return { rules, ruleValue, multiplier, pass, iq: Math.round(pass * multiplier) };
+    return { rules, rulePoints, pass, iq: rulePoints + pass };
   }
 
   window.HVAccount = {
@@ -83,20 +80,20 @@
     checkIn(gameId = GAME) { prog().checkins[gameId] = Date.now(); save(); return true; },
     isLive(gameId = GAME) { return !!prog().checkins[gameId]; },
 
-    // Learn the Game: eine Regel ins Regelbuch
-    addRule(ruleId, gameId = GAME) {
-      const p = prog(), live = this.isLive(gameId), had = ruleId in p.rules;
-      if (!had || (live && !p.rules[ruleId])) p.rules[ruleId] = live;
+    // Learn the Game: eine Regel ins Regelbuch (10 Punkte, einmalig)
+    addRule(ruleId) {
+      const p = prog(), had = ruleId in p.rules;
+      if (!had) p.rules[ruleId] = true;
       save();
       const s = stats();
-      return { isNew: !had, count: s.rules, multiplier: s.multiplier, live };
+      return { isNew: !had, count: s.rules, rulePoints: s.rulePoints, iq: s.iq, points: had ? 0 : RULE_POINTS };
     },
     hasRule(ruleId) { return ruleId in prog().rules; },
     rules() { return { ...prog().rules }; },
 
     // Be a Pro: Punkte für eine Szene (bester Versuch zählt)
-    addPass(sceneId, points, gameId = GAME) {
-      const v = Number(points) * (this.isLive(gameId) ? 1 : LATE);
+    addPass(sceneId, points) {
+      const v = Number(points);
       const p = prog();
       p.passes[sceneId] = Math.max(p.passes[sceneId] || 0, v);
       save();
@@ -113,8 +110,8 @@
       }
       for (const [name, d] of DEMO) {
         if (rows.some(r => r.name === name)) continue;
-        const multiplier = round1(1 + 0.1 * d.rules);
-        rows.push({ name, rules: d.rules, multiplier, pass: d.pass, iq: Math.round(d.pass * multiplier), me: false, demo: true });
+        const rulePoints = d.rules * RULE_POINTS;
+        rows.push({ name, rules: d.rules, rulePoints, pass: d.pass, iq: rulePoints + d.pass, me: false, demo: true });
       }
       return rows.sort((a, b) => b.iq - a.iq).slice(0, n);
     },
