@@ -182,6 +182,23 @@ nav.tabs button.on{color:var(--ink)}
 .live{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:var(--ink)}
 .live i{width:8px;height:8px;border-radius:50%;background:var(--usc);animation:blink 1.4s infinite}
 @keyframes blink{50%{opacity:.25}}
+.pophead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.newrule{flex:none;white-space:nowrap;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--ice);color:var(--on-ink);padding:5px 10px;border-radius:999px;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.qa{display:grid;grid-template-columns:62px 1fr;gap:10px;font-size:16px;line-height:1.4;padding:8px 0;border-top:1px solid var(--line)}
+.qa .k{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ice);padding-top:3px}
+.more{margin-top:12px;border-top:1px solid var(--line)}
+.more summary{padding:12px 0}
+.more p{padding:0 0 4px}
+.linkbtn{display:block;width:100%;margin-top:6px;padding:12px;font-size:14px;font-weight:600;color:var(--ink2);background:none}
+.rules{padding:14px 16px}
+.ruleshead{font-size:15px;color:var(--ink2)}.ruleshead b{font-size:22px;color:var(--ink);font-weight:900;margin-right:4px}
+.rulebar{height:6px;border-radius:3px;background:var(--fill);margin:10px 0 12px;overflow:hidden}.rulebar i{display:block;height:100%;background:var(--ice);transition:width .6s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;border:1px dashed var(--line);color:var(--ink2);min-width:30px;text-align:center}
+.chip.on{border:1px solid var(--ice);color:var(--ink);background:rgba(102,193,211,.12)}
+#rulesList .ruleshead,#rulesList .rulebar{margin-left:16px;margin-right:16px}#rulesList .ruleshead{padding-top:14px}
+.cell.locked{color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -192,21 +209,24 @@ nav.tabs button.on{color:var(--ink)}
   <!-- LIVE -->
   <section class="view active" id="v-learn">
     <h1 class="lt"><span data-l="de">Jeder Pfiff, sofort erklärt.</span><span data-l="en">Every whistle, explained instantly.</span></h1>
-    <p class="sub"><span data-l="de">Der Final HCD – USC, nachgespielt wie live. Sobald der Schiri pfeift, siehst du was und warum.</span><span data-l="en">The final HCD – USC, replayed as if live. As soon as the referee blows the whistle, you see what and why.</span></p>
+    <p class="sub"><span data-l="de">Final 2025, nachgespielt wie live. Drück Play.</span><span data-l="en">Final 2025, replayed as if live. Press play.</span></p>
     <div class="group" style="margin-top:14px">
       <div class="score" id="wScore" style="padding:14px 16px 0"></div>
       <div class="fn" id="wClock" style="text-align:center;padding:2px 16px 12px"></div>
       <div style="padding:0 12px"><div class="rinkwrap"><canvas class="rink" id="c-watch"></canvas></div></div>
       <div class="clipbar" style="padding:12px 12px 14px"><button class="playbtn" id="wPlay" aria-label="Play"></button><span class="grow fn" id="wNext"></span></div>
     </div>
-    <p class="fn" style="margin:12px 4px"><span data-l="de">Im Live-Betrieb erscheinen die Erklärungen automatisch, sobald die Wisehockey-Daten einen Pfiff melden.</span><span data-l="en">Live, the explanations appear automatically as soon as the Wisehockey data reports a whistle.</span></p>
+    <div class="group rules" id="rulesLive" style="margin-top:12px"></div>
   </section>
 
   <!-- SPICK -->
   <section class="view" id="v-spick">
-    <h1 class="lt"><span data-l="de">Schiri-Spick</span><span data-l="en">Referee signals</span></h1>
-    <p class="sub"><span data-l="de">Ein Zeichen am TV gesehen? Tippe es an.</span><span data-l="en">Saw a signal on TV? Tap it.</span></p>
-    <div class="siggrid" id="sigGrid" style="margin-top:18px"></div>
+    <h1 class="lt"><span data-l="de">Spick</span><span data-l="en">Cheat sheet</span></h1>
+    <p class="sub"><span data-l="de">Alles, was du schon verstanden hast, plus alle Schiri-Zeichen.</span><span data-l="en">Everything you have understood so far, plus all referee signals.</span></p>
+    <div class="eyebrow" style="margin:22px 4px 8px"><span data-l="de">Deine Regeln</span><span data-l="en">Your rules</span></div>
+    <div class="group" id="rulesList"></div>
+    <div class="eyebrow" style="margin:26px 4px 8px"><span data-l="de">Schiri-Zeichen</span><span data-l="en">Referee signals</span></div>
+    <div class="siggrid" id="sigGrid"></div>
     <div class="fn" style="margin:8px 4px"><span data-l="de">Vereinfacht nach den Handzeichen im IIHF-Regelbuch.</span><span data-l="en">Simplified from the IIHF rule book signals.</span></div>
     <div class="eyebrow" style="margin:26px 4px 8px"><span data-l="de">Begriffe</span><span data-l="en">Terms</span></div>
     <div class="group" id="glossNew"></div>
