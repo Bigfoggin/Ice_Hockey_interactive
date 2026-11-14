@@ -199,6 +199,18 @@ nav.tabs button.on{color:var(--ink)}
 .chip.on{border:1px solid var(--ice);color:var(--ink);background:rgba(102,193,211,.12)}
 #rulesList .ruleshead,#rulesList .rulebar{margin-left:16px;margin-right:16px}#rulesList .ruleshead{padding-top:14px}
 .cell.locked{color:var(--ink2)}
+.checkin{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--surface);min-height:52px}
+.checkin .live{color:var(--ink)}
+.ruleshead{display:flex;align-items:baseline;gap:6px}.ruleshead .mult{margin-left:auto;font-weight:900;font-size:20px;color:var(--ice)}
+.rbcat{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ice);padding:16px 16px 6px;display:flex;justify-content:space-between}
+.rbcat span{color:var(--ink2)}
+.cell.locked{opacity:.55}.cell.locked .lock{font-size:13px}
+summary em.late{font-style:normal;font-size:11px;font-weight:700;color:var(--ink2);margin-left:8px;text-transform:uppercase;letter-spacing:.06em}
+.seg2{display:flex;gap:6px}.seg2 button{flex:1;min-height:34px;border-radius:9px;background:var(--fill);color:var(--ink2);font-weight:700;font-size:13px}
+.seg2 button.on{background:var(--ice);color:var(--on-ink)}
+.late-note{margin-top:4px;color:#F59E0B}
+canvas[hidden]{display:none!important}
+.field{width:100%;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--fill);color:var(--ink);padding:0 14px;font:inherit;margin-top:12px}
 </style>
 </head>
 <body>
@@ -210,6 +222,7 @@ nav.tabs button.on{color:var(--ink)}
   <section class="view active" id="v-learn">
     <h1 class="lt"><span data-l="de">Jeder Pfiff, sofort erklärt.</span><span data-l="en">Every whistle, explained instantly.</span></h1>
     <p class="sub"><span data-l="de">Drück Play und schau zu. Bei jedem Pfiff kommt die Erklärung.</span><span data-l="en">Press play and watch. At every whistle, the explanation appears.</span></p>
+    <div class="checkin" id="checkin"></div>
     <div class="group" style="margin-top:14px">
       <div class="score" id="wScore" style="padding:14px 16px 0"></div>
       <div class="fn" id="wClock" style="text-align:center;padding:2px 16px 12px"></div>
@@ -222,8 +235,8 @@ nav.tabs button.on{color:var(--ink)}
   <!-- SPICK -->
   <section class="view" id="v-spick">
     <h1 class="lt"><span data-l="de">Spick</span><span data-l="en">Cheat sheet</span></h1>
-    <p class="sub"><span data-l="de">Alles, was du schon verstanden hast, plus alle Schiri-Zeichen.</span><span data-l="en">Everything you have understood so far, plus all referee signals.</span></p>
-    <div class="eyebrow" style="margin:22px 4px 8px"><span data-l="de">Deine Regeln</span><span data-l="en">Your rules</span></div>
+    <p class="sub"><span data-l="de">30 Regeln, die du für ein Spiel brauchst. Jede hebt deinen Multiplikator.</span><span data-l="en">30 rules you need to follow a game. Each one raises your multiplier.</span></p>
+    <div class="eyebrow" style="margin:22px 4px 8px"><span data-l="de">Dein Regelbuch</span><span data-l="en">Your rulebook</span></div>
     <div class="group" id="rulesList"></div>
     <div class="eyebrow" style="margin:26px 4px 8px"><span data-l="de">Schiri-Zeichen</span><span data-l="en">Referee signals</span></div>
     <div class="siggrid" id="sigGrid"></div>

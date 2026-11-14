@@ -220,6 +220,14 @@ const SIG = (() => {
     trip: svg(torso + arm([RS, [30, 48], [29, 64]], true, [RS, [31, 52], [38, 80]], 1.1) + arm(downL, true) + hit('M31 76 L26 73 M30 82 L24 83 M32 88 L27 92', 1.1)),
     // Ellbogencheck: mit der freien Hand auf den Ellbogen der Pfeifenhand tippen
     elbow: svg(torso + arm([RS, [20, 42], [40, 38]], true) + arm([LS, [64, 52], [46, 52]], true, [LS, [55, 54], [24, 45]], 0.9) + hit('M14 36 L10 32 M13 44 L8 45 M16 51 L12 55', 0.9)),
+    // Behinderung: Arme vor der Brust gekreuzt, Fäuste geschlossen, stillhalten
+    interference: svg(torso + arm(downR, true, [RS, [40, 52], [62, 42]], 1.8) + arm(downL, true, [LS, [60, 52], [38, 42]], 1.8)),
+    // Unnötige Härte: Faust mit einer Stossbewegung seitlich auf Schulterhöhe ausstrecken
+    roughing: svg(torso + arm(downR, true) + arm([LS, [72, 42], [66, 30]], true, [LS, [80, 31], [96, 30]], 0.9) + hit('M100 22 L104 18 M101 38 L105 42', 0.9)),
+    // Penalty: Arme über dem Kopf gekreuzt
+    pshot: svg(torso + arm(downR, true, [RS, [36, 14], [62, -2]], 1.8) + arm(downL, true, [LS, [64, 14], [38, -2]], 1.8)),
+    // Disziplinarstrafe: beide Hände in die Hüften
+    misconduct: svg(torso + arm(downR, true, [RS, [24, 46], [37, 58]], 1.8) + arm(downL, true, [LS, [76, 46], [63, 58]], 1.8)),
     // Check gegen die Bande: Faust in die offene Handfläche schlagen
     board: svg(torso + arm([LS, [72, 56], [55, 56]], true) + `<ellipse cx="55" cy="56" rx="11" ry="4" fill="${SKIN}" stroke="${INK}" stroke-width="2.2"/>` + arm([RS, [26, 36], [50, 24]], true, [RS, [27, 46], [54, 50]], 1.0) + hit('M44 50 L40 47 M66 50 L70 47', 1.0)),
   };
@@ -238,6 +246,10 @@ const SIGNALS = [
   { id: 'hold', name: tr('Halten', 'Holding'), text: tr('Das Handgelenk der Pfeifenhand vor der Brust mit der anderen Hand umfassen. Der Gegner wurde festgehalten.', 'Clasping the wrist of the whistle hand in front of the chest. The opponent was held.') },
   { id: 'trip', name: tr('Beinstellen', 'Tripping'), text: tr('Mit der rechten Hand unterhalb des Knies seitlich aufs rechte Bein schlagen. Der Gegner wurde zu Fall gebracht.', 'Striking the side of the right leg below the knee with the right hand. The opponent was tripped.') },
   { id: 'elbow', name: tr('Ellbogencheck', 'Elbowing'), text: tr('Mit der Hand auf den Ellbogen des anderen Arms tippen. Der Gegner wurde mit dem Ellbogen gecheckt.', 'Tapping the elbow with the opposite hand. The opponent was checked with the elbow.') },
+  { id: 'interference', name: tr('Behinderung', 'Interference'), text: tr('Arme vor der Brust gekreuzt, Fäuste geschlossen. Ein Gegner ohne Puck wurde behindert.', 'Arms crossed in front of the chest, fists closed. An opponent without the puck was impeded.') },
+  { id: 'roughing', name: tr('Unnötige Härte', 'Roughing'), text: tr('Die Faust stösst seitlich auf Schulterhöhe nach aussen. Ein Spieler hat geschubst oder geschlagen.', 'A fist thrust out to the side at shoulder height. A player pushed or punched.') },
+  { id: 'pshot', name: 'Penalty', text: tr('Arme über dem Kopf gekreuzt. Eine klare Torchance wurde durch ein Foul verhindert.', 'Arms crossed above the head. A clear scoring chance was stopped by a foul.') },
+  { id: 'misconduct', name: tr('Disziplinarstrafe', 'Misconduct'), text: tr('Beide Hände in die Hüften: 10 Minuten Strafe für den Spieler.', 'Both hands on the hips: a 10-minute penalty for the player.') },
   { id: 'board', name: tr('Check gegen die Bande', 'Boarding'), text: tr('Mit der Faust in die offene Handfläche schlagen. Der Gegner wurde gefährlich in die Bande gecheckt.', 'Pounding the fist into the open palm. The opponent was checked dangerously into the boards.') },
 ];
 const SIGMAP = Object.fromEntries(SIGNALS.map(s => [s.id, s]));
@@ -652,42 +664,42 @@ const finalWhistle = EV[EV.length - 1];
 const avgShift = Math.round(SKATERS.reduce((s, p) => s + p.avgs, 0) / SKATERS.length);
 
 const MOMENTS = [
-  { from: EV[0].g - 0.5, to: EV[0].g + 4, title: tr('Das Bully', 'The faceoff'), anim: 'bully', rule: 'Bully', ruleEn: 'Faceoff',
+  { from: EV[0].g - 0.5, to: EV[0].g + 4, title: tr('Das Bully', 'The faceoff'), anim: 'bully', rid: 'faceoff', rule: 'Bully', ruleEn: 'Faceoff',
     why: tr('Jedes Drittel und jede Unterbrechung beginnt mit einem Bully.', 'Every period and every stoppage starts with a faceoff.'),
     seen: tr('Spielbeginn: Der Schiri wirft den Puck ein.', 'Start of the game: the referee drops the puck.'),
     text: tr(`Jedes Drittel und jede Unterbrechung startet mit einem Bully. Gespielt werden 3 × 20 Minuten, pro Team stehen 5 Feldspieler und ein Torhüter auf dem Eis. Gewechselt wird mitten im Spiel, ein Einsatz dauert nur rund ${avgShift} Sekunden.`,
       `Every period and every stoppage starts with a faceoff. A game has 3 × 20 minutes, each team has 5 skaters and a goalie on the ice. Lines change on the fly, a shift lasts only about ${avgShift} seconds.`) },
-  { from: icingDump.g - 6, to: icingStop.g + 0.2, title: 'Icing', anim: 'icing', sig: 'icing', rule: 'Icing', ruleEn: 'Icing',
+  { from: icingDump.g - 6, to: icingStop.g + 0.2, title: 'Icing', anim: 'icing', sig: 'icing', rid: 'icing', ring: icingDump.pl, rule: 'Icing', ruleEn: 'Icing',
     why: tr('Puck aus der eigenen Hälfte unberührt über die gegnerische Torlinie: Bully vor dem eigenen Tor.', 'Puck from the own half untouched across the opponent’s goal line: faceoff in front of the own net.'),
     seen: tr(`${nm(icingDump.pl)} (${icingDump.tm}) hat den Puck aus der eigenen Hälfte bis hinter die gegnerische Torlinie geschossen.`, `${nm(icingDump.pl)} (${icingDump.tm}) shot the puck from the defensive half past the opponent’s goal line.`),
     text: tr('Ein Weitschuss aus der eigenen Hälfte über die gegnerische Torlinie, den niemand berührt, ist Icing. Die Folge: Bully vor dem eigenen Tor, und das Team darf vorher nicht wechseln. In Unterzahl ist der Befreiungsschlag erlaubt.',
       'A shot from the own half across the opponent’s goal line that nobody touches is icing. The faceoff then takes place in front of the own net, and the team may not change lines. A short-handed team is allowed to ice the puck.') },
-  { from: ppPenalty.g - 9, to: ppPenalty.g + 0.2, title: tr('Strafe', 'Penalty'), anim: 'penalty', sig: 'slash', rule: 'Strafe', ruleEn: 'Penalty',
+  { from: ppPenalty.g - 9, to: ppPenalty.g + 0.2, title: tr('Strafe', 'Penalty'), anim: 'penalty', sig: 'slash', rid: 'slash', ring: ppPenalty.pl, rule: 'Strafe', ruleEn: 'Penalty',
     why: tr('Stockschlag ist ein Foul: 2 Minuten auf die Strafbank, das andere Team spielt im Powerplay.', 'Slashing is a foul: 2 minutes in the box, the other team gets a power play.'),
     seen: tr(`${nm(ppPenalty.pl)} (${ppPenalty.tm}) hat mit dem Stock zugeschlagen.`, `${nm(ppPenalty.pl)} (${ppPenalty.tm}) slashed an opponent.`),
     text: tr(`Bei einem Foul hebt der Schiri den Arm und pfeift, sobald das foulende Team den Puck berührt. Der Spieler muss 2 Minuten auf die Strafbank, ${ppPenalty.tm} spielt in Unterzahl. Für ${other(ppPenalty.tm)} heisst das Powerplay.`,
       `After a foul the referee raises his arm and blows the whistle once the offending team touches the puck. The player sits 2 minutes in the penalty box, ${ppPenalty.tm} plays short-handed. For ${other(ppPenalty.tm)} that means a power play.`) },
-  { from: ppPenalty.g + 0.5, to: ppScene.goal.g + 0.6, title: tr('Tor im Powerplay', 'Power-play goal'), anim: 'ppgoal', sig: 'goal', rule: 'Powerplay', ruleEn: 'Power play',
+  { from: ppPenalty.g + 0.5, to: ppScene.goal.g + 0.6, title: tr('Tor im Powerplay', 'Power-play goal'), anim: 'ppgoal', sig: 'goal', rid: 'powerplay', ring: ppScene.goal.pl, rule: 'Powerplay', ruleEn: 'Power play',
     why: tr('Fällt im Powerplay ein Tor, endet die Strafe sofort. Wieder 5 gegen 5.', 'A power-play goal ends the penalty at once. Back to 5 on 5.'),
     seen: tr(`${nm(ppScene.goal.pl)} trifft nur drei Sekunden nach dem Bully zum ${ppScene.sc.USC}:${ppScene.sc.HCD}.`, `${nm(ppScene.goal.pl)} scores only three seconds after the faceoff: ${ppScene.sc.USC}:${ppScene.sc.HCD}.`),
     text: tr('Trifft das Team im Powerplay, ist die 2-Minuten-Strafe sofort vorbei. Der bestrafte Spieler darf zurück aufs Eis, es steht wieder 5 gegen 5.',
       'If the team on the power play scores, the 2-minute penalty ends at once. The penalised player returns to the ice, it is 5 on 5 again.') },
-  { from: walsh.shot.g - 12, to: walsh.goal.g + 0.6, title: tr('Wann zählt ein Tor?', 'When does a goal count?'), anim: 'goalline', sig: 'goal', rule: 'Torlinie', ruleEn: 'Goal line',
+  { from: walsh.shot.g - 12, to: walsh.goal.g + 0.6, title: tr('Wann zählt ein Tor?', 'When does a goal count?'), anim: 'goalline', sig: 'goal', rid: 'goal', ring: walsh.goal.pl, rule: 'Torlinie', ruleEn: 'Goal line',
     why: tr('Ein Tor zählt nur, wenn der Puck ganz über der Linie ist.', 'A goal counts only when the puck is fully across the line.'),
     seen: tr(`${nm(walsh.goal.pl)} lenkt den Puck direkt vor dem Tor ab: ${walsh.sc.USC}:${walsh.sc.HCD}.`, `${nm(walsh.goal.pl)} deflects the puck right in front of the net: ${walsh.sc.USC}:${walsh.sc.HCD}.`),
     text: tr('Ein Tor zählt nur, wenn der Puck die Torlinie vollständig überquert hat. Liegt er auf der Linie, geht das Spiel weiter. In knappen Fällen prüfen die Schiris das Video.',
       'A goal counts only when the puck has fully crossed the goal line. If it is on the line, play goes on. In close cases the referees check the video.') },
-  { from: offside.g - 10, to: offside.g + 0.2, title: tr('Abseits', 'Offside'), anim: 'offside', sig: 'offside', rule: 'Abseits', ruleEn: 'Offside',
+  { from: offside.g - 10, to: offside.g + 0.2, title: tr('Abseits', 'Offside'), anim: 'offside', sig: 'offside', rid: 'offside', rule: 'Abseits', ruleEn: 'Offside',
     why: tr('Angreifer dürfen erst nach dem Puck über die blaue Linie.', 'Attackers may cross the blue line only after the puck.'),
     seen: tr(`Ein Angreifer von ${offsideTeam} war vor dem Puck in der Angriffszone.`, `A ${offsideTeam} forward entered the attacking zone ahead of the puck.`),
     text: tr('Angreifer dürfen die blaue Linie erst nach dem Puck überqueren. Ist einer zu früh in der Angriffszone, pfeift der Linienrichter ab. Das Bully gibt es dann ausserhalb der Zone.',
       'Attackers may cross the blue line only after the puck. If one is in the attacking zone too early, the linesman stops play. The faceoff then takes place outside the zone.') },
-  { from: hsPenalty.g - 9, to: hsPenalty.g + 0.2, title: tr('Hoher Stock', 'High-sticking'), anim: 'penalty', sig: 'high', rule: 'Hoher Stock', ruleEn: 'High stick',
+  { from: hsPenalty.g - 9, to: hsPenalty.g + 0.2, title: tr('Hoher Stock', 'High-sticking'), anim: 'penalty', sig: 'high', rid: 'high', ring: hsPenalty.pl, rule: 'Hoher Stock', ruleEn: 'High stick',
     why: tr('Der Stock über Schulterhöhe ist verboten: 2 Minuten, bei Verletzung 2+2.', 'A stick above shoulder height is not allowed: 2 minutes, 2+2 if someone is hurt.'),
     seen: tr(`${nm(hsPenalty.pl)} (${hsPenalty.tm}) hat einen Gegner mit dem Stock über Schulterhöhe getroffen.`, `${nm(hsPenalty.pl)} (${hsPenalty.tm}) hit an opponent with the stick above shoulder height.`),
     text: tr(`Der Stock war über Schulterhöhe. Das gibt normalerweise 2 Minuten, bei einer Verletzung 2+2 Minuten.${hsDouble ? ` ${nm(hsPenalty.pl)} bekam 2+2 Minuten.` : ''}`,
       `The stick was above shoulder height. That usually means 2 minutes, 2+2 minutes if the opponent is injured.${hsDouble ? ` ${nm(hsPenalty.pl)} got 2+2 minutes.` : ''}`) },
-  { from: enScene.shot.g - 16, to: enScene.goal.g + 0.6, title: tr('Leeres Tor', 'Empty net'), anim: 'emptynet', rule: 'Leeres Tor', ruleEn: 'Empty net',
+  { from: enScene.shot.g - 16, to: enScene.goal.g + 0.6, title: tr('Leeres Tor', 'Empty net'), anim: 'emptynet', rid: 'emptynet', ring: enScene.goal.pl, rule: 'Leeres Tor', ruleEn: 'Empty net',
     why: tr('Wer zurückliegt, tauscht den Goalie gegen einen sechsten Feldspieler. Das Risiko: ein leeres Tor.', 'A trailing team swaps the goalie for a sixth skater. The risk: an empty net.'),
     seen: tr(`${nm(enScene.goal.pl)} trifft aus der eigenen Hälfte ins leere Tor: ${enScene.sc.USC}:${enScene.sc.HCD}.`, `${nm(enScene.goal.pl)} scores from the defensive half into the empty net: ${enScene.sc.USC}:${enScene.sc.HCD}.`),
     text: tr('Kurz vor Schluss nehmen Teams im Rückstand oft den Torhüter vom Eis und bringen einen sechsten Feldspieler. Mehr Angreifer, aber das eigene Tor ist leer.',
@@ -699,21 +711,82 @@ const MOMENTS = [
       'You have seen the key whistles in real scenes: faceoff, icing, penalties, power play, goal, offside and the empty net. Now you understand every whistle.') },
 ];
 
-// Regel-Sammlung: jede Regel wird beim ersten echten Pfiff dieser Art freigeschaltet
-const RULES = MOMENTS.map((m, i) => ({ ...m, i })).filter(m => m.rule);
-const learned = () => RULES.filter(r => (S.watched || {})[r.i]).length;
-function renderRules() {
-  const got = learned(), total = RULES.length;
-  const chips = RULES.map(r => (S.watched || {})[r.i]
-    ? `<span class="chip on">${tr(r.rule, r.ruleEn)}</span>`
-    : '<span class="chip">?</span>').join('');
-  const bar = `<div class="rulebar"><i style="width:${Math.round(got / total * 100)}%"></i></div>`;
-  const head = `<div class="ruleshead"><b>${got}/${total}</b> ${tr('Regeln verstanden', 'rules understood')}</div>`;
-  $('#rulesLive').innerHTML = head + bar + `<div class="chips">${chips}</div>`;
-  $('#rulesList').innerHTML = head + bar + RULES.map(r => (S.watched || {})[r.i]
-    ? `<details><summary>${tr(r.rule, r.ruleEn)}</summary><p>${r.text}</p></details>`
-    : `<div class="cell locked"><span class="grow">?</span><span class="fn">${tr('Beim nächsten Pfiff dieser Art', 'At the next whistle of this kind')}</span></div>`).join('');
+// Regelbuch: die 30 Regeln, die man braucht, um einem Spiel zu folgen.
+// Jede Regel wird beim ersten echten Pfiff dieser Art gesammelt und hebt den Multiplikator für den Hockey-IQ.
+const CATS = [['stop', tr('Unterbrechungen', 'Stoppages')], ['pen', tr('Strafen', 'Penalties')], ['sit', tr('Spielsituationen', 'Game situations')]];
+const RULEBOOK = [
+  ['faceoff', 'stop', 'Bully', 'Faceoff', '', 'Jedes Drittel und jede Unterbrechung beginnt mit einem Bully.', 'Every period and every stoppage starts with a faceoff.'],
+  ['icing', 'stop', 'Icing', 'Icing', 'icing', 'Puck aus der eigenen Hälfte unberührt über die gegnerische Torlinie: Bully vor dem eigenen Tor.', 'Puck from the own half untouched across the opponent’s goal line: faceoff in front of the own net.'],
+  ['offside', 'stop', 'Abseits', 'Offside', 'offside', 'Angreifer dürfen erst nach dem Puck über die blaue Linie.', 'Attackers may cross the blue line only after the puck.'],
+  ['goal', 'stop', 'Tor', 'Goal', 'goal', 'Ein Tor zählt nur, wenn der Puck ganz über der Linie ist.', 'A goal counts only when the puck is fully across the line.'],
+  ['nogoal', 'stop', 'Tor aberkannt', 'Goal disallowed', 'washout', 'Mit dem Schlittschuh gekickt, mit hohem Stock oder bei Behinderung des Goalies zählt das Tor nicht.', 'Kicked in, with a high stick or with goalie interference, the goal does not count.'],
+  ['outofplay', 'stop', 'Puck aus dem Spiel', 'Puck out of play', '', 'Fliegt der Puck über die Bande, gibt es ein Bully.', 'If the puck flies over the boards, there is a faceoff.'],
+  ['handpass', 'stop', 'Handpass', 'Hand pass', '', 'Mit der Hand zum Mitspieler passen ist nur in der eigenen Zone erlaubt.', 'Passing to a teammate with the hand is only allowed in the own zone.'],
+  ['highpuck', 'stop', 'Hoher Stock am Puck', 'High stick on the puck', '', 'Wer den Puck über Torhöhe spielt, löst einen Abpfiff aus.', 'Playing the puck above the crossbar stops play.'],
+  ['frozen', 'stop', 'Goalie hält den Puck', 'Goalie covers the puck', '', 'Hält der Goalie den Puck fest, pfeift der Schiri ab. Bully neben dem Tor.', 'When the goalie covers the puck, play stops. Faceoff next to the net.'],
+  ['video', 'stop', 'Videobeweis', 'Video review', '', 'In knappen Fällen prüfen die Schiris das Tor am Video.', 'In close cases the referees check the goal on video.'],
+  ['trip', 'pen', 'Beinstellen', 'Tripping', 'trip', 'Den Gegner mit Stock oder Bein zu Fall bringen: 2 Minuten.', 'Bringing an opponent down with stick or leg: 2 minutes.'],
+  ['hook', 'pen', 'Haken', 'Hooking', 'hook', 'Den Gegner mit dem Stock zurückhalten: 2 Minuten.', 'Holding an opponent back with the stick: 2 minutes.'],
+  ['slash', 'pen', 'Stockschlag', 'Slashing', 'slash', 'Mit dem Stock auf den Gegner schlagen: 2 Minuten.', 'Hitting an opponent with the stick: 2 minutes.'],
+  ['hold', 'pen', 'Halten', 'Holding', 'hold', 'Den Gegner mit Händen oder Armen festhalten: 2 Minuten.', 'Holding an opponent with hands or arms: 2 minutes.'],
+  ['interference', 'pen', 'Behinderung', 'Interference', 'interference', 'Einen Gegner ohne Puck behindern: 2 Minuten.', 'Impeding an opponent without the puck: 2 minutes.'],
+  ['roughing', 'pen', 'Unnötige Härte', 'Roughing', 'roughing', 'Schubsen oder schlagen, etwa nach dem Pfiff: 2 Minuten.', 'Pushing or punching, for example after the whistle: 2 minutes.'],
+  ['high', 'pen', 'Hoher Stock', 'High-sticking', 'high', 'Den Gegner mit dem Stock über Schulterhöhe treffen: 2 Minuten, bei Verletzung 2+2.', 'Hitting an opponent with the stick above shoulder height: 2 minutes, 2+2 if injured.'],
+  ['cross', 'pen', 'Crosscheck', 'Cross-checking', 'cross', 'Den Gegner mit dem quer gehaltenen Stock stossen: 2 Minuten.', 'Pushing an opponent with the stick held across: 2 minutes.'],
+  ['elbow', 'pen', 'Ellbogencheck', 'Elbowing', 'elbow', 'Den Gegner mit dem Ellbogen checken: 2 Minuten.', 'Checking an opponent with the elbow: 2 minutes.'],
+  ['board', 'pen', 'Check gegen die Bande', 'Boarding', 'board', 'Den Gegner gefährlich in die Bande checken: 2 oder 5 Minuten.', 'Checking an opponent dangerously into the boards: 2 or 5 minutes.'],
+  ['toomany', 'pen', 'Zu viele Spieler', 'Too many players', '', 'Mehr als 6 Spieler auf dem Eis, etwa beim Wechseln: 2 Minuten fürs Team.', 'More than 6 players on the ice, for example during a change: 2 minutes for the team.'],
+  ['delay', 'pen', 'Spielverzögerung', 'Delay of game', '', 'Den Puck absichtlich aus dem Spiel schiessen: 2 Minuten.', 'Shooting the puck out of play on purpose: 2 minutes.'],
+  ['unsport', 'pen', 'Unsportliches Verhalten', 'Unsportsmanlike conduct', '', 'Reklamieren, provozieren oder beleidigen: 2 Minuten.', 'Arguing, provoking or insulting: 2 minutes.'],
+  ['misconduct', 'pen', 'Grosse Strafe und Disziplinarstrafe', 'Major and misconduct', 'misconduct', 'Schwere Fouls kosten 5 Minuten, Disziplinarstrafen 10 Minuten oder das ganze Spiel.', 'Severe fouls cost 5 minutes, misconducts 10 minutes or the whole game.'],
+  ['pshot', 'pen', 'Penalty', 'Penalty shot', 'pshot', 'Wird eine klare Torchance durch ein Foul verhindert, gibt es einen Penalty: allein gegen den Goalie.', 'If a foul stops a clear scoring chance, there is a penalty shot: one on one with the goalie.'],
+  ['delayed', 'sit', 'Angezeigte Strafe', 'Delayed penalty', 'armup', 'Der Schiri hebt den Arm. Gepfiffen wird erst, wenn das foulende Team den Puck berührt.', 'The referee raises his arm. Play stops once the offending team touches the puck.'],
+  ['powerplay', 'sit', 'Powerplay', 'Power play', '', 'Nach einer Strafe spielt ein Team mit einem Spieler mehr. Ein Tor beendet die Strafe.', 'After a penalty, one team plays with an extra skater. A goal ends the penalty.'],
+  ['shorthanded', 'sit', 'Unterzahl', 'Short-handed', '', 'Das bestrafte Team spielt mit einem Spieler weniger und darf den Puck befreien.', 'The penalised team plays one skater short and may ice the puck.'],
+  ['emptynet', 'sit', 'Leeres Tor', 'Empty net', '', 'Wer zurückliegt, nimmt den Goalie für einen sechsten Feldspieler vom Eis.', 'A trailing team pulls the goalie for a sixth skater.'],
+  ['overtime', 'sit', 'Verlängerung und Penaltyschiessen', 'Overtime and shootout', '', 'Steht es nach 60 Minuten unentschieden, folgen Verlängerung und Penaltyschiessen.', 'If it is tied after 60 minutes, overtime and a shootout follow.'],
+].map(([id, cat, de, en, sig, wde, wen]) => ({ id, cat, name: tr(de, en), sig, why: tr(wde, wen) }));
+const RB = Object.fromEntries(RULEBOOK.map(r => [r.id, r]));
+const ACC = () => window.HVAccount;
+const stats = () => (ACC() ? ACC().stats() : { rules: 0, multiplier: 1, pass: 0, iq: 0 });
+const isLive = () => !!(ACC() && ACC().isLive());
+const mult = m => '×' + m.toFixed(1);
+function renderCheckin() {
+  const el = $('#checkin'); if (!el) return;
+  el.innerHTML = isLive()
+    ? `<span class="live"><i></i>${tr('Eingecheckt', 'Checked in')}</span><span class="fn">${tr('Live dabei: volle Punkte', 'Live: full points')}</span>`
+    : `<span class="fn">${tr('Nicht eingecheckt: Regeln zählen nur halb.', 'Not checked in: rules count half.')}</span><button class="btn inline" data-checkin>${tr('Code scannen', 'Scan code')}</button>`;
 }
+function renderRules() {
+  const st = stats(), got = st.rules, total = RULEBOOK.length, have = ACC() ? ACC().rules() : {};
+  const bar = `<div class="rulebar"><i style="width:${Math.round(got / total * 100)}%"></i></div>`;
+  const head = `<div class="ruleshead"><b>${got}/${total}</b> ${tr('Regeln im Regelbuch', 'rules in your rulebook')}<span class="mult">${mult(st.multiplier)}</span></div>`;
+  $('#rulesLive').innerHTML = head + bar + `<div class="fn">${tr('Jede neue Regel hebt deinen Multiplikator für den Hockey-IQ.', 'Every new rule raises your multiplier for the Hockey IQ.')}</div>`;
+  $('#rulesList').innerHTML = head + bar + CATS.map(([cat, label]) => {
+    const rs = RULEBOOK.filter(r => r.cat === cat);
+    const n = rs.filter(r => r.id in have).length;
+    return `<div class="rbcat">${label} <span>${n}/${rs.length}</span></div>` + rs.map(r => (r.id in have)
+      ? `<details><summary>${r.name}${have[r.id] ? '' : `<em class="late">${tr('nachgeschaut', 'caught up')}</em>`}</summary><p>${r.why}${r.sig ? `<br><button class="linkbtn" style="text-align:left;padding:8px 0 0" data-sig="${r.sig}">${tr('Schiri-Zeichen ansehen', 'See the referee signal')} ›</button>` : ''}</p></details>`
+      : `<div class="cell locked"><span class="lock">🔒</span><span class="grow">${r.name}</span><span class="fn">${tr('noch nicht erlebt', 'not seen yet')}</span></div>`).join('');
+  }).join('');
+  renderCheckin();
+}
+function checkInFlow() {
+  const A = ACC(); if (!A) return;
+  const done = () => { A.checkIn(); renderRules(); };
+  if (A.current()) { done(); return; }
+  const m = modal(`<div class="t2">${tr('Einchecken', 'Check in')}</div><p class="sub">${tr('Im Stadion oder vor dem TV: Code scannen, Name eingeben, live dabei. (Prototyp: hier direkt.)', 'In the arena or in front of the TV: scan the code, enter your name, you are live. (Prototype: right here.)')}</p>
+    <input id="ciName" class="field" maxlength="24" placeholder="${tr('Dein Name', 'Your name')}"><button class="btn" style="margin-top:12px" id="ciGo">${tr('Live dabei sein', 'Go live')}</button>`);
+  $('#ciGo', m).onclick = () => { const v = $('#ciName', m).value.trim(); if (!v) return; A.login(v); m.remove(); done(); };
+}
+document.addEventListener('click', ev => { if (ev.target.closest('[data-checkin]')) checkInFlow(); });
+// Demo-Links: ?checkin=1 (Code gescannt), &as=Name (eingeloggt als)
+(function demoCheckin() {
+  const q = new URLSearchParams(location.search), A = ACC();
+  if (!A) return;
+  if (q.get('as')) A.login(q.get('as'));
+  if (q.get('checkin')) A.checkIn();
+})();
 
 views.learn = (() => {
   const rink = new Rink($('#c-watch'));
@@ -754,28 +827,43 @@ views.learn = (() => {
 
   function openPop() {
     const m = MOMENTS[mi];
-    S.watched = S.watched || {}; const wasKnown = !!S.watched[mi]; S.watched[mi] = 1; save(); dots(); renderRules();
-    if (window.HVAccount && HVAccount.current()) HVAccount.saveScore('learn-the-game', learned(), { rules: RULES.length });
+    S.watched = S.watched || {}; S.watched[mi] = 1; save(); dots();
+    const res = m.rid && ACC() ? ACC().addRule(m.rid) : null;
+    renderRules();
     const el = document.createElement('div');
     el.className = 'modal';
     const last = mi + 1 >= MOMENTS.length;
-    const isNew = m.rule && !wasKnown;
-    const got = learned(), total = RULES.length;
+    const isNew = !!(res && res.isNew);
+    const total = RULEBOOK.length;
     el.innerHTML = `<div class="box"><div class="grab"></div>
       <div class="pophead"><span class="fn">${tr('Pfiff', 'Whistle')} · ${$('#wClock').textContent}</span>
-        ${isNew ? `<span class="newrule">${tr('Neue Regel', 'New rule')} · ${got}/${total}</span>` : ''}</div>
+        ${isNew ? `<span class="newrule">${tr('Neue Regel', 'New rule')} · ${res.count}/${total} · ${mult(res.multiplier)}</span>` : ''}</div>
+      ${isNew && !res.live ? `<div class="fn late-note">${tr('Nicht eingecheckt: Diese Regel zählt nur halb.', 'Not checked in: this rule counts half.')}</div>` : ''}
       <div class="t2" style="margin:6px 0 10px">${m.title}</div>
       <div class="qa"><span class="k">${tr('Was', 'What')}</span><span>${m.seen}</span></div>
       <div class="qa"><span class="k">${tr('Warum', 'Why')}</span><span class="hl">${m.why}</span></div>
-      ${m.anim ? `<div class="rinkwrap" style="margin-top:14px"><canvas class="rink"></canvas></div>` : ''}
+      <div class="seg2" style="margin-top:14px"><button class="on" data-v2="real">${tr('Im Spiel', 'In the game')}</button>${m.anim ? `<button data-v2="rule">${tr('Regel erklärt', 'Rule explained')}</button>` : ''}</div>
+      <div class="rinkwrap" style="margin-top:8px"><canvas class="rink real"></canvas>${m.anim ? '<canvas class="rink sch" hidden></canvas>' : ''}</div>
+      <div class="fn" style="margin-top:6px" id="sitNote">${tr('Echte Positionen aus den Tracking-Daten, im Moment des Pfiffs.', 'Real positions from the tracking data, at the moment of the whistle.')}</div>
       ${m.sig ? `<button class="cell sigrow" data-sig="${m.sig}"><span class="sigpic">${SIG[m.sig]}</span><span class="grow"><span class="hl">${tr('So zeigt es der Schiri', 'The referee signal')}</span><br><span class="fn">${SIGMAP[m.sig].name}</span></span><span class="chev">›</span></button>` : ''}
       <details class="more"><summary>${tr('Mehr dazu', 'More')}</summary><p>${m.text}</p></details>
-      ${last ? `<button class="btn" style="margin-top:18px" data-w="spick">${got === total ? tr('Alle Regeln ansehen', 'See all rules') : tr('Deine Regeln ansehen', 'See your rules')}</button><button class="linkbtn" data-w="restart">${tr('Nochmal von vorne', 'Start again')}</button>`
+      ${last ? `<button class="btn" style="margin-top:18px" data-w="spick">${tr('Dein Regelbuch', 'Your rulebook')}</button><button class="linkbtn" data-w="restart">${tr('Nochmal von vorne', 'Start again')}</button>`
         : `<button class="btn" style="margin-top:18px" data-w="next">${tr('Weiter schauen', 'Keep watching')}</button><button class="linkbtn" data-w="again">${tr('Szene nochmal', 'Replay scene')}</button>`}
     </div>`;
     document.body.appendChild(el);
-    pop = { el, sch: m.anim ? new Schematic($('canvas', el)) : null, a: ANIM[m.anim], t: 0 };
+    pop = { el, sch: m.anim ? new Schematic($('canvas.sch', el)) : null, a: ANIM[m.anim], t: 0 };
+    const real = new Rink($('canvas.real', el)), g = t;
+    requestAnimationFrame(() => real.draw(g - 0.1, { ring: m.ring }));
     el.addEventListener('click', ev => {
+      const v2 = ev.target.closest('[data-v2]');
+      if (v2) {
+        $$('[data-v2]', el).forEach(b => b.classList.toggle('on', b === v2));
+        const isReal = v2.dataset.v2 === 'real';
+        $('canvas.real', el).hidden = !isReal; if ($('canvas.sch', el)) $('canvas.sch', el).hidden = isReal;
+        $('#sitNote', el).textContent = isReal ? tr('Echte Positionen aus den Tracking-Daten, im Moment des Pfiffs.', 'Real positions from the tracking data, at the moment of the whistle.') : tr('Die Regel vereinfacht erklärt.', 'The rule, explained simply.');
+        if (isReal) real.draw(g - 0.1, { ring: m.ring });
+        return;
+      }
       const b = ev.target.closest('[data-w]');
       if (!b) return;
       close();
@@ -796,7 +884,7 @@ views.learn = (() => {
     // für Screenshots: direkt das Popup eines Moments zeigen
     _demo(i, animT) { load(i, false); t = MOMENTS[i].to; board(); openPop(); if (pop) pop.t = animT; },
     // für das Demovideo: Moment i live abspielen
-    _play(i) { close(); load(i, true); },
+    _play(i, lead) { close(); load(i, true); if (lead) t = Math.max(MOMENTS[i].from, MOMENTS[i].to - lead); },
     tick(dt) {
       if (playing && !pop) {
         t += dt;

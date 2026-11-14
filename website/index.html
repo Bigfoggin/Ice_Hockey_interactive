@@ -288,17 +288,42 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 @media (max-width:900px){.sec{padding:84px 0}}
 @media (max-width:700px){.herovid{opacity:.4}.hero::after{background:linear-gradient(0deg,var(--deep) 0%,rgba(0,20,43,.78) 40%,rgba(0,20,43,.7) 100%)}}
 #pro h2{font-size:clamp(34px,4.4vw,58px)}
-.prize{margin-top:14px;font-size:15px;color:var(--mist)}.prize b{color:var(--ice)}
+.prizeline{margin-top:14px;font-size:16px;color:var(--mist)}.prizeline b{color:var(--ice)}
+
+/* ===== v3: Spieltag, Hockey-IQ ===== */
+.day{background:var(--deep)}
+.daysteps{list-style:none;padding:0;margin:44px 0 0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.daysteps li{background:var(--navy);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;gap:8px}
+.daysteps b{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mist)}
+.daysteps strong{font-size:20px;font-weight:900;text-transform:uppercase}
+.daysteps span{color:var(--mist);font-size:15px;line-height:1.45}
+.daysteps li.lg{border-color:var(--ice);box-shadow:inset 0 3px 0 var(--ice)}.daysteps li.lg strong{color:var(--ice)}
+.daysteps li.bp{border-color:#F5B800;box-shadow:inset 0 3px 0 #F5B800}.daysteps li.bp strong{color:#F5B800}
+@media (max-width:1000px){.daysteps{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.daysteps{grid-template-columns:1fr}}
+.iq{background:linear-gradient(180deg,var(--navy),var(--deep))}
+.formula{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:34px}
+.formula div{background:var(--navy);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px 22px;display:flex;flex-direction:column;gap:4px}
+.formula div b{font-size:19px;font-weight:900;text-transform:uppercase}
+.formula div span{font-size:13px;color:var(--mist);font-weight:600}
+.formula div.res{border-color:var(--ice);background:rgba(102,193,211,.12)}.formula div.res b{color:var(--ice)}
+.formula i{font-style:normal;font-size:32px;font-weight:900;color:var(--ice)}
+.iqgrid{display:grid;grid-template-columns:1fr 340px;gap:40px;align-items:start;margin-top:10px}
+@media (max-width:900px){.iqgrid{grid-template-columns:1fr}}
+.board .r.h{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
+.board .r .nm{display:flex;flex-direction:column}.board .r small.bd{margin:2px 0 0;font-weight:600}
+.showgrid.pro{grid-template-columns:1fr 1.1fr}
+@media (max-width:900px){.showgrid.pro{grid-template-columns:1fr}}
 </style>
 
 <body>
 
 <nav id="nav"><div class="wrap">
   <a class="logo" href="#top" aria-label="In the Game"><i></i>IN THE GAME</a>
-  <div class="navlinks"><a href="#learn">Learn the Game</a><a href="#pro">Be a Pro</a><a href="#ranking"><span data-l="de">Rangliste</span><span data-l="en">Ranking</span></a></div>
+  <div class="navlinks"><a href="#day"><span data-l="de">Spieltag</span><span data-l="en">Game day</span></a><a href="#learn">Learn the Game</a><a href="#pro">Be a Pro</a><a href="#ranking">Hockey-IQ</a></div>
   <div class="navr">
     <div class="langs" role="group" aria-label="Sprache / Language"><button data-setlang="de">DE</button><button data-setlang="en">EN</button></div>
-    <button class="acct" id="acctBtn"><i id="acctIni"></i><span class="lbl" id="acctLbl"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></span></button>
+    <button class="acct" id="acctBtn"><i id="acctIni"></i><span class="lbl" id="acctLbl"><span data-l="de">Einchecken</span><span data-l="en">Check in</span></span></button>
   </div>
 </div></nav>
 
@@ -310,7 +335,7 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="wrap">
     <div class="eyebrow fade">Spengler Cup Davos</div>
     <h1><span><b><span data-l="de">Nicht nur</span><span data-l="en">Don&#39;t just</span></b></span><span><b><span data-l="de">zuschauen.</span><span data-l="en">watch.</span></b></span><span><b><span data-l="de" class="w"><em class="on">Mitspielen.</em><em>Verstehen.</em><em>Mitfiebern.</em></span><span data-l="en" class="w"><em class="on">Play.</em><em>Understand.</em><em>Feel it.</em></span></b></span></h1>
-    <div class="rotator fade d2"><span data-l="de">Learn the Game oder Be a Pro: zwei Wege ins Spiel.</span><span data-l="en">Learn the Game or Be a Pro: two ways into the game.</span></div>
+    <div class="rotator fade d2"><span data-l="de">Ein Spiel für Neulinge und Kenner. Live am Spengler Cup.</span><span data-l="en">One game for newcomers and experts. Live at the Spengler Cup.</span></div>
     <div class="ctas fade d3">
       <a class="btn primary" href="#learn">Learn the Game <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a class="btn ghost" href="#pro">Be a Pro</a>
@@ -321,13 +346,25 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 
 
 
+<section class="sec day" id="day"><div class="wrap">
+  <div class="eyebrow reveal"><span data-l="de">Dein Spieltag</span><span data-l="en">Your game day</span></div>
+  <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Ein Spiel. Von Anpfiff bis Schlusspfiff.</span><span data-l="en">One game. From faceoff to final whistle.</span></h2>
+  <ol class="daysteps reveal d2">
+    <li><b>01</b><strong><span data-l="de">Einchecken</span><span data-l="en">Check in</span></strong><span><span data-l="de">Code im Stadion oder im TV-Bild scannen. Live dabei heisst volle Punkte.</span><span data-l="en">Scan the code in the arena or on TV. Live means full points.</span></span></li>
+    <li class="lg"><b>02 · <span data-l="de">Während der Drittel</span><span data-l="en">During the periods</span></b><strong>Learn the Game</strong><span><span data-l="de">Jeder Pfiff erklärt. Jede neue Regel hebt deinen Multiplikator.</span><span data-l="en">Every whistle explained. Every new rule raises your multiplier.</span></span></li>
+    <li class="bp"><b>03 · <span data-l="de">In den Pausen und danach</span><span data-l="en">In the breaks and after</span></b><strong>Be a Pro</strong><span><span data-l="de">Schlüsselszenen einfrieren, Pass ziehen, Punkte holen.</span><span data-l="en">Freeze key scenes, draw the pass, score points.</span></span></li>
+    <li><b>04</b><strong>Hockey-IQ</strong><span><span data-l="de">Punkte × Regeln. Wer liegt vorne, du oder deine Freunde?</span><span data-l="en">Points × rules. Who is ahead, you or your friends?</span></span></li>
+    <li><b>05</b><strong><span data-l="de">Nächstes Spiel</span><span data-l="en">Next game</span></strong><span><span data-l="de">11 Spiele in 6 Tagen. Neue Regeln, neue Szenen, Revanche.</span><span data-l="en">11 games in 6 days. New rules, new scenes, rematch.</span></span></li>
+  </ol>
+</div></section>
+
 <section class="sec show" id="learn" style="background:linear-gradient(180deg,var(--deep),var(--navy))"><div class="wrap">
   <div class="showgrid">
     <div>
       <div class="eyebrow reveal">Learn the Game</div>
       <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Eishockey, was?<br>Erklär mir den Sport.</span><span data-l="en">Hockey, what?<br>Explain it to me.</span></h2>
-      <p class="lead reveal d2"><span data-l="de">Bei jedem Pfiff zeigt dir dein Handy, was gepfiffen wurde und warum. Mit Animation und Schiri-Zeichen.</span><span data-l="en">At every whistle, your phone shows what was called and why. With an animation and the referee signal.</span></p>
-      <ol class="flow reveal d2"><li><span data-l="de">Pfiff</span><span data-l="en">Whistle</span></li><li><span data-l="de">Erklärung</span><span data-l="en">Explanation</span></li><li><span data-l="de">Verstanden</span><span data-l="en">Got it</span></li></ol>
+      <p class="lead reveal d2"><span data-l="de">Bei jedem Pfiff zeigt dir dein Handy, was gepfiffen wurde und warum: mit der echten Situation aus dem Spiel und dem Schiri-Zeichen. Jede Regel landet in deinem Regelbuch, 30 gibt es zu sammeln.</span><span data-l="en">At every whistle, your phone shows what was called and why: with the real situation from the game and the referee signal. Every rule goes into your rulebook, 30 to collect.</span></p>
+      <ol class="flow reveal d2"><li><span data-l="de">Pfiff</span><span data-l="en">Whistle</span></li><li><span data-l="de">Erklärung</span><span data-l="en">Explanation</span></li><li><span data-l="de">Regel gesammelt</span><span data-l="en">Rule collected</span></li></ol>
       <div style="margin-top:30px" class="reveal"><a class="btn primary" href="../learn_the_game/Hockey-verstehen.html"><span data-l="de">Regeln live lernen</span><span data-l="en">Learn the rules live</span></a></div>
     </div>
     <div class="phonecol reveal">
@@ -341,19 +378,34 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
     <div>
       <div class="eyebrow reveal">Be a Pro</div>
       <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Schon mal geträumt, Teil des Spengler Cup zu sein?</span><span data-l="en">Ever dreamed of being part of the Spengler Cup?</span></h2>
-      <p class="lead reveal d2"><span data-l="de">Hier ist deine Chance. In der Pause oder nach dem Spiel spielst du die Schlüsselszenen selbst: Die Szene friert ein, du ziehst den Pass. Wer hat den besten Hockey-IQ? Miss dich mit deinen Freunden.</span><span data-l="en">Here is your chance. In the break or after the game, you play the key scenes yourself: the scene freezes, you draw the pass. Who has the best hockey IQ? Take on your friends.</span></p>
-      <button class="demo reveal d2" id="proDemo" aria-label="Be a Pro">
+      <p class="lead reveal d2"><span data-l="de">Hier ist deine Chance. In der Pause und nach dem Spiel kommen die Schlüsselszenen zurück. Die Szene friert ein, du ziehst den Pass. Danach siehst du, wie es wirklich lief und warum.</span><span data-l="en">Here is your chance. In the break and after the game, the key scenes come back. The scene freezes, you draw the pass. Then you see how it really went, and why.</span></p>
+      <ol class="flow reveal d2"><li><span data-l="de">Szene friert ein</span><span data-l="en">Scene freezes</span></li><li><span data-l="de">Pass ziehen</span><span data-l="en">Draw the pass</span></li><li><span data-l="de">Punkte</span><span data-l="en">Points</span></li></ol>
+    </div>
+    <div class="reveal">
+      <button class="demo" id="proDemo" aria-label="Be a Pro" style="margin-top:0">
         <video src="media/be-a-pro-loop.mp4" autoplay muted loop playsinline preload="metadata"></video>
         <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
         <span class="cap"><span data-l="de">Probier es aus</span><span data-l="en">Try it</span></span>
       </button>
     </div>
-    <div class="reveal" id="ranking">
-      <div class="eyebrow"><span data-l="de">Rangliste</span><span data-l="en">Ranking</span></div>
-      <div class="board" id="board" style="margin-top:14px"></div>
-      <p class="prize"><span data-l="de"><b>Zu gewinnen:</b> Fanartikel und ein Ticket für den Final.</span><span data-l="en"><b>To win:</b> fan merchandise and a ticket for the final.</span></p>
-      <div style="margin-top:18px"><button class="btn ghost" id="boardLogin"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button></div>
-      <p style="margin-top:12px;color:var(--mist);font-size:12px"><span data-l="de">Prototyp: «Demo»-Einträge sind Beispiele, Scores bleiben in diesem Browser.</span><span data-l="en">Prototype: “demo” entries are examples, scores stay in this browser.</span></p>
+  </div>
+</div></section>
+
+<section class="sec iq" id="ranking"><div class="wrap">
+  <div class="eyebrow reveal">Hockey-IQ</div>
+  <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Erst beides macht dich zum Profi.</span><span data-l="en">Only both make you a pro.</span></h2>
+  <div class="formula reveal d2">
+    <div><b><span data-l="de">Pass-Punkte</span><span data-l="en">Pass points</span></b><span>Be a Pro</span></div><i>×</i>
+    <div><b><span data-l="de">Regel-Multiplikator</span><span data-l="en">Rule multiplier</span></b><span>Learn the Game</span></div><i>=</i>
+    <div class="res"><b><span data-l="de">Dein Hockey-IQ</span><span data-l="en">Your Hockey IQ</span></b><span><span data-l="de">eine Bestenliste</span><span data-l="en">one leaderboard</span></span></div>
+  </div>
+  <p class="lead reveal d2"><span data-l="de">Neulinge sammeln Regeln, Kenner lesen Pässe. Nach oben kommt nur, wer beides kann. Live eingecheckt zählt alles voll, später nachgeschaut die Hälfte.</span><span data-l="en">Newcomers collect rules, experts read passes. Only those who do both reach the top. Checked in live, everything counts fully; caught up later, half.</span></p>
+  <div class="iqgrid">
+    <div class="board reveal" id="board"></div>
+    <div class="reveal">
+      <p class="prizeline"><span data-l="de"><b>Zu gewinnen:</b> Fanartikel und ein Ticket für den Final.</span><span data-l="en"><b>To win:</b> fan merchandise and a ticket for the final.</span></p>
+      <div style="margin-top:18px"><button class="btn primary" id="boardLogin"><span data-l="de">Einchecken</span><span data-l="en">Check in</span></button></div>
+      <p style="margin-top:14px;color:var(--mist);font-size:12px"><span data-l="de">Prototyp: «Demo»-Einträge sind Beispiele, alles bleibt in diesem Browser.</span><span data-l="en">Prototype: “demo” entries are examples, everything stays in this browser.</span></p>
     </div>
   </div>
 </div></section>
@@ -361,7 +413,7 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 <section class="sec final" id="final"><div class="wrap">
   <div class="eyebrow reveal"><span data-l="de">Spengler Cup Davos</span><span data-l="en">Spengler Cup Davos</span></div>
   <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Bereit fürs Spiel?</span><span data-l="en">Ready for the game?</span></h2>
-  <p class="lead reveal d2"><span data-l="de">Der 98. Spengler Cup startet am 26. Dezember in Davos. Hier die Highlights vom letzten Final.</span><span data-l="en">The 98th Spengler Cup starts on 26 December in Davos. Here are the highlights of last year’s final.</span></p>
+  <p class="lead reveal d2"><span data-l="de">11 Spiele vom 26. bis 31. Dezember in Davos. Hier die Highlights vom letzten Final.</span><span data-l="en">11 games from 26 to 31 December in Davos. Here are the highlights of last year’s final.</span></p>
   <button class="yt reveal" data-yt="O3rLScC5SKw" aria-label="Highlights abspielen">
     <img src="https://i.ytimg.com/vi/O3rLScC5SKw/maxresdefault.jpg" alt="" loading="lazy">
     <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
@@ -380,15 +432,15 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 <div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
   <div class="box">
     <div class="eyebrow">Be a Pro · Learn the Game</div>
-    <h3 id="dlgTitle"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></h3>
-    <p><span data-l="de">Mit deinem Login speicherst du deinen Spielstand und nimmst am Gewinnspiel teil. Und der Spengler Cup lernt sein Publikum besser kennen.</span><span data-l="en">Log in to save your progress and enter the prize draw. And the Spengler Cup gets to know its audience better.</span></p>
+    <h3 id="dlgTitle"><span data-l="de">Einchecken</span><span data-l="en">Check in</span></h3>
+    <p><span data-l="de">Im Stadion oder vor dem TV scannst du den Code des Spiels. Damit bist du live dabei: volle Punkte, dein Spielstand ist gespeichert und du nimmst am Gewinnspiel teil. Im Prototyp checkst du hier ein.</span><span data-l="en">In the arena or in front of the TV, you scan the code of the game. Then you are live: full points, your progress is saved and you enter the prize draw. In the prototype, you check in here.</span></p>
     <form id="loginForm" novalidate>
       <label for="lgName"><span data-l="de">Name in der Rangliste</span><span data-l="en">Name in the ranking</span></label>
       <input type="text" id="lgName" autocomplete="nickname" maxlength="32" placeholder="z. B. Lena, Davos">
       <label for="lgMail"><span data-l="de">E-Mail (optional, für Gewinnspiel)</span><span data-l="en">Email (optional, for the contest)</span></label>
       <input type="email" id="lgMail" autocomplete="email" placeholder="name@example.ch">
       <label class="chk" style="text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" id="lgOk"> <span data-l="de">Ich bin einverstanden, dass mein Name in der Rangliste erscheint und ich am Gewinnspiel teilnehme.</span><span data-l="en">I agree that my name appears in the ranking and that I take part in the prize draw.</span></label>
-      <div class="row2"><button class="btn primary" type="submit"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button><button class="btn ghost" type="button" data-close><span data-l="de">Abbrechen</span><span data-l="en">Cancel</span></button></div>
+      <div class="row2"><button class="btn primary" type="submit"><span data-l="de">Live dabei sein</span><span data-l="en">Go live</span></button><button class="btn ghost" type="button" data-close><span data-l="de">Abbrechen</span><span data-l="en">Cancel</span></button></div>
       <div class="err" id="lgErr"></div>
     </form>
     <div id="loggedIn" hidden>
@@ -514,11 +566,12 @@ function renderAccount() {
   const btn = document.getElementById('acctBtn');
   btn.classList.toggle('in', !!u);
   document.getElementById('acctIni').textContent = u ? u.name.trim().slice(0, 1).toUpperCase() : '';
-  document.getElementById('acctLbl').textContent = u ? u.name : t('Anmelden', 'Log in');
-  document.getElementById('boardLogin').textContent = u ? t('Abmelden', 'Log out') : t('Anmelden', 'Log in');
-  const rows = HVAccount.leaderboard('be-a-pro', 10);
-  document.getElementById('board').innerHTML = rows.map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><i>${i + 1}</i>${esc(r.name)}${r.demo ? '<small>Demo</small>' : ''}<em>${r.value}</em></div>`).join('')
-    + (u && HVAccount.best('be-a-pro') == null ? `<div class="r me"><i>–</i>${esc(u.name)}<small>${t('noch kein Score', 'no score yet')}</small><em>–</em></div>` : '');
+  const live = HVAccount.isLive();
+  document.getElementById('acctLbl').textContent = u ? u.name + (live ? ' · LIVE' : '') : t('Einchecken', 'Check in');
+  document.getElementById('boardLogin').textContent = u ? (live ? t('Abmelden', 'Log out') : t('Einchecken', 'Check in')) : t('Einchecken', 'Check in');
+  const rows = HVAccount.board(8);
+  const fmt = r => `${r.rules} ${t('Regeln', 'rules')} ×${r.multiplier.toFixed(1)} · ${r.pass} ${t('Punkte', 'points')}`;
+  document.getElementById('board').innerHTML = `<div class="r h"><i>#</i>${t('Name', 'Name')}<em>Hockey-IQ</em></div>` + rows.map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><i>${i + 1}</i><span class="nm">${esc(r.name)}${r.demo ? '<small>Demo</small>' : ''}<small class="bd">${fmt(r)}</small></span><em>${r.iq}</em></div>`).join('');
 }
 (function account() {
   const dlg = document.getElementById('dlg');
@@ -526,14 +579,14 @@ function renderAccount() {
     const u = window.HVAccount && HVAccount.current();
     document.getElementById('loginForm').hidden = !!u;
     document.getElementById('loggedIn').hidden = !u;
-    document.getElementById('dlgTitle').textContent = u ? t('Angemeldet', 'Logged in') : t('Anmelden', 'Log in');
-    if (u) document.getElementById('lgHello').textContent = t(`Hallo ${u.name}. Dein Spielstand wird gespeichert und du bist im Gewinnspiel.`, `Hi ${u.name}. Your progress is saved and you are in the prize draw.`);
+    document.getElementById('dlgTitle').textContent = u ? t('Eingecheckt', 'Checked in') : t('Einchecken', 'Check in');
+    if (u) document.getElementById('lgHello').textContent = t(`Hallo ${u.name}. Du bist live dabei: volle Punkte, dein Spielstand ist gespeichert und du bist im Gewinnspiel.`, `Hi ${u.name}. You are live: full points, your progress is saved and you are in the prize draw.`);
     dlg.classList.add('open');
     setTimeout(() => (u ? document.getElementById('lgOut') : document.getElementById('lgName')).focus(), 30);
   };
   const close = () => dlg.classList.remove('open');
   document.getElementById('acctBtn').addEventListener('click', open);
-  document.getElementById('boardLogin').addEventListener('click', () => { if (HVAccount.current()) HVAccount.logout(); else open(); });
+  document.getElementById('boardLogin').addEventListener('click', () => { const u = HVAccount.current(); if (u && HVAccount.isLive()) HVAccount.logout(); else if (u) HVAccount.checkIn(); else open(); });
   dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-close]')) close(); });
   addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   document.getElementById('loginForm').addEventListener('submit', e => {
@@ -544,7 +597,7 @@ function renderAccount() {
     if (mail && !/^\S+@\S+\.\S+$/.test(mail)) { err.textContent = t('Bitte prüfe die E-Mail-Adresse.', 'Please check the email address.'); return; }
     if (!document.getElementById('lgOk').checked) { err.textContent = t('Bitte bestätige, dass dein Name angezeigt werden darf.', 'Please confirm that your name may be shown.'); return; }
     err.textContent = '';
-    HVAccount.login(name, mail); close();
+    HVAccount.login(name, mail); HVAccount.checkIn(); close();
   });
   document.getElementById('lgOut').addEventListener('click', () => { HVAccount.logout(); close(); });
   if (window.HVAccount) HVAccount.onChange(renderAccount);
