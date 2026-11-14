@@ -53,7 +53,7 @@ nav .btn{height:42px;padding:0 18px;font-size:12px}
 .rinklines path,.rinklines line,.rinklines circle,.rinklines rect{fill:none;stroke-width:3;stroke-dasharray:2400;stroke-dashoffset:2400;animation:draw 3.2s cubic-bezier(.6,.1,.2,1) forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
 .hero .wrap{position:relative;z-index:2;padding-top:100px;padding-bottom:80px;width:100%}
-.hero h1{font-size:clamp(56px,11vw,168px);margin:22px 0 26px}
+.hero h1{font-size:clamp(36px,10.5vw,168px);margin:22px 0 26px}
 .hero h1 span{display:block;overflow:hidden}
 .hero h1 span b{display:block;font-weight:900}
 .js .hero h1 span b{transform:translateY(105%);animation:rise 1s cubic-bezier(.2,.8,.2,1) forwards}
@@ -256,6 +256,37 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 .board .r em{font-style:normal;margin-left:auto;font-weight:900;font-variant-numeric:tabular-nums}
 .board .r.me{color:var(--ice)}
 .board .r small{color:var(--mist);font-weight:500;margin-left:8px;font-size:12px}
+
+/* ===== Entschlackt: Video-Hero, kurze Sektionen ===== */
+.herovid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,20,43,.92) 0%,rgba(0,20,43,.6) 55%,rgba(0,20,43,.25) 100%),linear-gradient(0deg,var(--deep) 0%,transparent 30%);pointer-events:none;z-index:1}
+.hero .wrap,.hero .scrollcue{z-index:3}
+.lead{color:var(--mist);font-size:clamp(18px,1.6vw,21px);font-weight:500;line-height:1.55;max-width:560px;margin-top:24px}
+.flow{list-style:none;display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;padding:0}
+.flow li{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px}
+.flow li+li::before{content:'→';margin-right:10px;color:var(--ice)}
+.final{background:var(--deep)}
+.yt,.demo{position:relative;display:block;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;cursor:pointer;margin-top:40px;box-shadow:0 40px 120px -40px rgba(102,193,211,.45)}
+.yt img,.demo video,.lb video{width:100%;height:100%;object-fit:cover;display:block}
+.yt img{opacity:.85;transition:opacity .3s,transform .6s}
+.yt:hover img{opacity:1;transform:scale(1.02)}
+.yt .play,.demo .play{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:var(--ice);color:var(--navy);display:grid;place-items:center;box-shadow:0 10px 40px rgba(0,0,0,.4);transition:transform .2s}
+.yt .play svg,.demo .play svg{width:34px;height:34px;margin-left:4px}
+.yt:hover .play,.demo:hover .play{transform:scale(1.08)}
+.yt .cap,.demo .cap{position:absolute;left:18px;bottom:16px;right:18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.src{margin-top:14px;font-size:12px;color:var(--mist)}
+.demo{margin-top:34px}
+.demo .cap{font-size:14px}
+.showgrid.pro{align-items:center}
+.lb{position:fixed;inset:0;z-index:200;background:rgba(0,10,25,.92);display:none;place-items:center;padding:24px}
+.lb.open{display:grid}
+.lb .frame{width:min(1100px,100%);aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;position:relative}
+.lb .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.lb .x{position:absolute;top:18px;right:22px;font-size:40px;line-height:1;color:#fff;background:none;border:0;cursor:pointer}
+.sec{padding:120px 0}
+@media (max-width:900px){.sec{padding:84px 0}}
+@media (max-width:700px){.herovid{opacity:.4}.hero::after{background:linear-gradient(0deg,var(--deep) 0%,rgba(0,20,43,.78) 40%,rgba(0,20,43,.7) 100%)}}
 </style>
 
 <body>
@@ -270,24 +301,12 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 </div></nav>
 
 <header class="hero" id="top">
-  <canvas id="ice"></canvas><canvas id="game"></canvas>
-  <svg class="rinklines" viewBox="0 0 1200 600" preserveAspectRatio="none" stroke="#fff">
-    <rect x="20" y="20" width="1160" height="560" rx="170"/>
-    <line x1="600" y1="20" x2="600" y2="580" style="stroke:#D7192D"/>
-    <line x1="430" y1="20" x2="430" y2="580" style="stroke:#66C1D3"/>
-    <line x1="770" y1="20" x2="770" y2="580" style="stroke:#66C1D3"/>
-    <circle cx="600" cy="300" r="90"/>
-    <circle cx="210" cy="160" r="90"/><circle cx="210" cy="440" r="90"/>
-    <circle cx="990" cy="160" r="90"/><circle cx="990" cy="440" r="90"/>
-  </svg>
+  <video class="herovid" autoplay muted loop playsinline preload="auto" aria-hidden="true"
+    src="https://backend.spenglercup.ch/sites/default/files/2026-09/Headervideo_Spengler.mp4"></video>
 
-  <div class="count fade d3">
-    <div class="eyebrow"><span data-l="de">Bis zum 98. Spengler Cup</span><span data-l="en">Until the 98th Spengler Cup</span></div>
-    <div class="t" id="countdown"><div><b>--</b><span><span data-l="de">TAGE</span><span data-l="en">DAYS</span></span></div><div><b>--</b><span><span data-l="de">STD</span><span data-l="en">HRS</span></span></div><div><b>--</b><span>MIN</span></div><div><b>--</b><span><span data-l="de">SEK</span><span data-l="en">SEC</span></span></div></div>
-  </div>
 
   <div class="wrap">
-    <div class="eyebrow fade">Spengler Cup Davos · <span data-l="de">Konzept</span><span data-l="en">Concept</span> Sport Innovation Challenge 2026</div>
+    <div class="eyebrow fade">Spengler Cup Davos</div>
     <h1><span><b><span data-l="de">Nicht nur</span><span data-l="en">Don&#39;t just</span></b></span><span><b><span data-l="de">zuschauen.</span><span data-l="en">watch.</span></b></span><span><b><span data-l="de" class="w"><em class="on">Mitspielen.</em><em>Verstehen.</em><em>Mitfiebern.</em></span><span data-l="en" class="w"><em class="on">Play.</em><em>Understand.</em><em>Feel it.</em></span></b></span></h1>
     <div class="rotator fade d2"><span data-l="de">Learn the Game oder Be a Pro: zwei Wege ins Spiel.</span><span data-l="en">Learn the Game or Be a Pro: two ways into the game.</span></div>
     <div class="ctas fade d3">
@@ -298,36 +317,15 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="scrollcue"></div>
 </header>
 
-<div class="mqclip"><div class="marquee" aria-hidden="true"><div class="track" id="mq">
-  <span>146 km/h <span data-l="de">härtester Schuss</span><span data-l="en">hardest shot</span></span><span>37.8 km/h Top-Speed</span><span>60 <span data-l="de">Pfiffe pro Spiel</span><span data-l="en">whistles per game</span></span><span><span data-l="de">Echte Tracking-Daten</span><span data-l="en">Real tracking data</span></span><span>Spengler Cup Davos</span>
-</div></div></div>
 
-<section class="sec doors" id="doors"><div class="wrap">
-  <div class="eyebrow reveal"><span data-l="de">Zwei Wege ins Spiel</span><span data-l="en">Two ways into the game</span></div>
-  <div class="doorgrid">
-    <a class="door reveal" href="#learn"><span class="glow"></span><span class="num">01</span>
-      <span class="tag">Learn the Game</span>
-      <h3><span data-l="de">Eishockey, was?</span><span data-l="en">Hockey, what?</span></h3>
-      <p><span data-l="de">Erklär mir den Sport. Bei jedem Pfiff zeigt dir dein Handy, was passiert ist und warum.</span><span data-l="en">Explain the sport to me. At every whistle, your phone shows what happened and why.</span></p>
-    </a>
-    <a class="door reveal d1" href="#pro"><span class="glow"></span><span class="num">02</span>
-      <span class="tag">Be a Pro</span>
-      <h3><span data-l="de">Schon mal geträumt, ein Eishockey-Profi zu sein?</span><span data-l="en">Ever dreamed of being a hockey pro?</span></h3>
-      <p><span data-l="de">Probier es aus. Sag in echten Spielszenen den nächsten Pass voraus.</span><span data-l="en">Try it. Predict the next pass in real game scenes.</span></p>
-    </a>
-  </div>
-</div></section>
 
 <section class="sec show" id="learn" style="background:linear-gradient(180deg,var(--deep),var(--navy))"><div class="wrap">
   <div class="showgrid">
     <div>
       <div class="eyebrow reveal">Learn the Game</div>
       <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Eishockey, was?<br>Erklär mir den Sport.</span><span data-l="en">Hockey, what?<br>Explain it to me.</span></h2>
-      <div class="steps" style="margin-top:30px">
-        <div class="step" data-step><div class="k">01 · <span data-l="de">PFIFF</span><span data-l="en">WHISTLE</span></div><h3><span data-l="de">Der Schiri unterbricht</span><span data-l="en">The referee stops play</span></h3><p><span data-l="de">Icing, Abseits, Strafe oder Tor: Die Live-Daten kennen den Grund.</span><span data-l="en">Icing, offside, penalty or goal: the live data knows the reason.</span></p></div>
-        <div class="step" data-step><div class="k">02 · <span data-l="de">ERKLÄRUNG</span><span data-l="en">EXPLANATION</span></div><h3><span data-l="de">Du weisst warum</span><span data-l="en">You know why</span></h3><p><span data-l="de">Eine kurze Animation zeigt, was passiert ist, mit dem Handzeichen des Schiris.</span><span data-l="en">A short animation shows what happened, with the referee signal.</span></p></div>
-        <div class="step" data-step><div class="k">03 · <span data-l="de">MITREDEN</span><span data-l="en">JOIN IN</span></div><h3><span data-l="de">Du fieberst mit</span><span data-l="en">You are part of it</span></h3><p><span data-l="de">Nach ein paar Spielen verstehst du jeden Pfiff, auch ohne Handy.</span><span data-l="en">After a few games you understand every whistle, even without your phone.</span></p></div>
-      </div>
+      <p class="lead reveal d2"><span data-l="de">Bei jedem Pfiff zeigt dir dein Handy, was gepfiffen wurde und warum. Mit Animation und Schiri-Zeichen.</span><span data-l="en">At every whistle, your phone shows what was called and why. With an animation and the referee signal.</span></p>
+      <ol class="flow reveal d2"><li><span data-l="de">Pfiff</span><span data-l="en">Whistle</span></li><li><span data-l="de">Erklärung</span><span data-l="en">Explanation</span></li><li><span data-l="de">Verstanden</span><span data-l="en">Got it</span></li></ol>
       <div style="margin-top:30px" class="reveal"><a class="btn primary" href="../learn_the_game/Hockey-verstehen.html"><span data-l="de">Regeln live lernen</span><span data-l="en">Learn the rules live</span></a></div>
     </div>
     <div class="phonecol reveal">
@@ -336,17 +334,29 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   </div>
 </div></section>
 
+<section class="sec final" id="final"><div class="wrap">
+  <div class="eyebrow reveal"><span data-l="de">Das Spiel hinter den Daten</span><span data-l="en">The game behind the data</span></div>
+  <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Final 2025.<br>USC – HCD 3:6.</span><span data-l="en">Final 2025.<br>USC – HCD 3:6.</span></h2>
+  <p class="lead reveal d2"><span data-l="de">Beide Angebote nutzen die Tracking-Daten genau dieses Spiels.</span><span data-l="en">Both offers use the tracking data of exactly this game.</span></p>
+  <button class="yt reveal" data-yt="O3rLScC5SKw" aria-label="Highlights abspielen">
+    <img src="https://i.ytimg.com/vi/O3rLScC5SKw/maxresdefault.jpg" alt="" loading="lazy">
+    <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
+    <span class="cap">Highlights · U.S. Collegiate Selects vs. HC Davos · Spengler Cup Davos</span>
+  </button>
+  <p class="src"><span data-l="de">Video: Spengler Cup Davos auf YouTube, provisorisch eingebunden. Wird erst beim Klick geladen.</span><span data-l="en">Video: Spengler Cup Davos on YouTube, embedded provisionally. Loads only on click.</span></p>
+</div></section>
+
 <section class="sec show" id="pro"><div class="wrap">
-  <div class="showgrid">
+  <div class="showgrid pro">
     <div>
       <div class="eyebrow reveal">Be a Pro</div>
       <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Schon mal geträumt,<br>ein Profi zu sein?</span><span data-l="en">Ever dreamed of<br>being a pro?</span></h2>
-      <div class="steps" style="margin-top:30px">
-        <div class="step on" data-step><div class="k">01 · <span data-l="de">IN DER PAUSE</span><span data-l="en">IN THE BREAK</span></div><h3><span data-l="de">Die Szene stoppt</span><span data-l="en">The scene freezes</span></h3><p><span data-l="de">Echte Spielzüge aus dem letzten Drittel, genau im entscheidenden Moment angehalten.</span><span data-l="en">Real plays from the last period, frozen at the decisive moment.</span></p></div>
-        <div class="step" data-step><div class="k">02 · <span data-l="de">DEIN ZUG</span><span data-l="en">YOUR MOVE</span></div><h3><span data-l="de">Zieh den Pass</span><span data-l="en">Draw the pass</span></h3><p><span data-l="de">Wohin geht der Puck? Je näher am echten Pass, desto mehr Punkte.</span><span data-l="en">Where does the puck go? The closer to the real pass, the more points.</span></p></div>
-        <div class="step" data-step><div class="k">03 · <span data-l="de">NACH DER PAUSE</span><span data-l="en">AFTER THE BREAK</span></div><h3><span data-l="de">Top 10 im Stadion</span><span data-l="en">Top 10 in the arena</span></h3><p><span data-l="de">Die Besten erscheinen auf dem Videowürfel. Am Ende des Turniers warten Tickets für 2026.</span><span data-l="en">The best appear on the video cube. Tickets for 2026 await at the end of the tournament.</span></p></div>
-      </div>
-      <div style="margin-top:30px" class="reveal"><a class="btn primary" href="../index.html"><span data-l="de">Probier es aus</span><span data-l="en">Try it</span></a></div>
+      <p class="lead reveal d2"><span data-l="de">In der Drittelspause friert eine echte Szene ein. Du ziehst den Pass. Je näher am echten Puck, desto mehr Punkte. Die Top 10 kommen auf den Videowürfel.</span><span data-l="en">In the intermission, a real scene freezes. You draw the pass. The closer to the real puck, the more points. The top 10 make the video cube.</span></p>
+      <button class="demo reveal d2" id="proDemo" aria-label="Be a Pro">
+        <video src="media/be-a-pro-loop.mp4" autoplay muted loop playsinline preload="metadata"></video>
+        <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
+        <span class="cap"><span data-l="de">Probier es aus</span><span data-l="en">Try it</span></span>
+      </button>
     </div>
     <div class="reveal" id="ranking">
       <div class="eyebrow"><span data-l="de">Rangliste</span><span data-l="en">Ranking</span></div>
@@ -361,6 +371,8 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div><b>In the Game</b><br><span data-l="de">Prototyp für die Sport Innovation Challenge 2026.</span><span data-l="en">Prototype for the Sport Innovation Challenge 2026.</span><br><span data-l="de">Daten: Wisehockey, Final Spengler Cup vom 31.12.2025.</span><span data-l="en">Data: Wisehockey, Spengler Cup final of 31.12.2025.</span></div>
   <div style="max-width:420px"><span data-l="de">Konzept eines Studierendenteams, kein offizielles Angebot des Spengler Cup Davos. Preis und Gewinnspiel sind symbolisch.</span><span data-l="en">Concept by a student team, not an official offer of the Spengler Cup Davos. Prize and contest are symbolic.</span></div>
 </div></footer>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Video"><button class="x" aria-label="Schliessen">×</button><div class="frame" id="lbFrame"></div></div>
 
 <div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
   <div class="box">
@@ -385,8 +397,6 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 </div>
 
 <script src="../shared/hv-account.js"></script>
-<!-- Spieldaten für den Hintergrund (lokal erzeugt, siehe learn_the_game/README.md); fehlen sie, läuft die Puck-Animation -->
-<script src="../learn_the_game/data.js"></script>
 <script>
 'use strict';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -398,17 +408,6 @@ if (STATIC) document.documentElement.classList.add('static');
 const nav = document.getElementById('nav');
 addEventListener('scroll', () => nav.classList.toggle('solid', scrollY > 40), { passive: true });
 
-// Countdown bis zum Turnierstart
-(function countdown() {
-  const target = new Date('2026-12-26T00:00:00+01:00').getTime();
-  const cells = [...document.querySelectorAll('#countdown b')];
-  function upd() {
-    let s = Math.max(0, Math.floor((target - Date.now()) / 1000));
-    const v = [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60];
-    v.forEach((x, i) => (cells[i].textContent = String(x).padStart(2, '0')));
-  }
-  upd(); setInterval(upd, 1000);
-})();
 
 // Wortwechsel im Hero
 (function rotator() {
@@ -419,42 +418,7 @@ addEventListener('scroll', () => nav.classList.toggle('solid', scrollY > 40), { 
   });
 })();
 
-// Marquee verdoppeln, damit die Schleife nahtlos läuft
-const mq = document.getElementById('mq');
-mq.innerHTML += mq.innerHTML;
 
-// Eis-Animation im Hero: Pucks mit Lichtspur, die übers Eis jagen
-(function ice() {
-  const c = document.getElementById('ice'), ctx = c.getContext('2d');
-  let W, H, dpr;
-  const pucks = [];
-  function size() { dpr = devicePixelRatio || 1; W = c.clientWidth; H = c.clientHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
-  function spawn() {
-    const y = H * (0.25 + Math.random() * 0.65), dir = Math.random() < 0.5 ? 1 : -1;
-    pucks.push({ x: dir > 0 ? -60 : W + 60, y, vx: dir * (6 + Math.random() * 10), vy: (Math.random() - 0.5) * 2.4, trail: [], hue: Math.random() < 0.75 ? '102,193,211' : '255,255,255' });
-  }
-  size(); addEventListener('resize', size);
-  let last = 0;
-  function frame(ts) {
-    ctx.clearRect(0, 0, W, H);
-    if (ts - last > 650 && pucks.length < 6) { spawn(); last = ts; }
-    for (let i = pucks.length - 1; i >= 0; i--) {
-      const p = pucks[i];
-      p.x += p.vx; p.y += p.vy;
-      if (p.y < H * 0.15 || p.y > H * 0.95) p.vy *= -1;
-      p.trail.push([p.x, p.y]); if (p.trail.length > 26) p.trail.shift();
-      for (let k = 1; k < p.trail.length; k++) {
-        ctx.strokeStyle = `rgba(${p.hue},${(k / p.trail.length) * 0.55})`;
-        ctx.lineWidth = (k / p.trail.length) * 5;
-        ctx.beginPath(); ctx.moveTo(...p.trail[k - 1]); ctx.lineTo(...p.trail[k]); ctx.stroke();
-      }
-      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fillStyle = '#fff'; ctx.shadowColor = `rgba(${p.hue},1)`; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0;
-      if (p.x < -100 || p.x > W + 100) pucks.splice(i, 1);
-    }
-    requestAnimationFrame(frame);
-  }
-  if (!reduce && !window.MATCH_DATA) requestAnimationFrame(frame);
-})();
 
 // Zahlen hochzählen, sobald sie sichtbar werden
 function countUp(el) {
@@ -494,82 +458,34 @@ new IntersectionObserver(([en], o) => {
 const stepIO = new IntersectionObserver(entries => entries.forEach(en => en.target.classList.toggle('on', en.isIntersecting)), { rootMargin: '-40% 0px -40% 0px' });
 document.querySelectorAll('[data-step]').forEach(s => stepIO.observe(s));
 
-// Türen: Lichtschein folgt der Maus, leichte Neigung
-document.querySelectorAll('.door').forEach(d => {
-  d.addEventListener('pointermove', e => {
-    const r = d.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-    d.style.setProperty('--mx', `${x * 100}%`); d.style.setProperty('--my', `${y * 100}%`);
-    if (!reduce) d.style.transform = `perspective(900px) rotateY(${(x - 0.5) * 6}deg) rotateX(${(0.5 - y) * 6}deg)`;
-  });
-  d.addEventListener('pointerleave', () => (d.style.transform = ''));
+
+
+
+
+// Videos: YouTube erst beim Klick laden (Datenschutz, Ladezeit)
+const lb = document.getElementById('lb'), lbFrame = document.getElementById('lbFrame');
+function lightbox(html) { lbFrame.innerHTML = html; lb.classList.add('open'); }
+function closeLb() { lb.classList.remove('open'); lbFrame.innerHTML = ''; }
+lb.addEventListener('click', e => { if (e.target === lb || e.target.closest('.x')) closeLb(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+document.querySelectorAll('.yt').forEach(b => b.addEventListener('click', () => {
+  b.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.yt}?autoplay=1&rel=0" title="Highlights" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+}));
+
+// Smart Link Be a Pro: echtes Spiel, wenn erreichbar, sonst die Demo mit Ton
+const BE_A_PRO = ['../index.html', 'http://localhost:8800/index.html'];
+async function reachable(url) {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 1200);
+  try {
+    const same = new URL(url, location.href).origin === location.origin;
+    const r = await fetch(url, { method: 'GET', mode: same ? 'same-origin' : 'no-cors', cache: 'no-store', signal: ctl.signal });
+    return same ? r.ok : true;
+  } catch (e) { return false; } finally { clearTimeout(t); }
+}
+document.getElementById('proDemo').addEventListener('click', async () => {
+  for (const u of BE_A_PRO) if (await reachable(u)) { location.href = u; return; }
+  lightbox('<video src="media/be-a-pro-demo.mp4" controls autoplay playsinline></video>');
 });
-
-
-// Hintergrund: ein echter Spielzug aus dem Final, endlos wiederholt
-(function gameBackground() {
-  const D = window.MATCH_DATA;
-  if (!D || reduce || STATIC) return;
-  const c = document.getElementById('game'), ctx = c.getContext('2d');
-  document.querySelector('.hero').classList.add('has-game');
-  const ev = D.events, goals = ev.filter(e => e.ty === 'Goal');
-  const goal = goals[2] || goals[0];
-  const t0 = goal.g - 40, t1 = goal.g + 3;
-  const tracks = new Map(), onEv = [], puck = [];
-  for (const e of ev) {
-    if (e.g < t0 - 5 || e.g > t1 + 5) continue;
-    if (e.on) { onEv.push(e); for (const [id, x, y] of e.on) { if (!tracks.has(id)) tracks.set(id, []); tracks.get(id).push([e.g, x, y]); } }
-    if (e.s) puck.push([e.g, e.s[0], e.s[1]]);
-  }
-  const at = (arr, t) => {
-    let k = 0; while (k + 1 < arr.length && arr[k + 1][0] <= t) k++;
-    const a = arr[k], b = arr[k + 1];
-    if (!b || b[0] - a[0] > 4) return [a[1], a[2]];
-    const f = (t - a[0]) / (b[0] - a[0]);
-    return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
-  };
-  let W, H, dpr, k, ox, oy;
-  function size() {
-    dpr = devicePixelRatio || 1; W = c.clientWidth; H = c.clientHeight;
-    c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    k = Math.min(W / 62, (H * 0.8) / 30); ox = W / 2; oy = H * 0.55;
-  }
-  size(); addEventListener('resize', size);
-  const X = x => ox + x * k, Y = y => oy - y * k;
-  function rink() {
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255,255,255,.18)';
-    ctx.beginPath(); ctx.roundRect(X(-30), Y(15), 60 * k, 30 * k, 8.5 * k); ctx.stroke();
-    const vl = (x, col, w) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(X(x), Y(15)); ctx.lineTo(X(x), Y(-15)); ctx.stroke(); };
-    vl(0, 'rgba(215,25,45,.45)', 4); vl(-7.14, 'rgba(102,193,211,.45)', 5); vl(7.14, 'rgba(102,193,211,.45)', 5);
-    vl(-26, 'rgba(215,25,45,.3)', 2); vl(26, 'rgba(215,25,45,.3)', 2);
-    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2;
-    for (const [x, y] of [[0, 0], [-20, 7], [-20, -7], [20, 7], [20, -7]]) { ctx.beginPath(); ctx.arc(X(x), Y(y), 4.5 * k, 0, 7); ctx.stroke(); }
-  }
-  const team = {};
-  for (const [id, p] of Object.entries(D.players)) team[id] = p.tm;
-  const start = performance.now();
-  function frame(now) {
-    const t = t0 + (((now - start) / 1000) % (t1 - t0));
-    ctx.clearRect(0, 0, W, H);
-    rink();
-    let cur = onEv[0];
-    for (const e of onEv) { if (e.g <= t) cur = e; else break; }
-    const r = Math.max(4, 0.6 * k);
-    for (const [id] of cur.on) {
-      const tr = tracks.get(id); if (!tr) continue;
-      const [x, y] = at(tr, t);
-      ctx.beginPath(); ctx.arc(X(x), Y(y), r, 0, 7);
-      ctx.fillStyle = team[id] === 'HCD' ? 'rgba(107,155,255,.9)' : 'rgba(240,82,106,.9)'; ctx.fill();
-    }
-    if (puck.length) {
-      const [px, py] = at(puck, t);
-      ctx.beginPath(); ctx.arc(X(px), Y(py), Math.max(4, 0.4 * k), 0, 7);
-      ctx.fillStyle = '#fff'; ctx.shadowColor = '#66C1D3'; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
-    }
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-})();
 
 // Sprache: ?lang=en, sonst gespeicherte Wahl, sonst Browsersprache
 (function lang() {
