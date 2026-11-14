@@ -155,67 +155,73 @@ function modal(html) {
  * Schiri-Zeichen (vereinfachte Piktogramme nach IIHF-Handzeichen)
  * ------------------------------------------------------------------ */
 const SIG = (() => {
-  // Piktogramme nach den IIHF-Handzeichen. Ansicht von vorne: Die rechte Hand des Schiris
-  // (Pfeifenhand) ist für uns links. Hauptschiedsrichter mit orangem Armband, Linienrichter ohne.
-  // Bewegungen in Gelb, Stock in Grau als Lesehilfe.
+  // Piktogramme nach den IIHF-Handzeichen, animiert: Ein Schiri-Zeichen ist eine Bewegung.
+  // Ansicht von vorne: Die rechte Hand des Schiris (Pfeifenhand) ist für uns links.
+  // Hauptschiedsrichter mit orangem Armband, Linienrichter ohne. Stock in Braun als Lesehilfe.
   const SKIN = '#F3D2B5', INK = '#111827', MOVE = '#F59E0B', BAND = '#F97316', STICK = '#8B5E34';
   const RS = [37, 32], LS = [63, 32]; // rechte / linke Schulter des Schiris (von vorne gesehen)
   const pts = a => a.map(p => p.join(',')).join(' ');
-  function arm(a, band) {
-    const [p0, p1] = a, end = a[a.length - 1];
-    const f = t => [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
-    return `<polyline points="${pts(a)}" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>` +
-      `<polyline points="${pts(a)}" fill="none" stroke="${INK}" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>` +
-      (band ? `<line x1="${f(0.32)[0]}" y1="${f(0.32)[1]}" x2="${f(0.66)[0]}" y2="${f(0.66)[1]}" stroke="${BAND}" stroke-width="9"/>` : '') +
-      `<circle cx="${end[0]}" cy="${end[1]}" r="5.6" fill="${SKIN}" stroke="${INK}" stroke-width="2.2"/>`;
+  const SPL = 'calcMode="spline" keyTimes="0;.5;1" keySplines=".45 0 .55 1;.45 0 .55 1" repeatCount="indefinite"';
+  // startet in der Zeichen-Pose (B), geht zurück und wieder hin
+  const an = (attr, A, B, dur) => `<animate attributeName="${attr}" values="${B};${A};${B}" dur="${dur}s" ${SPL}/>`;
+  // arm(Pose, Armband?, Zielpose, Dauer): ohne Zielpose statisch, sonst pendelt der Arm zwischen beiden Posen
+  function arm(a, band, b, dur = 1.4) {
+    const end = x => x[x.length - 1];
+    const f = (x, t) => [x[0][0] + (x[1][0] - x[0][0]) * t, x[0][1] + (x[1][1] - x[0][1]) * t];
+    const mv = (attr, va, vb) => (b ? an(attr, va, vb, dur) : '');
+    const poly = (w, c) => `<polyline points="${pts(a)}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${mv('points', pts(a), b && pts(b))}</polyline>`;
+    let band_ = '';
+    if (band) {
+      const A1 = f(a, 0.32), A2 = f(a, 0.66), B1 = b ? f(b, 0.32) : A1, B2 = b ? f(b, 0.66) : A2;
+      band_ = `<line x1="${A1[0]}" y1="${A1[1]}" x2="${A2[0]}" y2="${A2[1]}" stroke="${BAND}" stroke-width="9">${mv('x1', A1[0], B1[0])}${mv('y1', A1[1], B1[1])}${mv('x2', A2[0], B2[0])}${mv('y2', A2[1], B2[1])}</line>`;
+    }
+    const E = end(a), F = b ? end(b) : E;
+    return poly(13, '#fff') + poly(8.5, INK) + band_ +
+      `<circle cx="${E[0]}" cy="${E[1]}" r="5.6" fill="${SKIN}" stroke="${INK}" stroke-width="2.2">${mv('cx', E[0], F[0])}${mv('cy', E[1], F[1])}</circle>`;
   }
   const line = (d, w = 3.6, c = MOVE) => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  const tip = (x, y, ang) => {
-    const a = ang * Math.PI / 180, l = 6.5;
-    const p = s => [x - l * Math.cos(a + s), y - l * Math.sin(a + s)];
-    return line(`M${p(0.55).join(',')} L${x},${y} L${p(-0.55).join(',')}`);
-  };
-  const arrow = (d, x, y, ang) => line(d) + tip(x, y, ang);
-  const stick = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${STICK}" stroke-width="4.5" stroke-linecap="round"/>`;
+  // Aufprall-Striche blinken im Takt der Bewegung (sichtbar, wenn die Hand trifft)
+  const hit = (d, dur = 1.4) => `<path d="${d}" fill="none" stroke="${MOVE}" stroke-width="3.6" stroke-linecap="round" opacity="0"><animate attributeName="opacity" values="1;0;0;0;1" keyTimes="0;.12;.88;.95;1" dur="${dur}s" repeatCount="indefinite"/></path>`;
+  const stick = (x1, y1, x2, y2, dx = 0, dur = 1.4) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${STICK}" stroke-width="4.5" stroke-linecap="round">${dx ? an('x1', x1, x1 + dx, dur) + an('x2', x2, x2 + dx, dur) : ''}</line>`;
   const svg = body => `<svg viewBox="-5 -9 110 110" width="100%" height="100%"><defs><pattern id="ref-st" width="7" height="10" patternUnits="userSpaceOnUse"><rect width="3.5" height="10" fill="${INK}"/><rect x="3.5" width="3.5" height="10" fill="#fff"/></pattern></defs>${body}</svg>`;
   const torso = `<path d="M45 64 L43 94 M55 64 L57 94" stroke="${INK}" stroke-width="8.5" stroke-linecap="round"/>
       <rect x="36" y="27" width="28" height="39" rx="7" fill="url(#ref-st)" stroke="${INK}" stroke-width="2"/>
       <circle cx="50" cy="15" r="10" fill="${SKIN}" stroke="${INK}" stroke-width="2"/><path d="M40 14a10 10 0 0 1 20 0z" fill="${INK}"/>`;
-  // front(rechter Arm, linker Arm, Extras, Armband?, Extras hinter den Armen)
-  const front = (R, L, extra = '', band = true, under = '') => svg(torso + under + arm(R, band) + arm(L, band) + extra);
-  const downR = [RS, [34, 49], [33, 63]], downL = [LS, [66, 49], [67, 63]];
-  // Profil (Blick nach rechts) für Bewegungen nach vorne
-  const side = (A, extra = '', under = '') => svg(`<path d="M48 64 L44 94 M53 64 L57 94" stroke="${INK}" stroke-width="8.5" stroke-linecap="round"/>
+  const side = body => svg(`<path d="M48 64 L44 94 M53 64 L57 94" stroke="${INK}" stroke-width="8.5" stroke-linecap="round"/>
       <rect x="40" y="27" width="20" height="39" rx="7" fill="url(#ref-st)" stroke="${INK}" stroke-width="2"/>
-      <circle cx="50" cy="15" r="10" fill="${SKIN}" stroke="${INK}" stroke-width="2"/><path d="M40 14a10 10 0 0 1 17 -5 L52 14z" fill="${INK}"/><circle cx="56" cy="14" r="1.4" fill="${INK}"/>` + under + arm(A, true) + extra);
+      <circle cx="50" cy="15" r="10" fill="${SKIN}" stroke="${INK}" stroke-width="2"/><path d="M40 14a10 10 0 0 1 17 -5 L52 14z" fill="${INK}"/><circle cx="56" cy="14" r="1.4" fill="${INK}"/>` + body);
+  const downR = [RS, [34, 49], [33, 63]], downL = [LS, [66, 49], [67, 63]];
+  const upL = [LS, [65, 17], [66, 2]];
+  const net = `<path d="M82 60 h15 v12 h-15 z M82 66 h15 M87 60 v12 M92 60 v12" fill="none" stroke="#D7192D" stroke-width="1.8"/>`;
+  const blueLine = `<path d="M80 50 v40" stroke="#1D4ED8" stroke-width="4"/>`;
 
   return {
     // Tor: zeigt mit ausgestrecktem Arm ins Tor
-    goal: front(downR, [LS, [78, 42], [90, 52]], `<path d="M82 60 h15 v12 h-15 z M82 66 h15 M87 60 v12 M92 60 v12" fill="none" stroke="#D7192D" stroke-width="1.8"/>` + arrow('M91 55 L90 59', 90, 59, 95)),
-    // Kein Tor / aufgehoben: beide Arme seitlich auf Schulterhöhe, Wischbewegung
-    washout: front([RS, [21, 32], [5, 32]], [LS, [79, 32], [95, 32]], arrow('M38 20 L12 20', 12, 20, 180) + arrow('M62 20 L88 20', 88, 20, 0)),
-    // Icing (Linienrichter): Arme vor der oberen Brust verschränkt
-    icing: front([RS, [27, 40], [64, 37]], [LS, [73, 46], [36, 46]], '', false),
-    // Angezeigte Strafe: freie Hand gestreckt über dem Kopf
-    armup: front(downR, [LS, [65, 17], [66, 2]], arrow('M76 12 L76 4', 76, 4, -90)),
+    goal: svg(torso + net + arm(downR, true) + arm([LS, [70, 42], [78, 50]], true, [LS, [78, 42], [90, 52]])),
+    // Kein Tor / aufgehoben: beide Arme schwingen auf Schulterhöhe seitlich vor dem Körper
+    washout: svg(torso + arm([RS, [44, 40], [62, 36]], true, [RS, [21, 32], [5, 32]], 1.2) + arm([LS, [56, 40], [38, 36]], true, [LS, [79, 32], [95, 32]], 1.2)),
+    // Icing (Linienrichter): Arme vor der oberen Brust verschränken
+    icing: svg(torso + arm(downR, false, [RS, [27, 40], [64, 37]], 1.8) + arm(downL, false, [LS, [73, 46], [36, 46]], 1.8)),
+    // Angezeigte Strafe: freie Hand gestreckt über den Kopf
+    armup: svg(torso + arm(downR, true) + arm(downL, true, upL, 1.8)),
     // Abseits (Linienrichter): freier Arm hoch, ohne Armband
-    offside: front(downR, [LS, [65, 17], [66, 2]], `<path d="M80 50 v40" stroke="#1D4ED8" stroke-width="4"/>`, false),
+    offside: svg(torso + blueLine + arm(downR, false) + arm(downL, false, upL, 1.8)),
     // Stockschlag: Handkante schlägt auf den Unterarm der anderen Hand
-    slash: front([RS, [26, 47], [64, 47]], [LS, [75, 27], [55, 34]], arrow('M70 20 Q62 28 56 40', 56, 40, 115)),
-    // Hoher Stock: beide Fäuste übereinander seitlich am Kopf
-    high: front([RS, [54, 28], [74, 20]], [LS, [84, 22], [74, 7]], '', true, stick(74, -7, 74, 34)),
+    slash: svg(torso + arm([RS, [26, 47], [64, 47]], true) + arm([LS, [80, 20], [70, 10]], true, [LS, [75, 27], [55, 36]], 1.0) + hit('M47 30 L44 26 M56 28 L57 23', 1.0)),
+    // Hoher Stock: beide Fäuste übereinander seitlich am Kopf, der Stock geht nach oben
+    high: svg(torso + stick(74, -7, 74, 34) + arm([RS, [54, 32], [74, 30]], true, [RS, [54, 28], [74, 20]], 1.6) + arm([LS, [84, 30], [74, 18]], true, [LS, [84, 22], [74, 7]], 1.6)),
     // Crosscheck (Profil): Fäuste mit gestreckten Armen vor- und zurückstossen, Stock quer
-    cross: side([[50, 32], [64, 42], [80, 40]], arrow('M68 30 L92 30', 92, 30, 0) + arrow('M92 30 L68 30', 68, 30, 180), stick(80, 33, 80, 47)),
+    cross: side(stick(66, 35, 66, 49, 16, 1.0) + arm([[50, 32], [58, 44], [66, 42]], true, [[50, 32], [64, 42], [82, 42]], 1.0)),
     // Haken (Profil): mit beiden Armen zum Bauch ziehen
-    hook: side([[50, 32], [66, 44], [84, 50]], arrow('M90 58 Q76 64 62 56', 62, 56, 200)),
-    // Halten: Handgelenk der Pfeifenhand vor der Brust umfassen
-    hold: front([RS, [30, 47], [56, 44]], [LS, [70, 47], [50, 46]], `<circle cx="50" cy="45.5" r="9.5" fill="none" stroke="${MOVE}" stroke-width="3.2"/>`),
+    hook: side(arm([[50, 32], [66, 44], [86, 48]], true, [[50, 32], [56, 50], [62, 54]], 1.3)),
+    // Halten: mit der freien Hand das Handgelenk der Pfeifenhand vor der Brust umfassen
+    hold: svg(torso + arm([RS, [30, 47], [56, 44]], true) + arm(downL, true, [LS, [70, 47], [50, 46]], 1.6)),
     // Beinstellen: mit der rechten Hand unterhalb des Knies seitlich aufs rechte Bein schlagen
-    trip: front([RS, [31, 52], [38, 80]], downL, line('M31 76 L26 73 M30 82 L24 83 M32 88 L27 92')),
+    trip: svg(torso + arm([RS, [30, 48], [29, 64]], true, [RS, [31, 52], [38, 80]], 1.1) + arm(downL, true) + hit('M31 76 L26 73 M30 82 L24 83 M32 88 L27 92', 1.1)),
     // Ellbogencheck: mit der freien Hand auf den Ellbogen der Pfeifenhand tippen
-    elbow: front([RS, [20, 42], [40, 38]], [LS, [55, 54], [24, 45]], line('M14 36 L10 32 M13 44 L8 45 M16 51 L12 55')),
+    elbow: svg(torso + arm([RS, [20, 42], [40, 38]], true) + arm([LS, [64, 52], [46, 52]], true, [LS, [55, 54], [24, 45]], 0.9) + hit('M14 36 L10 32 M13 44 L8 45 M16 51 L12 55', 0.9)),
     // Check gegen die Bande: Faust in die offene Handfläche schlagen
-    board: front([RS, [27, 44], [54, 38]], [LS, [72, 56], [55, 56]], `<ellipse cx="55" cy="56" rx="11" ry="4" fill="${SKIN}" stroke="${INK}" stroke-width="2.2"/>` + arrow('M54 45 L54 50', 54, 50, 90)),
+    board: svg(torso + arm([LS, [72, 56], [55, 56]], true) + `<ellipse cx="55" cy="56" rx="11" ry="4" fill="${SKIN}" stroke="${INK}" stroke-width="2.2"/>` + arm([RS, [26, 36], [50, 24]], true, [RS, [27, 46], [54, 50]], 1.0) + hit('M44 50 L40 47 M66 50 L70 47', 1.0)),
   };
 })();
 
@@ -789,6 +795,8 @@ views.learn = (() => {
     leave() { setPlaying(false); close(); },
     // für Screenshots: direkt das Popup eines Moments zeigen
     _demo(i, animT) { load(i, false); t = MOMENTS[i].to; board(); openPop(); if (pop) pop.t = animT; },
+    // für das Demovideo: Moment i live abspielen
+    _play(i) { close(); load(i, true); },
     tick(dt) {
       if (playing && !pop) {
         t += dt;

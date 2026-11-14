@@ -287,6 +287,8 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 .sec{padding:120px 0}
 @media (max-width:900px){.sec{padding:84px 0}}
 @media (max-width:700px){.herovid{opacity:.4}.hero::after{background:linear-gradient(0deg,var(--deep) 0%,rgba(0,20,43,.78) 40%,rgba(0,20,43,.7) 100%)}}
+#pro h2{font-size:clamp(34px,4.4vw,58px)}
+.prize{margin-top:14px;font-size:15px;color:var(--mist)}.prize b{color:var(--ice)}
 </style>
 
 <body>
@@ -338,8 +340,8 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="showgrid pro">
     <div>
       <div class="eyebrow reveal">Be a Pro</div>
-      <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Schon mal geträumt,<br>ein Profi zu sein?</span><span data-l="en">Ever dreamed of<br>being a pro?</span></h2>
-      <p class="lead reveal d2"><span data-l="de">In der Drittelspause friert eine echte Szene ein. Du ziehst den Pass. Je näher am echten Puck, desto mehr Punkte. Die Top 10 kommen auf den Videowürfel.</span><span data-l="en">In the intermission, a real scene freezes. You draw the pass. The closer to the real puck, the more points. The top 10 make the video cube.</span></p>
+      <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Schon mal geträumt, Teil des Spengler Cup zu sein?</span><span data-l="en">Ever dreamed of being part of the Spengler Cup?</span></h2>
+      <p class="lead reveal d2"><span data-l="de">Hier ist deine Chance. In der Pause oder nach dem Spiel spielst du die Schlüsselszenen selbst: Die Szene friert ein, du ziehst den Pass. Wer hat den besten Hockey-IQ? Miss dich mit deinen Freunden.</span><span data-l="en">Here is your chance. In the break or after the game, you play the key scenes yourself: the scene freezes, you draw the pass. Who has the best hockey IQ? Take on your friends.</span></p>
       <button class="demo reveal d2" id="proDemo" aria-label="Be a Pro">
         <video src="media/be-a-pro-loop.mp4" autoplay muted loop playsinline preload="metadata"></video>
         <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
@@ -349,6 +351,7 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
     <div class="reveal" id="ranking">
       <div class="eyebrow"><span data-l="de">Rangliste</span><span data-l="en">Ranking</span></div>
       <div class="board" id="board" style="margin-top:14px"></div>
+      <p class="prize"><span data-l="de"><b>Zu gewinnen:</b> Fanartikel und ein Ticket für den Final.</span><span data-l="en"><b>To win:</b> fan merchandise and a ticket for the final.</span></p>
       <div style="margin-top:18px"><button class="btn ghost" id="boardLogin"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button></div>
       <p style="margin-top:12px;color:var(--mist);font-size:12px"><span data-l="de">Prototyp: «Demo»-Einträge sind Beispiele, Scores bleiben in diesem Browser.</span><span data-l="en">Prototype: “demo” entries are examples, scores stay in this browser.</span></p>
     </div>
@@ -378,13 +381,13 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="box">
     <div class="eyebrow">Be a Pro · Learn the Game</div>
     <h3 id="dlgTitle"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></h3>
-    <p><span data-l="de">Mit deinem Namen werden deine Scores gespeichert und du erscheinst in der Rangliste.</span><span data-l="en">With your name, your scores are saved and you appear in the ranking.</span></p>
+    <p><span data-l="de">Mit deinem Login speicherst du deinen Spielstand und nimmst am Gewinnspiel teil. Und der Spengler Cup lernt sein Publikum besser kennen.</span><span data-l="en">Log in to save your progress and enter the prize draw. And the Spengler Cup gets to know its audience better.</span></p>
     <form id="loginForm" novalidate>
       <label for="lgName"><span data-l="de">Name in der Rangliste</span><span data-l="en">Name in the ranking</span></label>
       <input type="text" id="lgName" autocomplete="nickname" maxlength="32" placeholder="z. B. Lena, Davos">
       <label for="lgMail"><span data-l="de">E-Mail (optional, für Gewinnspiel)</span><span data-l="en">Email (optional, for the contest)</span></label>
       <input type="email" id="lgMail" autocomplete="email" placeholder="name@example.ch">
-      <label class="chk" style="text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" id="lgOk"> <span data-l="de">Ich bin einverstanden, dass mein Name in der Rangliste erscheint.</span><span data-l="en">I agree that my name appears in the ranking.</span></label>
+      <label class="chk" style="text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" id="lgOk"> <span data-l="de">Ich bin einverstanden, dass mein Name in der Rangliste erscheint und ich am Gewinnspiel teilnehme.</span><span data-l="en">I agree that my name appears in the ranking and that I take part in the prize draw.</span></label>
       <div class="row2"><button class="btn primary" type="submit"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button><button class="btn ghost" type="button" data-close><span data-l="de">Abbrechen</span><span data-l="en">Cancel</span></button></div>
       <div class="err" id="lgErr"></div>
     </form>
@@ -524,7 +527,7 @@ function renderAccount() {
     document.getElementById('loginForm').hidden = !!u;
     document.getElementById('loggedIn').hidden = !u;
     document.getElementById('dlgTitle').textContent = u ? t('Angemeldet', 'Logged in') : t('Anmelden', 'Log in');
-    if (u) document.getElementById('lgHello').textContent = t(`Hallo ${u.name}. Deine Scores werden gespeichert.`, `Hi ${u.name}. Your scores are being saved.`);
+    if (u) document.getElementById('lgHello').textContent = t(`Hallo ${u.name}. Dein Spielstand wird gespeichert und du bist im Gewinnspiel.`, `Hi ${u.name}. Your progress is saved and you are in the prize draw.`);
     dlg.classList.add('open');
     setTimeout(() => (u ? document.getElementById('lgOut') : document.getElementById('lgName')).focus(), 30);
   };
