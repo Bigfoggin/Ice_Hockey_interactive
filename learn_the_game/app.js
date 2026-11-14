@@ -686,7 +686,7 @@ function renderRules() {
   const head = `<div class="ruleshead"><b>${got}/${total}</b> ${tr('Regeln verstanden', 'rules understood')}</div>`;
   $('#rulesLive').innerHTML = head + bar + `<div class="chips">${chips}</div>`;
   $('#rulesList').innerHTML = head + bar + RULES.map(r => (S.watched || {})[r.i]
-    ? `<details><summary>${tr(r.rule, r.ruleEn)}</summary><p><b>${r.why}</b><br>${r.text}</p></details>`
+    ? `<details><summary>${tr(r.rule, r.ruleEn)}</summary><p>${r.text}</p></details>`
     : `<div class="cell locked"><span class="grow">?</span><span class="fn">${tr('Beim nächsten Pfiff dieser Art', 'At the next whistle of this kind')}</span></div>`).join('');
 }
 
