@@ -155,63 +155,82 @@ function modal(html) {
  * Schiri-Zeichen (vereinfachte Piktogramme nach IIHF-Handzeichen)
  * ------------------------------------------------------------------ */
 const SIG = (() => {
-  // Schiri von vorne: gestreiftes Shirt, oranges Armband (Hauptschiedsrichter), dicke Arme.
-  // Bewegungen in Gelb. Arme: Schulter → Ellbogen → Hand.
-  const SKIN = '#F3D2B5', INK = '#111827', MOVE = '#F59E0B', BAND = '#F97316';
-  const SL = [40, 31], SR = [60, 31];
-  const down = side => (side === 'L' ? [SL, [35, 46], [34, 60]] : [SR, [65, 46], [66, 60]]);
+  // Piktogramme nach den IIHF-Handzeichen. Ansicht von vorne: Die rechte Hand des Schiris
+  // (Pfeifenhand) ist für uns links. Hauptschiedsrichter mit orangem Armband, Linienrichter ohne.
+  // Bewegungen in Gelb, Stock in Grau als Lesehilfe.
+  const SKIN = '#F3D2B5', INK = '#111827', MOVE = '#F59E0B', BAND = '#F97316', STICK = '#8B5E34';
+  const RS = [37, 32], LS = [63, 32]; // rechte / linke Schulter des Schiris (von vorne gesehen)
   const pts = a => a.map(p => p.join(',')).join(' ');
   function arm(a, band) {
-    const [p0, p1] = a;
-    const f = (t) => [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
-    const end = a[a.length - 1];
-    // weisser Rand, damit der Arm vor dem gestreiften Shirt lesbar bleibt
-    return `<polyline points="${pts(a)}" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>` +
-      `<polyline points="${pts(a)}" fill="none" stroke="${INK}" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>` +
-      (band ? `<line x1="${f(0.3)[0]}" y1="${f(0.3)[1]}" x2="${f(0.62)[0]}" y2="${f(0.62)[1]}" stroke="${BAND}" stroke-width="8"/>` : '') +
-      `<circle cx="${end[0]}" cy="${end[1]}" r="5" fill="${SKIN}" stroke="${INK}" stroke-width="2"/>`;
+    const [p0, p1] = a, end = a[a.length - 1];
+    const f = t => [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
+    return `<polyline points="${pts(a)}" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<polyline points="${pts(a)}" fill="none" stroke="${INK}" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+      (band ? `<line x1="${f(0.32)[0]}" y1="${f(0.32)[1]}" x2="${f(0.66)[0]}" y2="${f(0.66)[1]}" stroke="${BAND}" stroke-width="9"/>` : '') +
+      `<circle cx="${end[0]}" cy="${end[1]}" r="5.6" fill="${SKIN}" stroke="${INK}" stroke-width="2.2"/>`;
   }
-  const arrow = (d) => `<path d="${d}" fill="none" stroke="${MOVE}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`;
-  const head = (x, y, ang) => {
-    const a = ang * Math.PI / 180, l = 6;
+  const line = (d, w = 3.6, c = MOVE) => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const tip = (x, y, ang) => {
+    const a = ang * Math.PI / 180, l = 6.5;
     const p = s => [x - l * Math.cos(a + s), y - l * Math.sin(a + s)];
-    return arrow(`M${p(0.5).join(',')} L${x},${y} L${p(-0.5).join(',')}`);
+    return line(`M${p(0.55).join(',')} L${x},${y} L${p(-0.55).join(',')}`);
   };
-  function ref(L, R, extra = '') {
-    return `<svg viewBox="0 0 100 100" width="100%" height="100%">
-      <defs><pattern id="ref-st" width="7" height="10" patternUnits="userSpaceOnUse"><rect width="3.5" height="10" fill="${INK}"/><rect x="3.5" width="3.5" height="10" fill="#fff"/></pattern></defs>
-      <path d="M45 62 L43 93 M55 62 L57 93" stroke="${INK}" stroke-width="8" stroke-linecap="round"/>
-      <rect x="37" y="26" width="26" height="37" rx="7" fill="url(#ref-st)" stroke="${INK}" stroke-width="2"/>
-      <circle cx="50" cy="15" r="9" fill="${SKIN}" stroke="${INK}" stroke-width="2"/><path d="M41 14a9 9 0 0 1 18 0z" fill="${INK}"/>
-      ${arm(L, true)}${arm(R, true)}${extra}</svg>`;
-  }
+  const arrow = (d, x, y, ang) => line(d) + tip(x, y, ang);
+  const stick = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${STICK}" stroke-width="4.5" stroke-linecap="round"/>`;
+  const svg = body => `<svg viewBox="-5 -9 110 110" width="100%" height="100%"><defs><pattern id="ref-st" width="7" height="10" patternUnits="userSpaceOnUse"><rect width="3.5" height="10" fill="${INK}"/><rect x="3.5" width="3.5" height="10" fill="#fff"/></pattern></defs>${body}</svg>`;
+  const torso = `<path d="M45 64 L43 94 M55 64 L57 94" stroke="${INK}" stroke-width="8.5" stroke-linecap="round"/>
+      <rect x="36" y="27" width="28" height="39" rx="7" fill="url(#ref-st)" stroke="${INK}" stroke-width="2"/>
+      <circle cx="50" cy="15" r="10" fill="${SKIN}" stroke="${INK}" stroke-width="2"/><path d="M40 14a10 10 0 0 1 20 0z" fill="${INK}"/>`;
+  // front(rechter Arm, linker Arm, Extras, Armband?, Extras hinter den Armen)
+  const front = (R, L, extra = '', band = true, under = '') => svg(torso + under + arm(R, band) + arm(L, band) + extra);
+  const downR = [RS, [34, 49], [33, 63]], downL = [LS, [66, 49], [67, 63]];
+  // Profil (Blick nach rechts) für Bewegungen nach vorne
+  const side = (A, extra = '', under = '') => svg(`<path d="M48 64 L44 94 M53 64 L57 94" stroke="${INK}" stroke-width="8.5" stroke-linecap="round"/>
+      <rect x="40" y="27" width="20" height="39" rx="7" fill="url(#ref-st)" stroke="${INK}" stroke-width="2"/>
+      <circle cx="50" cy="15" r="10" fill="${SKIN}" stroke="${INK}" stroke-width="2"/><path d="M40 14a10 10 0 0 1 17 -5 L52 14z" fill="${INK}"/><circle cx="56" cy="14" r="1.4" fill="${INK}"/>` + under + arm(A, true) + extra);
+
   return {
-    goal: ref(down('L'), [SR, [78, 40], [93, 50]], `<rect x="84" y="62" width="13" height="10" fill="none" stroke="${INK}" stroke-width="2"/>` + arrow('M93 54 L91 60') + head(91, 60, 100)),
-    washout: ref([SL, [23, 31], [6, 31]], [SR, [77, 31], [94, 31]], arrow('M40 20 L14 20') + head(14, 20, 180) + arrow('M60 20 L86 20') + head(86, 20, 0)),
-    icing: ref([SL, [34, 41], [59, 41]], [SR, [66, 43], [41, 45]]),
-    armup: ref(down('L'), [SR, [63, 17], [65, 5]]),
-    slash: ref([SL, [33, 44], [59, 46]], [SR, [73, 30], [63, 39]], arrow('M77 21 Q78 32 68 37') + head(68, 37, 155)),
-    high: ref([SL, [57, 22], [71, 20]], [SR, [74, 28], [71, 9]]),
-    cross: ref([SL, [31, 40], [43, 45]], [SR, [69, 40], [57, 45]], arrow('M43 54 L43 64') + head(43, 64, 90) + arrow('M57 54 L57 64') + head(57, 64, 90)),
-    hook: ref([SL, [22, 43], [40, 50]], [SR, [78, 43], [60, 50]], arrow('M10 58 L30 52') + head(30, 52, -17) + arrow('M90 58 L70 52') + head(70, 52, 197)),
-    hold: ref([SL, [35, 44], [48, 46]], [SR, [66, 44], [53, 47]], `<circle cx="50" cy="46.5" r="8" fill="none" stroke="${MOVE}" stroke-width="3"/>`),
-    trip: ref(down('L'), [SR, [68, 47], [60, 78]], arrow('M70 72 L76 70 M70 79 L77 80 M69 85 L74 89')),
-    elbow: ref([SL, [23, 40], [38, 52]], [SR, [45, 38], [27, 39]], arrow('M18 30 L22 35 M26 29 L26 33 M14 37 L19 39')),
-    board: ref([SL, [33, 44], [46, 47]], [SR, [67, 42], [53, 47]], arrow('M47 36 L45 40 M53 35 L53 39 M58 37 L56 40')),
+    // Tor: zeigt mit ausgestrecktem Arm ins Tor
+    goal: front(downR, [LS, [78, 42], [90, 52]], `<path d="M82 60 h15 v12 h-15 z M82 66 h15 M87 60 v12 M92 60 v12" fill="none" stroke="#D7192D" stroke-width="1.8"/>` + arrow('M91 55 L90 59', 90, 59, 95)),
+    // Kein Tor / aufgehoben: beide Arme seitlich auf Schulterhöhe, Wischbewegung
+    washout: front([RS, [21, 32], [5, 32]], [LS, [79, 32], [95, 32]], arrow('M38 20 L12 20', 12, 20, 180) + arrow('M62 20 L88 20', 88, 20, 0)),
+    // Icing (Linienrichter): Arme vor der oberen Brust verschränkt
+    icing: front([RS, [27, 40], [64, 37]], [LS, [73, 46], [36, 46]], '', false),
+    // Angezeigte Strafe: freie Hand gestreckt über dem Kopf
+    armup: front(downR, [LS, [65, 17], [66, 2]], arrow('M76 12 L76 4', 76, 4, -90)),
+    // Abseits (Linienrichter): freier Arm hoch, ohne Armband
+    offside: front(downR, [LS, [65, 17], [66, 2]], `<path d="M80 50 v40" stroke="#1D4ED8" stroke-width="4"/>`, false),
+    // Stockschlag: Handkante schlägt auf den Unterarm der anderen Hand
+    slash: front([RS, [26, 47], [64, 47]], [LS, [75, 27], [55, 34]], arrow('M70 20 Q62 28 56 40', 56, 40, 115)),
+    // Hoher Stock: beide Fäuste übereinander seitlich am Kopf
+    high: front([RS, [54, 28], [74, 20]], [LS, [84, 22], [74, 7]], '', true, stick(74, -7, 74, 34)),
+    // Crosscheck (Profil): Fäuste mit gestreckten Armen vor- und zurückstossen, Stock quer
+    cross: side([[50, 32], [64, 42], [80, 40]], arrow('M68 30 L92 30', 92, 30, 0) + arrow('M92 30 L68 30', 68, 30, 180), stick(80, 33, 80, 47)),
+    // Haken (Profil): mit beiden Armen zum Bauch ziehen
+    hook: side([[50, 32], [66, 44], [84, 50]], arrow('M90 58 Q76 64 62 56', 62, 56, 200)),
+    // Halten: Handgelenk der Pfeifenhand vor der Brust umfassen
+    hold: front([RS, [30, 47], [56, 44]], [LS, [70, 47], [50, 46]], `<circle cx="50" cy="45.5" r="9.5" fill="none" stroke="${MOVE}" stroke-width="3.2"/>`),
+    // Beinstellen: mit der rechten Hand unterhalb des Knies seitlich aufs rechte Bein schlagen
+    trip: front([RS, [31, 52], [38, 80]], downL, line('M31 76 L26 73 M30 82 L24 83 M32 88 L27 92')),
+    // Ellbogencheck: mit der freien Hand auf den Ellbogen der Pfeifenhand tippen
+    elbow: front([RS, [20, 42], [40, 38]], [LS, [55, 54], [24, 45]], line('M14 36 L10 32 M13 44 L8 45 M16 51 L12 55')),
+    // Check gegen die Bande: Faust in die offene Handfläche schlagen
+    board: front([RS, [27, 44], [54, 38]], [LS, [72, 56], [55, 56]], `<ellipse cx="55" cy="56" rx="11" ry="4" fill="${SKIN}" stroke="${INK}" stroke-width="2.2"/>` + arrow('M54 45 L54 50', 54, 50, 90)),
   };
 })();
 
 const SIGNALS = [
   { id: 'goal', name: tr('Tor', 'Goal'), text: tr('Der Schiri zeigt mit ausgestrecktem Arm auf das Tor: Der Treffer zählt.', 'The referee points at the net with an outstretched arm: the goal counts.') },
   { id: 'washout', name: tr('Kein Tor / aufgehoben', 'No goal / washed out'), text: tr('Beide Arme seitlich auf Schulterhöhe ausgestreckt, Handflächen nach unten. Das Tor zählt nicht, oder ein angezeigtes Icing bzw. Abseits ist aufgehoben.', 'Both arms swung out to the side at shoulder height, palms down. The goal does not count, or a pending icing or offside is cancelled.') },
-  { id: 'icing', name: 'Icing', text: tr('Arme vor der Brust verschränkt. Der Puck wurde aus der eigenen Hälfte über die gegnerische Torlinie geschossen.', 'Arms folded across the chest. The puck was shot from the own half across the opponent’s goal line.') },
-  { id: 'armup', name: tr('Angezeigte Strafe', 'Delayed penalty'), text: tr('Ein Arm hoch: Ein Foul ist passiert, gepfiffen wird aber erst, wenn das foulende Team den Puck berührt. Der Linienrichter zeigt so auch ein verzögertes Abseits an.', 'One arm raised: a foul happened, but play is stopped only when the offending team touches the puck. Linesmen use the same signal for a delayed offside.') },
+  { id: 'icing', name: 'Icing', text: tr('Der Linienrichter verschränkt die Arme vor der Brust. Der Puck wurde aus der eigenen Hälfte unberührt über die gegnerische Torlinie geschossen.', 'The linesman folds his arms across the upper chest. The puck was shot from the own half across the opponent’s goal line, untouched.') },
+  { id: 'offside', name: tr('Abseits', 'Offside'), text: tr('Der Linienrichter hebt den freien Arm. Ein Angreifer war vor dem Puck über der blauen Linie. Spielt das Team den Puck zurück, senkt er den Arm wieder.', 'The linesman raises his free arm. An attacker crossed the blue line ahead of the puck. If the team clears the zone, he lowers the arm again.') },
+  { id: 'armup', name: tr('Angezeigte Strafe', 'Delayed penalty'), text: tr('Der Schiri streckt den freien Arm hoch: Ein Foul ist passiert. Gepfiffen wird erst, wenn das foulende Team den Puck berührt.', 'The referee raises his free arm straight up: a foul happened. Play is stopped once the offending team touches the puck.') },
   { id: 'slash', name: tr('Stockschlag', 'Slashing'), text: tr('Mit einer Hand auf den Unterarm der anderen Hand schlagen. Ein Spieler hat mit dem Stock auf den Gegner geschlagen.', 'A chopping motion onto the opposite forearm. A player hit the opponent with the stick.') },
   { id: 'high', name: tr('Hoher Stock', 'High-sticking'), text: tr('Beide Fäuste übereinander seitlich am Kopf. Der Stock war über Schulterhöhe.', 'Both fists held one above the other at the side of the head. The stick was above shoulder height.') },
-  { id: 'cross', name: 'Crosscheck', text: tr('Beide Fäuste vor der Brust, mit einer Stossbewegung nach vorne. Der Gegner wurde mit dem quer gehaltenen Stock gestossen.', 'Both fists in front of the chest, pushing forward. The opponent was pushed with the stick held across.') },
+  { id: 'cross', name: 'Crosscheck', text: tr('Beide Fäuste mit gestreckten Armen vor der Brust, vor und zurück gestossen. Der Gegner wurde mit dem quer gehaltenen Stock gestossen.', 'Both fists clenched, arms extended from the chest, pushed forward and back. The opponent was pushed with the stick held across.') },
   { id: 'hook', name: tr('Haken', 'Hooking'), text: tr('Mit beiden Armen eine Zieh-Bewegung zum Bauch. Ein Spieler hat den Gegner mit dem Stock zurückgehalten.', 'A pulling motion towards the stomach with both arms. A player held the opponent back with the stick.') },
   { id: 'hold', name: tr('Halten', 'Holding'), text: tr('Das Handgelenk der Pfeifenhand vor der Brust mit der anderen Hand umfassen. Der Gegner wurde festgehalten.', 'Clasping the wrist of the whistle hand in front of the chest. The opponent was held.') },
-  { id: 'trip', name: tr('Beinstellen', 'Tripping'), text: tr('Mit der Hand unterhalb des Knies aufs Bein schlagen. Der Gegner wurde zu Fall gebracht.', 'Striking the leg below the knee with the hand. The opponent was tripped.') },
+  { id: 'trip', name: tr('Beinstellen', 'Tripping'), text: tr('Mit der rechten Hand unterhalb des Knies seitlich aufs rechte Bein schlagen. Der Gegner wurde zu Fall gebracht.', 'Striking the side of the right leg below the knee with the right hand. The opponent was tripped.') },
   { id: 'elbow', name: tr('Ellbogencheck', 'Elbowing'), text: tr('Mit der Hand auf den Ellbogen des anderen Arms tippen. Der Gegner wurde mit dem Ellbogen gecheckt.', 'Tapping the elbow with the opposite hand. The opponent was checked with the elbow.') },
   { id: 'board', name: tr('Check gegen die Bande', 'Boarding'), text: tr('Mit der Faust in die offene Handfläche schlagen. Der Gegner wurde gefährlich in die Bande gecheckt.', 'Pounding the fist into the open palm. The opponent was checked dangerously into the boards.') },
 ];
@@ -652,7 +671,7 @@ const MOMENTS = [
     seen: tr(`${nm(walsh.goal.pl)} lenkt den Puck direkt vor dem Tor ab: ${walsh.sc.USC}:${walsh.sc.HCD}.`, `${nm(walsh.goal.pl)} deflects the puck right in front of the net: ${walsh.sc.USC}:${walsh.sc.HCD}.`),
     text: tr('Ein Tor zählt nur, wenn der Puck die Torlinie vollständig überquert hat. Liegt er auf der Linie, geht das Spiel weiter. In knappen Fällen prüfen die Schiris das Video.',
       'A goal counts only when the puck has fully crossed the goal line. If it is on the line, play goes on. In close cases the referees check the video.') },
-  { from: offside.g - 10, to: offside.g + 0.2, title: tr('Abseits', 'Offside'), anim: 'offside', sig: 'armup', rule: 'Abseits', ruleEn: 'Offside',
+  { from: offside.g - 10, to: offside.g + 0.2, title: tr('Abseits', 'Offside'), anim: 'offside', sig: 'offside', rule: 'Abseits', ruleEn: 'Offside',
     why: tr('Angreifer dürfen erst nach dem Puck über die blaue Linie.', 'Attackers may cross the blue line only after the puck.'),
     seen: tr(`Ein Angreifer von ${offsideTeam} war vor dem Puck in der Angriffszone.`, `A ${offsideTeam} forward entered the attacking zone ahead of the puck.`),
     text: tr('Angreifer dürfen die blaue Linie erst nach dem Puck überqueren. Ist einer zu früh in der Angriffszone, pfeift der Linienrichter ab. Das Bully gibt es dann ausserhalb der Zone.',
