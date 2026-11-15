@@ -489,12 +489,20 @@
                         const pB = playersB[pId];
                         const source = pA || pB;
                         const pos = lerpCoord(pA ? pA.coord : null, pB ? pB.coord : null, t);
+                        
+                        let velX = 0, velY = 0;
+                        if (pA && pB) {
+                            velX = pB.coord[0] - pA.coord[0];
+                            velY = pB.coord[1] - pA.coord[1];
+                        }
+
                         if (pos) {
                             interpPlayers[pId] = {
                                 coord: pos,
                                 team: source.team,
                                 jersey: source.jersey || "",
-                                name: source.name || ""
+                                name: source.name || "",
+                                vel: [velX, velY]
                             };
                         }
                     }
@@ -753,6 +761,32 @@
             const [px, py] = scaleCoordinates(pData.coord[0], pData.coord[1]);
             const isHome = pData.team.toLowerCase() === "home";
             const primaryColor = isHome ? HOME_TEAM : AWAY_TEAM;
+
+            // Draw direction indicator triangle based on velocity vector
+            if (pData.vel && (pData.vel[0] !== 0 || pData.vel[1] !== 0)) {
+                const angle = Math.atan2(pData.vel[1], pData.vel[0]);
+                const radius = 16;
+                const triangleDist = radius + 6;
+                const triangleSize = 7;
+
+                cCtx.save();
+                cCtx.translate(px, py);
+                cCtx.rotate(angle);
+
+                cCtx.fillStyle = CYAN_NEON;
+                cCtx.strokeStyle = "#0F1624";
+                cCtx.lineWidth = 1;
+
+                cCtx.beginPath();
+                cCtx.moveTo(triangleDist + triangleSize, 0);
+                cCtx.lineTo(triangleDist - triangleSize, -triangleSize * 0.7);
+                cCtx.lineTo(triangleDist - triangleSize, triangleSize * 0.7);
+                cCtx.closePath();
+                cCtx.fill();
+                cCtx.stroke();
+
+                cCtx.restore();
+            }
 
             cCtx.fillStyle = "rgba(0, 0, 0, 0.6)";
             cCtx.beginPath();

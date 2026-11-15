@@ -1,0 +1,23 @@
+{
+ "i1": {"cap": "", "say": "December in Davos. The arena is shaking, and millions follow the Spengler Cup. But online, all they can do is watch."},
+ "i2": {"cap": "", "say": "Like the newcomer. A family member, a holiday guest in Davos. The referee blows the whistle, the whole arena reacts, and they have no idea what just happened."},
+ "i3": {"cap": "", "say": "And the fan, who lives for this game and thinks: I could do that too. But how good are they really?"},
+ "h1": {"cap": "<b>In the Game</b>:<br>right in the middle of it.", "say": "In the Game puts both of them right in the middle of it."},
+ "l0": {"cap": "For the newcomer: <b>Learn the Game</b>.", "say": "For the newcomer: Learn the Game."},
+ "a1": {"cap": "Live on your phone, while the game is on.", "say": "Live on your phone, while the game is on. You watch, you cheer, and then: the whistle."},
+ "a3": {"cap": "Instantly: <b>what</b> was called, and <b>why</b>.", "say": "That's the moment. You see what was called, and why, in plain words. Suddenly, you're part of it."},
+ "s1": {"cap": "Slashing: a chop across the forearm.", "say": "And this is how the referee shows it. A chop across the forearm: slashing."},
+ "a4b": {"cap": "Live tracking data knows why play stopped.", "say": "It all runs on live tracking data. The moment play stops, you already know why."},
+ "s2": {"cap": "High-sticking: both fists up, like a raised stick.", "say": "High-sticking. Both fists held up, one above the other, like a stick raised too high."},
+ "a7": {"cap": "Every rule you learn: <b>+10 points</b>.", "say": "Every rule you learn goes into your rulebook, and earns you ten points."},
+ "t1": {"cap": "Ever dreamed of being part of the Spengler Cup?<br><b>This is your chance.</b>", "say": "And for the fan: ever dreamed of being part of the Spengler Cup? This is your chance. Be a Pro."},
+ "m0": {"cap": "In the break, or after the final whistle.", "say": "In the break, or after the final whistle, the key scenes come back. In two modes."},
+ "m1": {"cap": "<b>Replay mode</b>: relive the key scenes.", "say": "In Replay mode, you relive them like a broadcast. Every player, every pass."},
+ "m2": {"cap": "<b>Game mode</b>: the scene freezes. Your call.", "say": "In Game mode, it's your call. The scene freezes. Where does the puck go next?"},
+ "p3": {"cap": "Draw your pass. Then the real play rolls on.", "say": "Draw your pass. Then the real play rolls on, and you see how close you were."},
+ "p4": {"cap": "The closer you get, the more points.", "say": "The closer you get, the more points you score."},
+ "p5": {"cap": "Who reads the game best? You, or your friends?", "say": "So who reads the game best? You, or your friends?"},
+ "r1": {"cap": "Rule points + pass points = your <b>Hockey IQ</b>.", "say": "After the game, it all adds up. Points for every rule you learned and every pass you read. That's your Hockey IQ."},
+ "r2": {"cap": "Redeem your points: discount codes, fan gear, prizes.", "say": "And your points are worth something: discount codes, fan gear, maybe even a ticket for the final."},
+ "end": {"cap": "", "say": "Every whistle. Every pass. Every game. Don't just watch. Be in the game."}
+}
