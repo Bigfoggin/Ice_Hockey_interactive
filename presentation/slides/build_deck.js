@@ -115,12 +115,12 @@ s.addText('02  ·  OFFER 1 · BE A PRO  ·  FOR FANS', { placeholder: 'eyebrow' 
 s.addText(twoTone('PREDICT THE PASS.', 'PLAY LIKE A PRO.'), { placeholder: 'title' });
 s.addImage({ path: path.join(IMG, 'passspiel-zone-entry.jpg'), x: M, y: 2.6, w: 6.0, h: 3.75, altText: 'Be a Pro prototype: prediction 2.5 m off, 83 points', objectName: 'Screenshot Be a Pro' });
 s.addText('Be a Pro prototype: 2.5 m off = 83 points', { x: M, y: 6.45, w: 6, h: 0.25, fontSize: 10, color: C.background2, margin: 0, isTextBox: true });
-const pro = [['When', 'In the intermission, with key scenes from the last period.'], ['Do', 'The scene freezes. You draw where the puck goes next.'], ['Score', 'The distance to the real pass gives your points: every metre counts.'], ['Learn', 'Why the real pass worked, e.g. Knuble finds Walsh in front of the net: 40 % goal chance.'], ['Shine', 'The top 10 appear on the video cube after the break.']];
+const pro = [['When', 'In the intermission, with key scenes from the last period.'], ['Do', 'The scene freezes. You draw where the puck goes next.'], ['Score', 'The distance to the real pass gives your points: every metre counts.'], ['Learn', 'Why the real pass worked, e.g. the winger finds the centre in front of the net: 40 % goal chance.'], ['Shine', 'The top 10 appear on the video cube after the break.']];
 pro.forEach(([h, d], i) => {
   ring(s, 7.2, 2.62 + i * 0.78, 0.52, String(i + 1), `Pro step ${i + 1}`, 15);
   s.addText([{ text: h.toUpperCase(), options: { fontSize: 12, bold: true, charSpacing: 2, color: C.accent1, breakLine: true } }, { text: d, options: { fontSize: 13, color: C.background1 } }], { x: 7.9, y: 2.56 + i * 0.78, w: 4.7, h: 0.75, margin: 0, valign: 'top', isTextBox: true });
 });
-s.addNotes('Offer one, Be a Pro, for fans. In the intermission, key scenes from the last period are ready. The scene freezes, you draw the pass, and the distance to the real pass is your score: 2.5 metres off gives 83 points. Then the app shows why the real pass worked, for example Knuble finding Walsh in front of the net, a 40 percent chance. After the break the top 10 appear on the video cube.');
+s.addNotes('Offer one, Be a Pro, for fans. In the intermission, key scenes from the last period are ready. The scene freezes, you draw the pass, and the distance to the real pass is your score: 2.5 metres off gives 83 points. Then the app shows why the real pass worked, for example the winger finding the centre in front of the net, a 40 percent chance. After the break the top 10 appear on the video cube.');
 
 // ---------- 4 Learn the Game ----------
 s = pres.addSlide({ masterName: 'Content dark', sectionTitle: '2 Concept and interaction' });
