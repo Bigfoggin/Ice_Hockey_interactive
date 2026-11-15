@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Hockey Analytics — Persona 3 Reload UI</title>
+    <!-- Modern Sport/Broadcast & Stylized Fonts via Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:ital,wght@0,600;0,700;1,700;1,800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #04070C;
+            font-family: 'Rajdhani', sans-serif;
+            font-style: italic;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        #app-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #0B1220 0%, #04070C 100%);
+        }
+
+        canvas {
+            display: block;
+            background-color: transparent;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        /* Glassmorphism Modal Overlay */
+        #mode-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 7, 12, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-card {
+            background: rgba(14, 24, 42, 0.75);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 16px;
+            padding: 45px;
+            width: 640px;
+            max-width: 90vw;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.15);
+            transform: skewX(-8deg);
+        }
+
+        .modal-card h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-style: italic;
+            font-size: 34px;
+            font-weight: 800;
+            margin-bottom: 30px;
+            color: #FFFFFF;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: rgba(20, 35, 60, 0.6);
+            border: 1px solid rgba(0, 130, 210, 0.5);
+            border-radius: 12px;
+            padding: 24px 18px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #FFFFFF;
+            text-align: center;
+            font-family: 'Rajdhani', sans-serif;
+            font-style: italic;
+        }
+
+        .mode-btn:hover {
+            background: rgba(0, 210, 255, 0.15);
+            border-color: #00F0FF;
+            transform: translateY(-3px) skewX(-2deg);
+            box-shadow: 0 10px 25px rgba(0, 240, 255, 0.25);
+        }
+
+        .mode-btn.game-btn {
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .mode-btn.game-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #FFFFFF;
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.25);
+        }
+
+        .mode-btn h2 {
+            font-family: 'Rajdhani', sans-serif;
+            font-style: italic;
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .mode-btn p {
+            font-family: 'Rajdhani', sans-serif;
+            font-style: italic;
+            font-size: 15px;
+            color: #94A3B8;
+            margin: 3px 0;
+        }
+
+        .modal-footer {
+            font-family: 'Rajdhani', sans-serif;
+            font-style: italic;
+            font-size: 14px;
+            color: #64748B;
+            letter-spacing: 0.5px;
+        }
+
+        #error-banner {
+            display: none;
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%) skewX(-8deg);
+            background: rgba(235, 45, 65, 0.9);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 16px 28px;
+            border-radius: 10px;
+            z-index: 200;
+            border: 1px solid #FF203C;
+            font-family: 'Rajdhani', sans-serif;
+            font-style: italic;
+            font-weight: 800;
+            max-width: 80vw;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+
+    <div id="app-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="error-banner"></div>
+
+        <div id="mode-modal">
+            <div class="modal-card">
+                <h1>Select Operation Mode</h1>
+                <div class="button-group">
+                    <button class="mode-btn" id="btn-replay">
+                        <h2>REPLAY MODE</h2>
+                        <p>Watch cinematic broadcast</p>
+                        <p>Fully automated playback</p>
+                    </button>
+                    <button class="mode-btn game-btn" id="btn-game">
+                        <h2>GAME MODE</h2>
+                        <p>Draw puck prediction vectors</p>
+                        <p>Score points with distance accuracy</p>
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    Click an option or press [1] for Replay, [2] for Game
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CSV_PATH = "data/match_data/event_data_sample_Match_events.csv";
+
+        const VIRTUAL_WIDTH = 1500;
+        const VIRTUAL_HEIGHT = 800;
+        const TARGET_FPS = 30;
+        const CAMERA_ZOOM_WIDTH = 920;
+        const CAMERA_ZOOM_HEIGHT = 490;
+        const CAMERA_SMOOTH_SPEED = 0.22;
+        const PIP_WIDTH_RATIO = 0.22;
+        const PIP_HEIGHT_RATIO = 0.20;
+        const ZOOM_TOLERANCE_SECONDS = 5.0;
+        const POPUP_DURATION_SECONDS = 2.5;
+
+        const ARENA_BG = "#04070C";
+        const ICE_BASE = "#0D172A";
+        const BOARD_BORDER = "rgba(0, 212, 255, 0.8)";
+        const WHITE = "#FFFFFF";
+        const CYAN_NEON = "#00F0FF";
+        const GOLD_NEON = "#FFFFFF";
+        const LINE_RED = "#FF2E4C";
+        const LINE_BLUE = "#0088FF";
+        const HOME_TEAM = "#2882FF";
+        const AWAY_TEAM = "#FF2D5F";
+        const P3_YELLOW = "#FFFFFF";
+        const P3_CYAN = "#00E5FF";
+        const P3_RED = "#FF1A40";
+
+        let canvas, ctx;
+        let df = [];
+        let masterFrames = [];
+        let selectedMode = null;
+        let isRunning = false;
+
+        let frameIdx = 0.0;
+        let paused = false;
+        let playbackSpeed = 1.0;
+        let showPerformance = false;
+
+        let curCamX = 0.0;
+        let curCamY = 0.0;
+        let curCamW = VIRTUAL_WIDTH;
+        let curCamH = VIRTUAL_HEIGHT;
+
+        let homeTeamName = "EV Zug";
+        let awayTeamName = "HC Davos";
+
+        let activeCelebrationIdx = -1;
+        let activePopups = [];
+        let overlayStartTime = Date.now() / 1000;
+
+        let gameScore = 0;
+        let predictionsMade = 0;
+        let gameState = "PLAYING"; 
+        let drawingVector = false;
+        let mousePos = { x: 0, y: 0 };
+        let lastPromptedFrame = -9999;
+        let evalTargetFrame = 0;
+        let evalPuckStart = null;
+        let globalUserVector = [0, 0];
+        let globalActualVector = [0, 0];
+        let comparisonStartTime = 0;
+
+        let rinkCanvas, rinkCtx;
+        let masterCanvas, masterCtx;
+        let cropCanvas, cropCtx;
+
+        function scaleCoordinates(x, y) {
+            return [
+                Math.round(VIRTUAL_WIDTH / 2 + x * 17.5),
+                Math.round(VIRTUAL_HEIGHT / 2 + y * 17.5)
+            ];
+        }
+
+        function parseCoordStr(coordStr) {
+            if (!coordStr || typeof coordStr !== 'string') return null;
+            const parts = coordStr.split(",");
+            if (parts.length < 2) return null;
+            const x = parseFloat(parts[0]);
+            const y = parseFloat(parts[1]);
+            if (isNaN(x) || isNaN(y)) return null;
+            return [x, y];
+        }
+
+        function lerpCoord(coordA, coordB, t) {
+            if (!coordA) return coordB;
+            if (!coordB) return coordA;
+            return [
+                coordA[0] + (coordB[0] - coordA[0]) * t,
+                coordA[1] + (coordB[1] - coordA[1]) * t
+            ];
+        }
+
+        function extractPlayers(row) {
+            const players = {};
+            for (let i = 1; i <= 12; i++) {
+                const pId = row[`StartPlayerId${i}`];
+                const coord = parseCoordStr(row[`StartPlayerCoordinates${i}`]);
+                const team = row[`StartPlayerTeam${i}`];
+                const name = row[`StartPlayerName${i}`];
+
+                if (pId !== undefined && pId !== "" && coord !== null) {
+                    let jersey = "";
+                    let pName = "Unknown";
+                    if (name && typeof name === 'string') {
+                        const parts = name.trim().split(/\s+/);
+                        if (parts.length > 0 && parts[0].startsWith("#")) {
+                            jersey = parts[0].substring(1);
+                            pName = parts.slice(1).join(" ");
+                        }
+                    }
+                    players[pId] = {
+                        coord: coord,
+                        team: team ? String(team) : "",
+                        jersey: jersey,
+                        name: pName
+                    };
+                }
+            }
+            return players;
+        }
+
+        function precomputeReplayTimeline(data) {
+            const master = [];
+            if (data.length < 2) return master;
+
+            let homeScore = 0;
+            let awayScore = 0;
+
+            const playerInteractions = {};
+            const playerShots = {};
+            const playerPasses = {};
+            let totalInteractions = 0;
+
+            let lastZoomStateChangeTime = -999.0;
+            let currentSimulatedTime = 0.0;
+            let currentlyZoomed = false;
+
+            for (let i = 0; i < data.length - 1; i++) {
+                const rowA = data[i];
+                const rowB = data[i + 1];
+
+                const playersA = extractPlayers(rowA);
+                const playersB = extractPlayers(rowB);
+                const puckA = parseCoordStr(rowA["EventStartCoordinate"]);
+                const puckB = parseCoordStr(rowB["EventStartCoordinate"]);
+
+                const eventType = String(rowA["EventType"] || "");
+                const eventLower = eventType.toLowerCase();
+                const rawIsZoomEvent = ["Shot", "Goal", "Pass", "PuckControl"].includes(eventType);
+
+                const duration = 0.75;
+                const interpolationFrames = Math.max(1, Math.round(duration * TARGET_FPS));
+
+                let isZoomEvent = rawIsZoomEvent;
+                if (rawIsZoomEvent !== currentlyZoomed) {
+                    if ((currentSimulatedTime - lastZoomStateChangeTime) < ZOOM_TOLERANCE_SECONDS) {
+                        isZoomEvent = currentlyZoomed;
+                    } else {
+                        isZoomEvent = rawIsZoomEvent;
+                        currentlyZoomed = rawIsZoomEvent;
+                        lastZoomStateChangeTime = currentSimulatedTime;
+                    }
+                }
+
+                let bannerText = null;
+                let bannerColor = WHITE;
+
+                if (eventLower.includes("goal") || String(rowA["ShotResult"]) === "Goal") {
+                    bannerText = "GOAL!!!";
+                    bannerColor = P3_RED;
+                } else if (eventType === "Shot") {
+                    const shotRes = String(rowA["ShotResult"]);
+                    if (shotRes === "Saved") {
+                        bannerText = "GREAT SAVE!";
+                        bannerColor = P3_CYAN;
+                    } else if (!["Goal", "Blocked"].includes(shotRes)) {
+                        bannerText = "SHOT ON TARGET!";
+                        bannerColor = WHITE;
+                    }
+                } else if (eventType === "Pass" && String(rowA["PassResult"]) === "Successful") {
+                    bannerText = "CLEAN PASS!";
+                    bannerColor = "#30FF96";
+                } else if (eventType === "BluelineCrossing" && ["PossessionMaintained", "PuckDumpedIn"].includes(String(rowA["BluelineCrossingResult"]))) {
+                    bannerText = "ZONE ENTRY!";
+                    bannerColor = P3_CYAN;
+                }
+
+                const primaryName = rowA["EventPrimaryPlayerName"];
+
+                if (eventLower.includes("goal")) {
+                    let leftCount = 0;
+                    let rightCount = 0;
+                    const lookback = Math.min(3, i);
+                    for (let lb = lookback; lb > 0; lb--) {
+                        const prevRow = data[i - lb];
+                        const prevPuck = parseCoordStr(prevRow["EventStartCoordinate"]);
+                        if (prevPuck) {
+                            if (prevPuck[0] < 0) leftCount++;
+                            else rightCount++;
+                        }
+                    }
+
+                    if (leftCount === 0 && rightCount === 0 && puckA) {
+                        if (puckA[0] < 0) leftCount = 1;
+                        else rightCount = 1;
+                    }
+
+                    if (leftCount > rightCount) awayScore++;
+                    else homeScore++;
+                }
+
+                if (primaryName && typeof primaryName === 'string') {
+                    const parts = primaryName.trim().split(/\s+/);
+                    if (parts.length > 0 && parts[0].startsWith("#")) {
+                        const jNum = parts[0].substring(1);
+                        const cleanName = parts.slice(1).join(" ");
+                        let pTeam = "";
+                        for (const pData of Object.values(playersA)) {
+                            if (pData.jersey === jNum) {
+                                pTeam = pData.team || "";
+                                break;
+                            }
+                        }
+                        const playerKey = `${jNum}|${cleanName}|${pTeam}`;
+
+                        if (["Shot", "Goal"].includes(eventType)) {
+                            playerShots[playerKey] = (playerShots[playerKey] || 0) + 1;
+                        } else if (eventType === "Pass") {
+                            playerPasses[playerKey] = (playerPasses[playerKey] || 0) + 1;
+                        }
+                    }
+                }
+
+                if (puckA) {
+                    for (const pData of Object.values(playersA)) {
+                        const j = pData.jersey;
+                        const pName = pData.name || "Unknown";
+                        const pTeam = pData.team || "";
+                        if (j) {
+                            const dist = Math.hypot(pData.coord[0] - puckA[0], pData.coord[1] - puckA[1]);
+                            if (dist <= 3.5 || isZoomEvent) {
+                                const weight = (isZoomEvent && dist <= 2.0) ? 2 : 1;
+                                const key = `${j}|${pName}|${pTeam}`;
+                                playerInteractions[key] = (playerInteractions[key] || 0) + weight;
+                                totalInteractions += weight;
+                            }
+                        }
+                    }
+                }
+
+                const interactionShares = {};
+                if (totalInteractions > 0) {
+                    const sorted = Object.entries(playerInteractions).sort((a, b) => b[1] - a[1]);
+                    for (const [k, count] of sorted) {
+                        interactionShares[k] = (count / totalInteractions) * 100.0;
+                    }
+                }
+
+                const sortMap = map => Object.fromEntries(Object.entries(map).sort((a, b) => b[1] - a[1]));
+                const shotsRanked = sortMap(playerShots);
+                const passesRanked = sortMap(playerPasses);
+
+                const distMeters = (puckA && puckB) ? Math.hypot(puckB[0] - puckA[0], puckB[1] - puckA[1]) : 1.0;
+                const baseSpeedKmh = (distMeters / Math.max(0.1, duration)) * 3.6;
+
+                const allIds = new Set([...Object.keys(playersA), ...Object.keys(playersB)]);
+                let previousSpeed = 0.0;
+
+                for (let f = 0; f < interpolationFrames; f++) {
+                    const t = f / interpolationFrames;
+                    const puckInterp = lerpCoord(puckA, puckB, t);
+
+                    let speedKmh;
+                    if (isZoomEvent) {
+                        speedKmh = Math.max(0.0, baseSpeedKmh + Math.sin(f * 0.5) * 8.0);
+                    } else {
+                        speedKmh = Math.max(0.0, baseSpeedKmh * 0.5);
+                    }
+
+                    const accelerating = (f === 0) ? true : (speedKmh >= previousSpeed);
+                    previousSpeed = speedKmh;
+
+                    const interpPlayers = {};
+                    for (const pId of allIds) {
+                        const pA = playersA[pId];
+                        const pB = playersB[pId];
+                        const source = pA || pB;
+                        const pos = lerpCoord(pA ? pA.coord : null, pB ? pB.coord : null, t);
+                        
+                        let velX = 0, velY = 0;
+                        if (pA && pB) {
+                            velX = pB.coord[0] - pA.coord[0];
+                            velY = pB.coord[1] - pA.coord[1];
+                        }
+
+                        if (pos) {
+                            interpPlayers[pId] = {
+                                coord: pos,
+                                team: source.team,
+                                jersey: source.jersey || "",
+                                name: source.name || "",
+                                vel: [velX, velY]
+                            };
+                        }
+                    }
+
+                    let pkX, pkY;
+                    if (puckInterp) {
+                        [pkX, pkY] = scaleCoordinates(puckInterp[0], puckInterp[1]);
+                    } else {
+                        pkX = VIRTUAL_WIDTH / 2;
+                        pkY = VIRTUAL_HEIGHT / 2;
+                    }
+
+                    const targetW = isZoomEvent ? CAMERA_ZOOM_WIDTH : VIRTUAL_WIDTH;
+                    const targetH = isZoomEvent ? CAMERA_ZOOM_HEIGHT : VIRTUAL_HEIGHT;
+
+                    let targetX = 0.0, targetY = 0.0;
+                    if (isZoomEvent) {
+                        targetX = pkX - targetW / 2.0;
+                        targetY = pkY - targetH / 2.0;
+                    }
+
+                    master.push({
+                        matchClock: rowA["MatchClock (mm:ss)"] || "00:00",
+                        eventType: eventType,
+                        isZoom: isZoomEvent,
+                        eventIdx: i + 1,
+                        puck: puckInterp,
+                        speed: speedKmh,
+                        accelerating: accelerating,
+                        players: interpPlayers,
+                        homeScore: homeScore,
+                        awayScore: awayScore,
+                        targetX: targetX,
+                        targetY: targetY,
+                        targetW: targetW,
+                        targetH: targetH,
+                        interactionShares: interactionShares,
+                        shotsRanked: shotsRanked,
+                        passesRanked: passesRanked,
+                        bannerText: bannerText,
+                        bannerColor: bannerColor,
+                        bannerAnchor: (bannerText && puckA) ? puckA : null
+                    });
+                }
+
+                currentSimulatedTime += duration;
+            }
+
+            return master;
+        }
+
+        function optimizeStagnantFrames(master, movementRadius = 0.15) {
+            if (!master || master.length === 0) return master;
+            const optimized = [master[0]];
+
+            for (let i = 1; i < master.length; i++) {
+                const current = master[i];
+                const prev = optimized[optimized.length - 1];
+
+                const isSameTarget = (
+                    current.targetX === prev.targetX &&
+                    current.targetY === prev.targetY &&
+                    current.targetW === prev.targetW &&
+                    !current.bannerText && !prev.bannerText &&
+                    current.eventIdx === prev.eventIdx
+                );
+
+                if (isSameTarget && current.speed === 0.0) continue;
+
+                const isEventChange = (
+                    current.eventIdx !== prev.eventIdx ||
+                    current.bannerText !== null ||
+                    String(current.eventType) !== String(prev.eventType)
+                );
+
+                if (isEventChange) {
+                    optimized.push(current);
+                    continue;
+                }
+
+                let puckMoved = false;
+                if (prev.puck && current.puck) {
+                    if (Math.hypot(current.puck[0] - prev.puck[0], current.puck[1] - prev.puck[1]) > movementRadius) {
+                        puckMoved = true;
+                    }
+                }
+
+                let playersMoved = false;
+                const playersA = prev.players || {};
+                const playersB = current.players || {};
+
+                for (const [pId, pDataB] of Object.entries(playersB)) {
+                    if (playersA[pId]) {
+                        const dist = Math.hypot(pDataB.coord[0] - playersA[pId].coord[0], pDataB.coord[1] - playersA[pId].coord[1]);
+                        if (dist > movementRadius) {
+                            playersMoved = true;
+                            break;
+                        }
+                    } else {
+                        playersMoved = true;
+                        break;
+                    }
+                }
+
+                if (!puckMoved && !playersMoved) continue;
+                optimized.push(current);
+            }
+
+            return optimized;
+        }
+
+        function computeDistanceScore(userEnd, actualEnd) {
+            const dist = Math.hypot(userEnd[0] - actualEnd[0], userEnd[1] - actualEnd[1]);
+            const maxDist = 15.0; 
+            const score = Math.max(0, Math.round(100 * (1.0 - Math.min(dist, maxDist) / maxDist)));
+            return { score, dist };
+        }
+
+        function drawRoundedRect(cCtx, x, y, width, height, radius, fill, stroke) {
+            cCtx.beginPath();
+            cCtx.moveTo(x + radius, y);
+            cCtx.lineTo(x + width - radius, y);
+            cCtx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            cCtx.lineTo(x + width, y + height - radius);
+            cCtx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            cCtx.lineTo(x + radius, y + height);
+            cCtx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            cCtx.lineTo(x, y + radius);
+            cCtx.quadraticCurveTo(x, y, x + radius, y);
+            cCtx.closePath();
+            if (fill) cCtx.fill();
+            if (stroke) cCtx.stroke();
+        }
+
+        function drawMasterRink(cCtx) {
+            cCtx.fillStyle = ARENA_BG;
+            cCtx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+
+            const [xMin, yMin] = scaleCoordinates(-30.8, -14.85);
+            const [xMax, yMax] = scaleCoordinates(30.8, 14.85);
+            const rWidth = xMax - xMin;
+            const rHeight = yMax - yMin;
+
+            cCtx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            drawRoundedRect(cCtx, xMin - 12, yMin - 12, rWidth + 24, rHeight + 24, 52, true, false);
+
+            const iceGrad = cCtx.createRadialGradient(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, 100, VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, 700);
+            iceGrad.addColorStop(0, "#121E36");
+            iceGrad.addColorStop(1, "#0A1220");
+            cCtx.fillStyle = iceGrad;
+            drawRoundedRect(cCtx, xMin, yMin, rWidth, rHeight, 40, true, false);
+
+            cCtx.strokeStyle = BOARD_BORDER;
+            cCtx.lineWidth = 3.5;
+            drawRoundedRect(cCtx, xMin, yMin, rWidth, rHeight, 40, false, true);
+
+            const centerX = VIRTUAL_WIDTH / 2;
+            const centerY = VIRTUAL_HEIGHT / 2;
+
+            cCtx.strokeStyle = LINE_RED;
+            cCtx.lineWidth = 3;
+            cCtx.beginPath();
+            cCtx.moveTo(centerX, yMin);
+            cCtx.lineTo(centerX, yMax);
+            cCtx.stroke();
+
+            cCtx.strokeStyle = "rgba(0, 240, 255, 0.6)";
+            cCtx.lineWidth = 2;
+            cCtx.beginPath();
+            cCtx.arc(centerX, centerY, 65, 0, Math.PI * 2);
+            cCtx.stroke();
+
+            cCtx.fillStyle = LINE_RED;
+            cCtx.beginPath();
+            cCtx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+            cCtx.fill();
+
+            const blueXLeft = scaleCoordinates(-8.5, 0)[0];
+            const blueXRight = scaleCoordinates(8.5, 0)[0];
+            cCtx.strokeStyle = LINE_BLUE;
+            cCtx.lineWidth = 3.5;
+
+            cCtx.beginPath();
+            cCtx.moveTo(blueXLeft, yMin);
+            cCtx.lineTo(blueXLeft, yMax);
+            cCtx.stroke();
+
+            cCtx.beginPath();
+            cCtx.moveTo(blueXRight, yMin);
+            cCtx.lineTo(blueXRight, yMax);
+            cCtx.stroke();
+
+            const leftGoalX = scaleCoordinates(-26, 0)[0];
+            const rightGoalX = scaleCoordinates(26, 0)[0];
+            cCtx.strokeStyle = "rgba(255, 46, 76, 0.7)";
+            cCtx.lineWidth = 2;
+
+            cCtx.beginPath();
+            cCtx.moveTo(leftGoalX, yMin + 10);
+            cCtx.lineTo(leftGoalX, yMax - 10);
+            cCtx.stroke();
+
+            cCtx.beginPath();
+            cCtx.moveTo(rightGoalX, yMin + 10);
+            cCtx.lineTo(rightGoalX, yMax - 10);
+            cCtx.stroke();
+
+            for (const gx of [leftGoalX, rightGoalX]) {
+                cCtx.fillStyle = "rgba(15, 50, 90, 0.6)";
+                cCtx.beginPath();
+                cCtx.arc(gx, centerY, 20, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.strokeStyle = CYAN_NEON;
+                cCtx.lineWidth = 1.5;
+                cCtx.beginPath();
+                cCtx.arc(gx, centerY, 20, 0, Math.PI * 2);
+                cCtx.stroke();
+            }
+
+            const netW = 14, netH = 24;
+            cCtx.fillStyle = "rgba(60, 20, 20, 0.8)";
+            cCtx.strokeStyle = LINE_RED;
+            cCtx.lineWidth = 1.5;
+
+            cCtx.fillRect(leftGoalX - netW, centerY - netH / 2, netW, netH);
+            cCtx.strokeRect(leftGoalX - netW, centerY - netH / 2, netW, netH);
+
+            cCtx.fillRect(rightGoalX, centerY - netH / 2, netW, netH);
+            cCtx.strokeRect(rightGoalX, centerY - netH / 2, netW, netH);
+
+            for (const [dotX, dotY] of [[-20, -6], [-20, 6], [20, -6], [20, 6]]) {
+                const [px, py] = scaleCoordinates(dotX, dotY);
+                cCtx.strokeStyle = "rgba(0, 240, 255, 0.4)";
+                cCtx.lineWidth = 1.5;
+                cCtx.beginPath();
+                cCtx.arc(px, py, 45, 0, Math.PI * 2);
+                cCtx.stroke();
+
+                cCtx.fillStyle = CYAN_NEON;
+                cCtx.beginPath();
+                cCtx.arc(px, py, 4, 0, Math.PI * 2);
+                cCtx.fill();
+            }
+
+            for (const [dotX, dotY] of [[-6, -6], [-6, 6], [6, -6], [6, 6]]) {
+                const [px, py] = scaleCoordinates(dotX, dotY);
+                cCtx.fillStyle = CYAN_NEON;
+                cCtx.beginPath();
+                cCtx.arc(px, py, 4, 0, Math.PI * 2);
+                cCtx.fill();
+            }
+        }
+
+        function drawPlayer(cCtx, pData) {
+            const [px, py] = scaleCoordinates(pData.coord[0], pData.coord[1]);
+            const isHome = pData.team.toLowerCase() === "home";
+            const primaryColor = isHome ? HOME_TEAM : AWAY_TEAM;
+
+            // Draw direction indicator triangle based on velocity vector
+            if (pData.vel && (pData.vel[0] !== 0 || pData.vel[1] !== 0)) {
+                const angle = Math.atan2(pData.vel[1], pData.vel[0]);
+                const radius = 16;
+                const triangleDist = radius + 6;
+                const triangleSize = 7;
+
+                cCtx.save();
+                cCtx.translate(px, py);
+                cCtx.rotate(angle);
+
+                cCtx.fillStyle = CYAN_NEON;
+                cCtx.strokeStyle = "#0F1624";
+                cCtx.lineWidth = 1;
+
+                cCtx.beginPath();
+                cCtx.moveTo(triangleDist + triangleSize, 0);
+                cCtx.lineTo(triangleDist - triangleSize, -triangleSize * 0.7);
+                cCtx.lineTo(triangleDist - triangleSize, triangleSize * 0.7);
+                cCtx.closePath();
+                cCtx.fill();
+                cCtx.stroke();
+
+                cCtx.restore();
+            }
+
+            cCtx.fillStyle = "rgba(0, 0, 0, 0.6)";
+            cCtx.beginPath();
+            cCtx.arc(px + 2, py + 3, 16, 0, Math.PI * 2);
+            cCtx.fill();
+
+            cCtx.fillStyle = "#0F1624";
+            cCtx.beginPath();
+            cCtx.arc(px, py, 16, 0, Math.PI * 2);
+            cCtx.fill();
+
+            cCtx.fillStyle = primaryColor;
+            cCtx.beginPath();
+            cCtx.arc(px, py, 14, 0, Math.PI * 2);
+            cCtx.fill();
+
+            cCtx.strokeStyle = CYAN_NEON;
+            cCtx.lineWidth = 2;
+            cCtx.beginPath();
+            cCtx.arc(px, py, 16, 0, Math.PI * 2);
+            cCtx.stroke();
+
+            if (pData.jersey) {
+                cCtx.font = "italic 700 16px 'Rajdhani', sans-serif";
+                cCtx.textAlign = "center";
+                cCtx.textBaseline = "middle";
+
+                cCtx.fillStyle = "#000000";
+                cCtx.fillText(pData.jersey, px + 1, py + 1);
+
+                cCtx.fillStyle = WHITE;
+                cCtx.fillText(pData.jersey, px, py);
+            }
+        }
+
+        function drawPuck(cCtx, frame) {
+            if (!frame.puck) return;
+            const [pkX, pkY] = scaleCoordinates(frame.puck[0], frame.puck[1]);
+
+            cCtx.fillStyle = "rgba(0, 0, 0, 0.6)";
+            cCtx.beginPath();
+            cCtx.arc(pkX + 3, pkY + 3, 7, 0, Math.PI * 2);
+            cCtx.fill();
+
+            cCtx.fillStyle = "#0A0A0E";
+            cCtx.beginPath();
+            cCtx.arc(pkX, pkY, 7, 0, Math.PI * 2);
+            cCtx.fill();
+
+            cCtx.strokeStyle = CYAN_NEON;
+            cCtx.lineWidth = 1.5;
+            cCtx.beginPath();
+            cCtx.arc(pkX, pkY, 7, 0, Math.PI * 2);
+            cCtx.stroke();
+
+            if (frame.isZoom) {
+                const speedColor = frame.accelerating ? "#00FFB4" : "#FF3B56";
+                cCtx.font = "italic 800 15px 'Rajdhani', sans-serif";
+                cCtx.fillStyle = speedColor;
+                cCtx.textAlign = "center";
+                cCtx.fillText(`${Math.round(frame.speed)} km/h`, pkX, pkY + 20);
+            }
+        }
+
+        const p3AvatarCache = {};
+        function getP3PlayerAvatar(jersey, teamColor, isHome) {
+            const cacheKey = `${jersey}_${teamColor}`;
+            if (p3AvatarCache[cacheKey]) return p3AvatarCache[cacheKey];
+
+            const aCanvas = document.createElement("canvas");
+            aCanvas.width = 120;
+            aCanvas.height = 120;
+            const actx = aCanvas.getContext("2d");
+
+            actx.save();
+            actx.fillStyle = isHome ? "#0A255C" : "#5C0A1E";
+            actx.beginPath();
+            actx.moveTo(10, 0);
+            actx.lineTo(120, 15);
+            actx.lineTo(105, 120);
+            actx.lineTo(0, 95);
+            actx.closePath();
+            actx.fill();
+
+            const seed = (parseInt(jersey) || 0) % 5;
+            actx.fillStyle = isHome ? "#00F0FF" : "#FFFFFF";
+            
+            actx.fillStyle = "#1E293B";
+            actx.beginPath();
+            actx.moveTo(15, 110);
+            actx.lineTo(105, 110);
+            actx.lineTo(85, 75);
+            actx.lineTo(35, 75);
+            actx.closePath();
+            actx.fill();
+
+            actx.fillStyle = "#F8FAFC";
+            actx.beginPath();
+            actx.moveTo(40, 45);
+            actx.lineTo(75, 45);
+            actx.lineTo(70, 78);
+            actx.lineTo(55, 88);
+            actx.lineTo(42, 75);
+            actx.closePath();
+            actx.fill();
+
+            actx.fillStyle = isHome ? "#1D4ED8" : "#9F1239";
+            actx.beginPath();
+            if (seed === 0) {
+                actx.moveTo(30, 35); actx.lineTo(85, 25); actx.lineTo(75, 55); actx.lineTo(60, 42); actx.lineTo(45, 60);
+            } else if (seed === 1) {
+                actx.moveTo(25, 45); actx.lineTo(80, 20); actx.lineTo(65, 50); actx.lineTo(50, 35); actx.lineTo(35, 55);
+            } else {
+                actx.moveTo(35, 25); actx.lineTo(88, 35); actx.lineTo(70, 58); actx.lineTo(55, 45); actx.lineTo(40, 65);
+            }
+            actx.closePath();
+            actx.fill();
+
+            actx.fillStyle = "#0F172A";
+            actx.beginPath();
+            actx.moveTo(48, 56); actx.lineTo(58, 54); actx.lineTo(56, 60); actx.closePath();
+            actx.moveTo(64, 54); actx.lineTo(74, 56); actx.lineTo(66, 60); actx.closePath();
+            actx.fill();
+
+            actx.strokeStyle = CYAN_NEON;
+            actx.lineWidth = 2;
+            actx.beginPath();
+            actx.moveTo(42, 54);
+            actx.lineTo(78, 54);
+            actx.stroke();
+
+            actx.restore();
+            p3AvatarCache[cacheKey] = aCanvas;
+            return aCanvas;
+        }
+
+        function drawPersonaPartyHUD(cCtx, frame, actualW, actualH, pipBottomY, leftStatsBottomY = 0) {
+            const players = frame.players || {};
+            const homePlayers = [];
+            const awayPlayers = [];
+
+            for (const [pId, pData] of Object.entries(players)) {
+                if (pData.team.toLowerCase() === "home") homePlayers.push(pData);
+                else awayPlayers.push(pData);
+            }
+
+            const puckCoord = frame.puck;
+
+            // Shift Home HUD down dynamically when replay leaderboards are displayed on top left
+            const startYLeft = Math.max(110, leftStatsBottomY + 20);
+            const cardH = 48;
+            const spacing = 12;
+
+            homePlayers.slice(0, 5).forEach((pData, idx) => {
+                const y = startYLeft + idx * (cardH + spacing);
+                const x = 20 + idx * 8;
+                
+                let isCarrier = false;
+                if (puckCoord) {
+                    const dist = Math.hypot(pData.coord[0] - puckCoord[0], pData.coord[1] - puckCoord[1]);
+                    if (dist < 2.5) isCarrier = true;
+                }
+
+                cCtx.save();
+                cCtx.transform(1, 0, -0.15, 1, 0, 0);
+
+                cCtx.fillStyle = isCarrier ? "rgba(0, 240, 255, 0.25)" : "rgba(10, 22, 40, 0.85)";
+                cCtx.strokeStyle = isCarrier ? CYAN_NEON : "rgba(40, 130, 255, 0.5)";
+                cCtx.lineWidth = isCarrier ? 2.5 : 1.5;
+                drawRoundedRect(cCtx, x, y, 210, cardH, 6, true, true);
+
+                const avatar = getP3PlayerAvatar(pData.jersey || "00", HOME_TEAM, true);
+                cCtx.drawImage(avatar, x - 8, y - 4, 52, 52);
+
+                cCtx.font = "italic 700 17px 'Rajdhani', sans-serif";
+                cCtx.fillStyle = WHITE;
+                cCtx.textAlign = "left";
+                cCtx.fillText(pData.name.toUpperCase().slice(0, 11), x + 50, y + 22);
+
+                cCtx.font = "italic 700 18px 'Rajdhani', sans-serif";
+                cCtx.fillStyle = CYAN_NEON;
+                cCtx.fillText(`#${pData.jersey}`, x + 168, y + 22);
+
+                cCtx.font = "italic 800 11px 'Rajdhani', sans-serif";
+                if (isCarrier) {
+                    cCtx.fillStyle = WHITE;
+                    cCtx.fillText("★ IN CONTROL", x + 50, y + 38);
+                } else {
+                    cCtx.fillStyle = "#64748B";
+                    cCtx.fillText("ACTIVE ON ICE", x + 50, y + 38);
+                }
+
+                cCtx.restore();
+            });
+
+            const startYRight = Math.max(110, pipBottomY + 20);
+
+            awayPlayers.slice(0, 5).forEach((pData, idx) => {
+                const y = startYRight + idx * (cardH + spacing);
+                const x = actualW - 230 - idx * 8;
+
+                let isCarrier = false;
+                if (puckCoord) {
+                    const dist = Math.hypot(pData.coord[0] - puckCoord[0], pData.coord[1] - puckCoord[1]);
+                    if (dist < 2.5) isCarrier = true;
+                }
+
+                cCtx.save();
+                cCtx.transform(1, 0, 0.15, 1, 0, 0);
+
+                cCtx.fillStyle = isCarrier ? "rgba(255, 45, 95, 0.3)" : "rgba(26, 10, 20, 0.85)";
+                cCtx.strokeStyle = isCarrier ? WHITE : "rgba(255, 45, 95, 0.5)";
+                cCtx.lineWidth = isCarrier ? 2.5 : 1.5;
+                drawRoundedRect(cCtx, x, y, 210, cardH, 6, true, true);
+
+                const avatar = getP3PlayerAvatar(pData.jersey || "00", AWAY_TEAM, false);
+                cCtx.drawImage(avatar, x + 160, y - 4, 52, 52);
+
+                cCtx.font = "italic 700 17px 'Rajdhani', sans-serif";
+                cCtx.fillStyle = WHITE;
+                cCtx.textAlign = "left";
+                cCtx.fillText(pData.name.toUpperCase().slice(0, 11), x + 15, y + 22);
+
+                cCtx.font = "italic 700 18px 'Rajdhani', sans-serif";
+                cCtx.fillStyle = AWAY_TEAM;
+                cCtx.fillText(`#${pData.jersey}`, x + 125, y + 22);
+
+                cCtx.font = "italic 800 11px 'Rajdhani', sans-serif";
+                if (isCarrier) {
+                    cCtx.fillStyle = WHITE;
+                    cCtx.fillText("★ IN CONTROL", x + 15, y + 38);
+                } else {
+                    cCtx.fillStyle = "#64748B";
+                    cCtx.fillText("ACTIVE ON ICE", x + 15, y + 38);
+                }
+
+                cCtx.restore();
+            });
+        }
+
+        /* 
+         * Persona 3 Reload Action-Callout Style Event Popup (Rendered Screen-Space / Foreground)
+         */
+        function drawWorldEventBannerForeground(cCtx, popup, viewInfo, actualW, actualH, isUnderlayer = false) {
+            const text = popup.text;
+            const color = popup.color;
+            const anchor = popup.anchor;
+            const wallElapsed = (Date.now() / 1000) - popup.startTime;
+            const progress = wallElapsed / POPUP_DURATION_SECONDS;
+
+            if (!text || !anchor || progress >= 1.0) return;
+
+            const { destX, destY, scaledW, scaledH, camW, camH } = viewInfo;
+            const [puckPx, puckPy] = scaleCoordinates(anchor[0], anchor[1]);
+            const camPixelX = puckPx - curCamX;
+            const camPixelY = puckPy - curCamY;
+            const anchorX = destX + Math.round(camPixelX * (scaledW / camW));
+            const anchorY = destY + Math.round(camPixelY * (scaledH / camH));
+
+            const intro = Math.min(1.0, Math.max(0.0, progress / 0.12));
+            const outro = Math.min(1.0, Math.max(0.0, (1.0 - progress) / 0.12));
+            let visibility = Math.min(intro, outro);
+
+            if (isUnderlayer) visibility *= 0.5;
+
+            const eased = 1.0 - Math.pow(1.0 - intro, 3);
+            const scale = (0.7 + 0.3 * eased) * (isUnderlayer ? 0.85 : 1.0);
+
+            const shakeStrength = (1.0 - Math.min(1.0, wallElapsed / 0.4)) * (isUnderlayer ? 2.0 : 4.0);
+            const shakeX = Math.sin(wallElapsed * 60.0) * shakeStrength;
+            const shakeY = Math.cos(wallElapsed * 50.0) * shakeStrength * 0.5;
+
+            cCtx.save();
+            cCtx.font = "italic 800 22px 'Rajdhani', sans-serif";
+            const textMetrics = cCtx.measureText(text);
+            const padX = 32;
+            const w = textMetrics.width + padX * 2;
+            const h = 42;
+
+            const posX = anchorX + shakeX;
+            const posY = anchorY - 45 - (isUnderlayer ? 20 : 0) + shakeY;
+
+            cCtx.translate(posX, posY);
+            cCtx.scale(scale, scale);
+            cCtx.globalAlpha = visibility;
+
+            const skewAngle = -0.22;
+
+            // Background Shadow
+            cCtx.save();
+            cCtx.transform(1, 0, skewAngle, 1, 6, 6);
+            cCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
+            cCtx.fillRect(-w / 2, -h / 2, w, h);
+            cCtx.restore();
+
+            // Main Parallelogram Accent
+            cCtx.save();
+            cCtx.transform(1, 0, skewAngle, 1, 0, 0);
+            cCtx.fillStyle = color;
+            cCtx.fillRect(-w / 2 - 4, -h / 2 - 4, w + 8, h + 8);
+
+            cCtx.fillStyle = "#0A0F1D";
+            cCtx.fillRect(-w / 2, -h / 2, w, h);
+
+            // Left Slash Stripe
+            cCtx.fillStyle = color;
+            cCtx.fillRect(-w / 2, -h / 2, 8, h);
+            cCtx.restore();
+
+            // Text
+            cCtx.font = "italic 800 22px 'Rajdhani', sans-serif";
+            cCtx.fillStyle = WHITE;
+            cCtx.textAlign = "center";
+            cCtx.textBaseline = "middle";
+            cCtx.fillText(text, 2, 1);
+
+            cCtx.restore();
+        }
+
+        function blitCameraView(sourceCanvas, destCtx, actualW, actualH, curCamX, curCamY, curCamW, curCamH) {
+            const camW = Math.max(10, Math.min(VIRTUAL_WIDTH, curCamW));
+            const camH = Math.max(10, Math.min(VIRTUAL_HEIGHT, curCamH));
+
+            const cropW = Math.max(10, Math.round(camW));
+            const cropH = Math.max(10, Math.round(camH));
+
+            cropCanvas.width = cropW;
+            cropCanvas.height = cropH;
+            cropCtx.fillStyle = ARENA_BG;
+            cropCtx.fillRect(0, 0, cropW, cropH);
+
+            cropCtx.imageSmoothingEnabled = true;
+            cropCtx.imageSmoothingQuality = 'high';
+
+            cropCtx.drawImage(
+                sourceCanvas,
+                Math.round(curCamX), Math.round(curCamY), cropW, cropH,
+                0, 0, cropW, cropH
+            );
+
+            const targetAspect = actualW / actualH;
+            const cropAspect = cropW / cropH;
+
+            let scaledW, scaledH;
+            if (cropAspect > targetAspect) {
+                scaledW = actualW;
+                scaledH = Math.round(actualW / cropAspect);
+            } else {
+                scaledH = actualH;
+                scaledW = Math.round(actualH * cropAspect);
+            }
+
+            const destX = Math.round((actualW - scaledW) / 2);
+            const destY = Math.round((actualH - scaledH) / 2);
+
+            destCtx.fillStyle = ARENA_BG;
+            destCtx.fillRect(0, 0, actualW, actualH);
+
+            destCtx.imageSmoothingEnabled = true;
+            destCtx.imageSmoothingQuality = 'high';
+            destCtx.drawImage(cropCanvas, 0, 0, cropW, cropH, destX, destY, scaledW, scaledH);
+
+            return {
+                camX: curCamX, camY: curCamY, camW: camW, camH: camH,
+                destX: destX, destY: destY, scaledW: scaledW, scaledH: scaledH
+            };
+        }
+
+        async function init() {
+            canvas = document.getElementById("gameCanvas");
+            ctx = canvas.getContext("2d");
+
+            rinkCanvas = document.createElement("canvas");
+            rinkCanvas.width = VIRTUAL_WIDTH;
+            rinkCanvas.height = VIRTUAL_HEIGHT;
+            rinkCtx = rinkCanvas.getContext("2d");
+
+            masterCanvas = document.createElement("canvas");
+            masterCanvas.width = VIRTUAL_WIDTH;
+            masterCanvas.height = VIRTUAL_HEIGHT;
+            masterCtx = masterCanvas.getContext("2d");
+
+            cropCanvas = document.createElement("canvas");
+            cropCtx = cropCanvas.getContext("2d");
+
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            setupInputListeners();
+            drawMasterRink(rinkCtx);
+
+            await loadDatasetFromPath();
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function showError(msg) {
+            const banner = document.getElementById("error-banner");
+            banner.innerHTML = msg;
+            banner.style.display = "block";
+        }
+
+        async function loadDatasetFromPath() {
+            try {
+                const response = await fetch(CSV_PATH);
+                if (!response.ok) {
+                    throw new Error(`Failed to load '${CSV_PATH}' (HTTP ${response.status}).`);
+                }
+                const csvText = await response.text();
+                parseAndStart(csvText);
+            } catch (err) {
+                console.error(err);
+                showError(`Data Load Error: Could not load '${CSV_PATH}'.<br>Details: ${err.message}`);
+            }
+        }
+
+        function parseAndStart(csvText) {
+            Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    df = results.data;
+                    if (!df || df.length === 0) {
+                        showError("Parsed CSV contains no rows.");
+                        return;
+                    }
+
+                    for (const row of df) {
+                        const p1 = String(row["StartPlayerName1"] || "");
+                        const p7 = String(row["StartPlayerName7"] || "");
+                        if (p1.includes("Aeschlimann") || p1.includes("Stransky")) awayTeamName = "HC Davos";
+                        if (p7.includes("Gajan") || p7.includes("Finley")) homeTeamName = "EV Zug";
+                    }
+
+                    const rawFrames = precomputeReplayTimeline(df);
+                    masterFrames = optimizeStagnantFrames(rawFrames, 0.15);
+
+                    if (masterFrames.length === 0) {
+                        showError("Not enough data to construct a timeline.");
+                        return;
+                    }
+
+                    document.getElementById("mode-modal").style.display = "flex";
+                }
+            });
+        }
+
+        function selectMode(mode) {
+            selectedMode = mode;
+            document.getElementById("mode-modal").style.display = "none";
+            if (!isRunning) {
+                isRunning = true;
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function setupInputListeners() {
+            document.getElementById("btn-replay").addEventListener("click", () => selectMode("replay"));
+            document.getElementById("btn-game").addEventListener("click", () => selectMode("game"));
+
+            window.addEventListener("keydown", (e) => {
+                if (document.getElementById("mode-modal").style.display !== "none") {
+                    if (e.key === "1") selectMode("replay");
+                    if (e.key === "2") selectMode("game");
+                    return;
+                }
+
+                if (e.key === "Escape") {
+                    if (gameState === "SHOWING_COMPARISON") {
+                        gameState = "PLAYING";
+                        paused = false;
+                    }
+                } else if (e.code === "Space" && gameState === "PLAYING") {
+                    paused = !paused;
+                } else if (e.key === "ArrowRight" && gameState === "PLAYING") {
+                    frameIdx = Math.min(masterFrames.length - 1, frameIdx + TARGET_FPS);
+                } else if (e.key === "ArrowLeft" && gameState === "PLAYING") {
+                    frameIdx = Math.max(0, frameIdx - TARGET_FPS);
+                } else if (e.key === "ArrowUp") {
+                    playbackSpeed = Math.min(4.0, playbackSpeed + 0.5);
+                } else if (e.key === "ArrowDown") {
+                    playbackSpeed = Math.max(0.5, playbackSpeed - 0.5);
+                } else if (e.key === "F3") {
+                    showPerformance = !showPerformance;
+                    e.preventDefault();
+                }
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                mousePos.x = e.clientX;
+                mousePos.y = e.clientY;
+            });
+
+            window.addEventListener("mousedown", (e) => {
+                if (selectedMode === "game" && gameState === "SHOWING_COMPARISON") {
+                    if ((Date.now() / 1000) - comparisonStartTime > 0.5) {
+                        gameState = "PLAYING";
+                        paused = false;
+                    }
+                    return;
+                }
+
+                if (selectedMode === "game" && gameState === "WAITING_FOR_DRAW" && e.button === 0) {
+                    const currentIntFrame = Math.floor(frameIdx);
+                    const currentFrame = masterFrames[currentIntFrame];
+                    if (currentFrame && currentFrame.puck) {
+                        drawingVector = true;
+                    }
+                }
+            });
+
+            window.addEventListener("mouseup", (e) => {
+                if (selectedMode === "game" && gameState === "WAITING_FOR_DRAW" && e.button === 0 && drawingVector) {
+                    drawingVector = false;
+                    const currentIntFrame = Math.floor(frameIdx);
+                    const currentFrame = masterFrames[currentIntFrame];
+                    evalPuckStart = currentFrame.puck;
+
+                    if (evalPuckStart) {
+                        const actualW = canvas.width;
+                        const actualH = canvas.height;
+                        const camW = Math.max(10, Math.min(VIRTUAL_WIDTH, curCamW));
+                        const camH = Math.max(10, Math.min(VIRTUAL_HEIGHT, curCamH));
+
+                        const targetAspect = actualW / actualH;
+                        const cropAspect = camW / camH;
+
+                        let scaledW, scaledH;
+                        if (cropAspect > targetAspect) {
+                            scaledW = actualW;
+                            scaledH = Math.round(actualW / cropAspect);
+                        } else {
+                            scaledH = actualH;
+                            scaledH = Math.round(actualH * cropAspect);
+                        }
+                        const destX = Math.round((actualW - scaledW) / 2);
+                        const destY = Math.round((actualH - scaledH) / 2);
+
+                        const relX = mousePos.x - destX;
+                        const relY = mousePos.y - destY;
+
+                        if (relX >= 0 && relX <= scaledW && relY >= 0 && relY <= scaledH) {
+                            const virX = curCamX + (relX / scaledW) * camW;
+                            const virY = curCamY + (relY / scaledH) * camH;
+
+                            const rinkCenterX = VIRTUAL_WIDTH / 2;
+                            const rinkCenterY = VIRTUAL_HEIGHT / 2;
+                            const mEndX = (virX - rinkCenterX) / 17.5;
+                            const mEndY = (virY - rinkCenterY) / 17.5;
+
+                            globalUserVector = [mEndX - evalPuckStart[0], mEndY - evalPuckStart[1]];
+                            evalTargetFrame = Math.min(masterFrames.length - 1, currentIntFrame + Math.round(3.0 * TARGET_FPS));
+
+                            gameState = "WATCHING_RESULT";
+                            paused = false;
+                        }
+                    }
+                }
+            });
+        }
+
+        let lastTime = performance.now();
+        let fpsCounter = 0;
+        let lastFrameMs = 0;
+
+        function gameLoop(now) {
+            const frameStart = performance.now();
+            let dt = (now - lastTime) / 1000.0;
+            lastTime = now;
+            dt = Math.min(dt, 0.25);
+
+            fpsCounter = 1 / Math.max(0.001, dt);
+
+            const totalFrames = masterFrames.length;
+            let currentIntFrame = Math.floor(frameIdx);
+            let currentFrame = masterFrames[currentIntFrame];
+
+            if (selectedMode === "game" && gameState === "PLAYING" && !paused) {
+                if (currentIntFrame - lastPromptedFrame >= Math.round(4.0 * TARGET_FPS) && currentFrame.puck) {
+                    lastPromptedFrame = currentIntFrame;
+                    gameState = "WAITING_FOR_DRAW";
+                    paused = true;
+                    activePopups.push({
+                        text: "DRAW PUCK VECTOR",
+                        color: P3_CYAN,
+                        anchor: currentFrame.puck,
+                        startTime: Date.now() / 1000,
+                        eventIdx: currentFrame.eventIdx
+                    });
+                }
+            }
+
+            if (selectedMode === "game" && gameState === "WATCHING_RESULT") {
+                if (currentIntFrame >= evalTargetFrame) {
+                    paused = true;
+                    const puckEnd = currentFrame.puck;
+                    if (puckEnd && evalPuckStart) {
+                        globalActualVector = [puckEnd[0] - evalPuckStart[0], puckEnd[1] - evalPuckStart[1]];
+                        
+                        const userEndVirtual = [evalPuckStart[0] + globalUserVector[0], evalPuckStart[1] + globalUserVector[1]];
+                        const actualEndVirtual = [evalPuckStart[0] + globalActualVector[0], evalPuckStart[1] + globalActualVector[1]];
+                        
+                        const { score: earnedPts, dist } = computeDistanceScore(userEndVirtual, actualEndVirtual);
+                        gameScore += earnedPts;
+                        predictionsMade++;
+
+                        activePopups.push({
+                            text: `SCORE: ${earnedPts} PTS (${dist.toFixed(1)}M OFF)`,
+                            color: earnedPts > 50 ? WHITE : P3_RED,
+                            anchor: evalPuckStart,
+                            startTime: Date.now() / 1000,
+                            eventIdx: Math.round(Date.now() / 1000)
+                        });
+                    }
+                    gameState = "SHOWING_COMPARISON";
+                    comparisonStartTime = Date.now() / 1000;
+                }
+            }
+
+            if (!paused) {
+                frameIdx += playbackSpeed * TARGET_FPS * dt;
+                if (frameIdx >= totalFrames) frameIdx %= totalFrames;
+                currentIntFrame = Math.floor(frameIdx);
+                currentFrame = masterFrames[currentIntFrame];
+            }
+
+            let targetX, targetY, targetW, targetH;
+            if (selectedMode === "game" && gameState === "WAITING_FOR_DRAW") {
+                targetW = VIRTUAL_WIDTH;
+                targetH = VIRTUAL_HEIGHT;
+                targetX = 0.0;
+                targetY = 0.0;
+            } else {
+                targetX = currentFrame.targetX;
+                targetY = currentFrame.targetY;
+                targetW = currentFrame.targetW;
+                targetH = currentFrame.targetH;
+            }
+
+            const camDiff = Math.hypot(targetX - curCamX, targetY - curCamY);
+            const smoothSpeed = camDiff > 300 ? 0.5 : CAMERA_SMOOTH_SPEED;
+
+            curCamX += (targetX - curCamX) * smoothSpeed;
+            curCamY += (targetY - curCamY) * smoothSpeed;
+            curCamW += (targetW - curCamW) * CAMERA_SMOOTH_SPEED;
+            curCamH += (targetH - curCamH) * CAMERA_SMOOTH_SPEED;
+
+            if (currentFrame.bannerText) {
+                if (activeCelebrationIdx !== currentFrame.eventIdx) {
+                    activeCelebrationIdx = currentFrame.eventIdx;
+                    activePopups.push({
+                        text: currentFrame.bannerText,
+                        color: currentFrame.bannerColor || WHITE,
+                        anchor: currentFrame.bannerAnchor,
+                        startTime: Date.now() / 1000,
+                        eventIdx: activeCelebrationIdx
+                    });
+                }
+            }
+
+            const nowSec = Date.now() / 1000;
+            activePopups = activePopups.filter(p => (nowSec - p.startTime) < POPUP_DURATION_SECONDS);
+
+            masterCtx.drawImage(rinkCanvas, 0, 0);
+
+            for (const pData of Object.values(currentFrame.players)) {
+                drawPlayer(masterCtx, pData);
+            }
+            drawPuck(masterCtx, currentFrame);
+
+            const actualW = canvas.width;
+            const actualH = canvas.height;
+            const viewInfo = blitCameraView(masterCanvas, ctx, actualW, actualH, curCamX, curCamY, curCamW, curCamH);
+            const { destX, destY, scaledW, scaledH, camW, camH } = viewInfo;
+
+            // TRACK & DRAW TOP-LEFT REPLAY LEADERBOARDS
+            let leftStatsBottomY = 0;
+            if (selectedMode === "replay") {
+                const cycleDuration = 45.0;
+                const elapsedReal = (Date.now() / 1000) - overlayStartTime;
+                const cycleTime = elapsedReal % cycleDuration;
+
+                if (cycleTime >= 30.0) {
+                    const activeTime = cycleTime - 30.0;
+                    const windowIdx = Math.floor(activeTime / 5.0);
+                    const subTime = activeTime % 5.0;
+
+                    let mode = "INTERACTION %";
+                    let data = currentFrame.interactionShares || {};
+                    let formatter = val => `${val.toFixed(1)}%`;
+
+                    if (windowIdx === 1) {
+                        mode = "SHOTS LEADERS";
+                        data = currentFrame.shotsRanked || {};
+                        formatter = val => `${val} Shots`;
+                    } else if (windowIdx >= 2) {
+                        mode = "PASSES LEADERS";
+                        data = currentFrame.passesRanked || {};
+                        formatter = val => `${val} Passes`;
+                    }
+
+                    const animDuration = 0.6;
+                    let animProgress = 1.0;
+                    if (subTime < animDuration) {
+                        const p = subTime / animDuration;
+                        animProgress = 1.0 - Math.pow(1.0 - p, 3);
+                    } else if (subTime > (5.0 - animDuration)) {
+                        const p = (5.0 - subTime) / animDuration;
+                        animProgress = 1.0 - Math.pow(1.0 - p, 3);
+                    }
+
+                    animProgress = Math.max(0.0, Math.min(1.0, animProgress));
+
+                    if (animProgress > 0.0) {
+                        const tableW = 380, tableH = 220;
+                        const targetXBox = 30;
+                        const startXBox = -tableW - 30;
+                        const currentXBox = Math.round(startXBox + (targetXBox - startXBox) * animProgress);
+                        const tableY = 85;
+
+                        leftStatsBottomY = tableY + tableH;
+
+                        ctx.fillStyle = "rgba(10, 18, 32, 0.85)";
+                        ctx.strokeStyle = "rgba(0, 240, 255, 0.3)";
+                        ctx.lineWidth = 1;
+                        drawRoundedRect(ctx, currentXBox, tableY, tableW, tableH, 10, true, true);
+
+                        ctx.font = "italic 800 18px 'Rajdhani', sans-serif";
+                        ctx.fillStyle = WHITE;
+                        ctx.textAlign = "left";
+                        ctx.textBaseline = "top";
+                        ctx.fillText(`TOP ${mode}`, currentXBox + 16, tableY + 14);
+
+                        ctx.strokeStyle = "rgba(0, 240, 255, 0.2)";
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(currentXBox + 16, tableY + 38);
+                        ctx.lineTo(currentXBox + tableW - 16, tableY + 38);
+                        ctx.stroke();
+
+                        let yOffset = tableY + 48;
+                        let count = 0;
+                        for (const [key, val] of Object.entries(data)) {
+                            if (count >= 5) break;
+                            const parts = key.split("|");
+                            const jersey = parts[0] || "";
+                            const name = parts[1] || "";
+                            const team = parts[2] || "";
+
+                            const isHome = team.toLowerCase() === "home";
+                            const jerseyColor = isHome ? HOME_TEAM : AWAY_TEAM;
+
+                            ctx.font = "italic 700 15px 'Rajdhani', sans-serif";
+
+                            ctx.fillStyle = "#64748B";
+                            ctx.fillText("#", currentXBox + 16, yOffset);
+
+                            ctx.fillStyle = jerseyColor;
+                            ctx.fillText(jersey, currentXBox + 30, yOffset);
+
+                            ctx.fillStyle = WHITE;
+                            ctx.fillText(name, currentXBox + 65, yOffset);
+
+                            ctx.textAlign = "right";
+                            ctx.fillStyle = "#94A3B8";
+                            ctx.fillText(formatter(val), currentXBox + tableW - 16, yOffset);
+                            ctx.textAlign = "left";
+
+                            yOffset += 30;
+                            count++;
+                        }
+                    }
+                }
+            }
+
+            // MINI-MAP PIP OVERLAY
+            let pipBottomY = 0;
+            if (camW < VIRTUAL_WIDTH - 50) {
+                const pipW = Math.max(1, Math.round(actualW * PIP_WIDTH_RATIO));
+                const pipH = Math.max(1, Math.round(actualH * PIP_HEIGHT_RATIO));
+                const pipRect = { x: actualW - pipW - 25, y: 85, w: pipW, h: pipH };
+                pipBottomY = pipRect.y + pipRect.h;
+
+                ctx.fillStyle = "rgba(8, 14, 24, 0.8)";
+                drawRoundedRect(ctx, pipRect.x - 4, pipRect.y - 4, pipW + 8, pipH + 8, 10, true, false);
+
+                ctx.drawImage(rinkCanvas, pipRect.x, pipRect.y, pipW, pipH);
+
+                for (const pData of Object.values(currentFrame.players)) {
+                    const [mx, my] = scaleCoordinates(pData.coord[0], pData.coord[1]);
+                    const px = pipRect.x + Math.round(mx * pipW / VIRTUAL_WIDTH);
+                    const py = pipRect.y + Math.round(my * pipH / VIRTUAL_HEIGHT);
+                    ctx.fillStyle = pData.team.toLowerCase() === "home" ? HOME_TEAM : AWAY_TEAM;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (currentFrame.puck) {
+                    const [mx, my] = scaleCoordinates(currentFrame.puck[0], currentFrame.puck[1]);
+                    const px = pipRect.x + Math.round(mx * pipW / VIRTUAL_WIDTH);
+                    const py = pipRect.y + Math.round(my * pipH / VIRTUAL_HEIGHT);
+                    ctx.fillStyle = CYAN_NEON;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.strokeStyle = "rgba(0, 240, 255, 0.4)";
+                ctx.lineWidth = 1;
+                drawRoundedRect(ctx, pipRect.x, pipRect.y, pipRect.w, pipRect.h, 6, false, true);
+
+                const viewBox = {
+                    x: pipRect.x + Math.round(curCamX * pipW / VIRTUAL_WIDTH),
+                    y: pipRect.y + Math.round(curCamY * pipH / VIRTUAL_HEIGHT),
+                    w: Math.max(1, Math.round(camW * pipW / VIRTUAL_WIDTH)),
+                    h: Math.max(1, Math.round(camH * pipH / VIRTUAL_HEIGHT))
+                };
+                ctx.strokeStyle = WHITE;
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(viewBox.x, viewBox.y, viewBox.w, viewBox.h);
+            }
+
+            // DRAW PERSONA 3 HUD (Dynamically offsets home roster if left leaderboards active)
+            drawPersonaPartyHUD(ctx, currentFrame, actualW, actualH, pipBottomY, leftStatsBottomY);
+
+            // TOP SCOREBOARD
+            const barW = Math.min(1100, actualW - 40);
+            const barH = 54;
+            const barX = (actualW - barW) / 2;
+            const barY = 16;
+
+            ctx.fillStyle = "rgba(10, 18, 32, 0.8)";
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+            ctx.lineWidth = 1;
+            drawRoundedRect(ctx, barX, barY, barW, barH, 14, true, true);
+
+            let statusLabel = paused ? "PAUSED" : "PLAYING";
+            let statusColor = paused ? "#FF3B56" : "#00FFB4";
+
+            if (selectedMode === "game") {
+                if (gameState === "WAITING_FOR_DRAW") {
+                    statusLabel = "PREDICT PUCK PATH";
+                    statusColor = WHITE;
+                } else if (gameState === "WATCHING_RESULT") {
+                    statusLabel = "WATCHING RESULT...";
+                    statusColor = P3_CYAN;
+                } else if (gameState === "SHOWING_COMPARISON") {
+                    statusLabel = "REVIEW";
+                    statusColor = WHITE;
+                }
+            }
+
+            const modePrefix = selectedMode === "game" ? "GAME" : "REPLAY";
+            ctx.font = "italic 800 16px 'Rajdhani', sans-serif";
+            ctx.fillStyle = statusColor;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`[${modePrefix}] ${statusLabel}`, barX + 20, barY + barH / 2);
+
+            ctx.textAlign = "center";
+            ctx.font = "italic 800 24px 'Rajdhani', sans-serif";
+            
+            ctx.fillStyle = HOME_TEAM;
+            ctx.fillText(homeTeamName.toUpperCase(), barX + barW / 2 - 130, barY + barH / 2);
+
+            ctx.font = "italic 800 28px 'Rajdhani', sans-serif";
+            ctx.fillStyle = WHITE;
+            ctx.fillText(`${currentFrame.homeScore}`, barX + barW / 2 - 40, barY + barH / 2);
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.fillText("-", barX + barW / 2, barY + barH / 2);
+
+            ctx.fillStyle = WHITE;
+            ctx.fillText(`${currentFrame.awayScore}`, barX + barW / 2 + 40, barY + barH / 2);
+
+            ctx.font = "italic 800 24px 'Rajdhani', sans-serif";
+            ctx.fillStyle = AWAY_TEAM;
+            ctx.fillText(awayTeamName.toUpperCase(), barX + barW / 2 + 130, barY + barH / 2);
+
+            ctx.textAlign = "right";
+            ctx.font = "italic 700 15px 'Rajdhani', sans-serif";
+            ctx.fillStyle = "#94A3B8";
+
+            const infoText = selectedMode === "game"
+                ? `CLOCK: ${currentFrame.matchClock}`
+                : `SPD: ${playbackSpeed.toFixed(1)}x | CLOCK: ${currentFrame.matchClock} | ${currentFrame.eventType.toUpperCase()}`;
+            ctx.fillText(infoText, barX + barW - 20, barY + barH / 2);
+
+            if (selectedMode === "game") {
+                const scoreStr = `SCORE: ${gameScore} PTS  |  PREDICTIONS: ${predictionsMade}`;
+                ctx.font = "italic 800 17px 'Rajdhani', sans-serif";
+                const textWidth = ctx.measureText(scoreStr).width;
+
+                const cardW = textWidth + 30;
+                const cardH = 42;
+                const cardX = actualW - cardW - 25;
+                const cardY = actualH - cardH - 25;
+
+                ctx.fillStyle = "rgba(10, 18, 32, 0.85)";
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+                ctx.lineWidth = 1;
+                drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 10, true, true);
+
+                ctx.fillStyle = WHITE;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(scoreStr, cardX + cardW / 2, cardY + cardH / 2);
+            }
+
+            // -------------------------------------------------------------
+            // FOREGROUND RENDERING (PREDICTION VECTORS, TAGS, & EVENT POPUPS)
+            // -------------------------------------------------------------
+            for (let i = 0; i < activePopups.length; i++) {
+                const isUnderlayer = (i < activePopups.length - 1);
+                drawWorldEventBannerForeground(ctx, activePopups[i], viewInfo, actualW, actualH, isUnderlayer);
+            }
+
+            if (selectedMode === "game" && drawingVector && currentFrame.puck) {
+                const [puckPx, puckPy] = scaleCoordinates(currentFrame.puck[0], currentFrame.puck[1]);
+                const camPixelX = puckPx - curCamX;
+                const camPixelY = puckPy - curCamY;
+                const screenPuckX = destX + Math.round(camPixelX * (scaledW / camW));
+                const screenPuckY = destY + Math.round(camPixelY * (scaledH / camH));
+
+                ctx.strokeStyle = WHITE;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([6, 4]);
+                ctx.beginPath();
+                ctx.moveTo(screenPuckX, screenPuckY);
+                ctx.lineTo(mousePos.x, mousePos.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = CYAN_NEON;
+                ctx.beginPath();
+                ctx.arc(mousePos.x, mousePos.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (selectedMode === "game" && gameState === "SHOWING_COMPARISON" && evalPuckStart) {
+                const [puckPx, puckPy] = scaleCoordinates(evalPuckStart[0], evalPuckStart[1]);
+                const camPixelX = puckPx - curCamX;
+                const camPixelY = puckPy - curCamY;
+                const screenPuckX = destX + Math.round(camPixelX * (scaledW / camW));
+                const screenPuckY = destY + Math.round(camPixelY * (scaledH / camH));
+
+                const userEndVirtual = [evalPuckStart[0] + globalUserVector[0], evalPuckStart[1] + globalUserVector[1]];
+                const [uPx, uPy] = scaleCoordinates(userEndVirtual[0], userEndVirtual[1]);
+                const screenUserEndX = destX + Math.round((uPx - curCamX) * (scaledW / camW));
+                const screenUserEndY = destY + Math.round((uPy - curCamY) * (scaledH / camH));
+
+                const actualEndVirtual = [evalPuckStart[0] + globalActualVector[0], evalPuckStart[1] + globalActualVector[1]];
+                const [aPx, aPy] = scaleCoordinates(actualEndVirtual[0], actualEndVirtual[1]);
+                const screenActualEndX = destX + Math.round((aPx - curCamX) * (scaledW / camW));
+                const screenActualEndY = destY + Math.round((aPy - curCamY) * (scaledH / camH));
+
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = WHITE;
+                ctx.beginPath();
+                ctx.moveTo(screenPuckX, screenPuckY);
+                ctx.lineTo(screenUserEndX, screenUserEndY);
+                ctx.stroke();
+
+                ctx.strokeStyle = P3_CYAN;
+                ctx.beginPath();
+                ctx.moveTo(screenPuckX, screenPuckY);
+                ctx.lineTo(screenActualEndX, screenActualEndY);
+                ctx.stroke();
+
+                ctx.fillStyle = WHITE;
+                ctx.beginPath();
+                ctx.arc(screenPuckX, screenPuckY, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                const userEndV = [evalPuckStart[0] + globalUserVector[0], evalPuckStart[1] + globalUserVector[1]];
+                const actualEndV = [evalPuckStart[0] + globalActualVector[0], evalPuckStart[1] + globalActualVector[1]];
+                const currentDist = Math.hypot(userEndV[0] - actualEndV[0], userEndV[1] - actualEndV[1]);
+
+                // Contextual Data Tag directly on the ice
+                const tagText = `${currentDist.toFixed(1)}m Error`;
+                ctx.font = "italic 700 15px 'Rajdhani', sans-serif";
+                const tagW = ctx.measureText(tagText).width + 20;
+                const tagH = 26;
+                const tagX = screenActualEndX + 15;
+                const tagY = screenActualEndY - 12;
+
+                ctx.fillStyle = "rgba(10, 18, 32, 0.9)";
+                ctx.strokeStyle = P3_CYAN;
+                ctx.lineWidth = 1.5;
+                drawRoundedRect(ctx, tagX, tagY, tagW, tagH, 6, true, true);
+
+                ctx.fillStyle = P3_CYAN;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(tagText, tagX + tagW / 2, tagY + tagH / 2);
+
+                // Consolidated bottom-center feedback banner
+                const bannerW = 540;
+                const bannerH = 85;
+                const bannerX = (actualW - bannerW) / 2;
+                const bannerY = actualH - bannerH - 85;
+
+                ctx.fillStyle = "rgba(10, 18, 32, 0.92)";
+                ctx.strokeStyle = WHITE;
+                ctx.lineWidth = 2;
+                drawRoundedRect(ctx, bannerX, bannerY, bannerW, bannerH, 12, true, true);
+
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = "italic 800 18px 'Rajdhani', sans-serif";
+                ctx.fillStyle = WHITE;
+                ctx.fillText(`PREDICTION RESULT — DISTANCE ERROR: ${currentDist.toFixed(1)}M`, bannerX + bannerW / 2, bannerY + 20);
+
+                ctx.font = "italic 700 15px 'Rajdhani', sans-serif";
+                ctx.fillStyle = WHITE;
+                ctx.fillText("— Your Prediction", bannerX + 120, bannerY + 45);
+                ctx.fillStyle = P3_CYAN;
+                ctx.fillText("— Actual Movement", bannerX + 310, bannerY + 45);
+
+                ctx.font = "italic 800 15px 'Rajdhani', sans-serif";
+                ctx.fillStyle = WHITE;
+                ctx.fillText("▶ CLICK OR PRESS ANY KEY TO CONTINUE", bannerX + bannerW / 2, bannerY + 68);
+            }
+
+            if (showPerformance) {
+                const perfText = `FPS: ${fpsCounter.toFixed(1)} | Frame: ${lastFrameMs.toFixed(1)} ms | Frame: ${currentIntFrame}/${totalFrames}`;
+                ctx.font = "italic 700 14px 'Rajdhani', sans-serif";
+                const perfW = ctx.measureText(perfText).width + 24;
+
+                ctx.fillStyle = "rgba(10, 18, 32, 0.9)";
+                drawRoundedRect(ctx, 20, actualH - 45, perfW, 28, 6, true, false);
+
+                ctx.fillStyle = WHITE;
+                ctx.textAlign = "left";
+                ctx.textBaseline = "middle";
+                ctx.fillText(perfText, 32, actualH - 31);
+            }
+
+            lastFrameMs = performance.now() - frameStart;
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener("load", init);
+    </script>
+</body>
+</html>

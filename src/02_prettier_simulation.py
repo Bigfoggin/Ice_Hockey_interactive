@@ -9,7 +9,7 @@ import pygame
 # ---------------------------------------------------------------------------
 VIRTUAL_WIDTH, VIRTUAL_HEIGHT = 1500, 800
 TARGET_FPS = 30
-FRAMES_PER_STEP = 15
+FRAMES_PER_STEP = 15  # Fallback for rows without usable timestamps
 
 ARENA_BG = (6, 10, 18)
 ICE_BASE = (14, 24, 42)
@@ -24,30 +24,47 @@ LINE_BLUE = (0, 130, 210)
 HOME_TEAM = (40, 130, 255)
 AWAY_TEAM = (255, 45, 95)
 
+# Persona 3 Reload Palette Accents
+P3_BLUE = (10, 30, 80)
+P3_CYAN = (0, 230, 255)
+P3_YELLOW = (255, 230, 0)
+P3_RED = (255, 20, 60)
+
 CAMERA_ZOOM_WIDTH = 920
 CAMERA_ZOOM_HEIGHT = 490
-CAMERA_MORPH_FACTOR = 0.2
+
+# --- CAMERA DYNAMICS ---
+CAMERA_SMOOTH_SPEED = 0.18  # Increased for snappy camera tracking
+
 PIP_WIDTH_RATIO = 0.24
 PIP_HEIGHT_RATIO = 0.22
+
+# Zoom Tolerance Buffer (in seconds)
+ZOOM_TOLERANCE_SECONDS = 5.0
+POPUP_DURATION_SECONDS = 2.5
 
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 ACTUAL_WIDTH, ACTUAL_HEIGHT = screen.get_size()
-pygame.display.set_caption("Pro Hockey Analytics — F1 Style Leaderboard Edition")
+pygame.display.set_caption("Pro Hockey Analytics — Dynamic Smooth Zoom")
 clock = pygame.time.Clock()
 
 try:
-    FONT_SM = pygame.font.SysFont("Segoe UI", 13, bold=True)
+    FONT_SM = pygame.font.SysFont("Segoe UI", 12, bold=True)
     FONT_MD = pygame.font.SysFont("Segoe UI", 15, bold=True)
     FONT_LG = pygame.font.SysFont("Segoe UI", 20, bold=True)
-    FONT_TITLE = pygame.font.SysFont("Segoe UI", 24, bold=True)
+    FONT_TITLE = pygame.font.SysFont("Segoe UI", 28, bold=True)
     FONT_HUGE = pygame.font.SysFont("Segoe UI", 30, bold=True)
+    FONT_BANNER = pygame.font.SysFont("Segoe UI", 24, bold=True)
+    FONT_SMALL_BANNER = pygame.font.SysFont("Segoe UI", 13, bold=True)
 except Exception:
-    FONT_SM = pygame.font.Font(None, 18)
+    FONT_SM = pygame.font.Font(None, 16)
     FONT_MD = pygame.font.Font(None, 22)
     FONT_LG = pygame.font.Font(None, 26)
-    FONT_TITLE = pygame.font.Font(None, 30)
+    FONT_TITLE = pygame.font.Font(None, 32)
     FONT_HUGE = pygame.font.Font(None, 36)
+    FONT_BANNER = pygame.font.Font(None, 28)
+    FONT_SMALL_BANNER = pygame.font.Font(None, 16)
 
 
 def scale_coordinates(x, y):
@@ -112,15 +129,17 @@ def precompute_replay_timeline(df):
 
     home_score = 0
     away_score = 0
-    cam_x, cam_y = 0.0, 0.0
-    cam_w, cam_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
 
     player_interactions = {}
     player_shots = {}
     player_passes = {}
     total_interactions = 0
 
-    print("Precomputing multi-stat timelines...")
+    last_zoom_state_change_time = -999.0
+    current_simulated_time = 0.0
+    currently_zoomed = False
+
+    print("Precomputing replay timeline and camera targets...")
     for i in range(len(df) - 1):
         row_a = df.iloc[i]
         row_b = df.iloc[i + 1]
@@ -132,7 +151,43 @@ def precompute_replay_timeline(df):
 
         event_type = str(row_a.get("EventType", ""))
         event_lower = event_type.lower()
-        is_zoom_event = event_type in ("Shot", "Goal", "Pass", "PuckControl")
+        raw_is_zoom_event = event_type in ("Shot", "Goal", "Pass", "PuckControl")
+
+        duration = 0.75
+        interpolation_frames = max(1, int(round(duration * TARGET_FPS)))
+
+        if raw_is_zoom_event != currently_zoomed:
+            if (current_simulated_time - last_zoom_state_change_time) < ZOOM_TOLERANCE_SECONDS:
+                is_zoom_event = currently_zoomed
+            else:
+                is_zoom_event = raw_is_zoom_event
+                currently_zoomed = raw_is_zoom_event
+                last_zoom_state_change_time = current_simulated_time
+        else:
+            is_zoom_event = raw_is_zoom_event
+
+        banner_text = None
+        banner_color = P3_YELLOW
+
+        if "goal" in event_lower or str(row_a.get("ShotResult")) == "Goal":
+            banner_text = "GOAL!!!"
+            banner_color = P3_RED
+        elif event_type == "Shot":
+            shot_res = str(row_a.get("ShotResult"))
+            if shot_res == "Saved":
+                banner_text = "GREAT SAVE!"
+                banner_color = P3_CYAN
+            elif shot_res in ("Goal", "Blocked"):
+                pass
+            else:
+                banner_text = "SHOT ON TARGET!"
+                banner_color = P3_YELLOW
+        elif event_type == "Pass" and str(row_a.get("PassResult")) == "Successful":
+            banner_text = "CLEAN PASS!"
+            banner_color = (50, 255, 150)
+        elif event_type == "BluelineCrossing" and str(row_a.get("BluelineCrossingResult")) in ("PossessionMaintained", "PuckDumpedIn"):
+            banner_text = "ZONE ENTRY!"
+            banner_color = P3_CYAN
 
         primary_name = row_a.get("EventPrimaryPlayerName")
 
@@ -165,7 +220,6 @@ def precompute_replay_timeline(df):
             if parts and parts[0].startswith("#"):
                 j_num = parts[0][1:]
                 clean_name = " ".join(parts[1:])
-                
                 p_team = ""
                 for p_data in players_a.values():
                     if p_data.get("jersey") == j_num:
@@ -203,13 +257,12 @@ def precompute_replay_timeline(df):
         else:
             dist_meters = 1.0
 
-        duration = FRAMES_PER_STEP / TARGET_FPS
         base_speed_kmh = dist_meters / max(0.1, duration) * 3.6
         all_ids = set(players_a) | set(players_b)
 
         previous_speed = 0.0
-        for f in range(FRAMES_PER_STEP):
-            t = f / FRAMES_PER_STEP
+        for f in range(interpolation_frames):
+            t = f / interpolation_frames
             puck_interp = lerp_coord(puck_a, puck_b, t)
 
             if is_zoom_event:
@@ -246,19 +299,15 @@ def precompute_replay_timeline(df):
             else:
                 pk_x, pk_y = VIRTUAL_WIDTH // 2, VIRTUAL_HEIGHT // 2
 
-            if is_zoom_event and puck_interp is not None:
-                target_w = float(CAMERA_ZOOM_WIDTH)
-                target_h = float(CAMERA_ZOOM_HEIGHT)
+            target_w = float(CAMERA_ZOOM_WIDTH) if is_zoom_event else float(VIRTUAL_WIDTH)
+            target_h = float(CAMERA_ZOOM_HEIGHT) if is_zoom_event else float(VIRTUAL_HEIGHT)
+            
+            if is_zoom_event:
                 target_x = pk_x - target_w / 2.0
                 target_y = pk_y - target_h / 2.0
             else:
-                target_x, target_y = 0.0, 0.0
-                target_w, target_h = float(VIRTUAL_WIDTH), float(VIRTUAL_HEIGHT)
-
-            cam_x += (target_x - cam_x) * CAMERA_MORPH_FACTOR
-            cam_y += (target_y - cam_y) * CAMERA_MORPH_FACTOR
-            cam_w += (target_w - cam_w) * CAMERA_MORPH_FACTOR
-            cam_h += (target_h - cam_h) * CAMERA_MORPH_FACTOR
+                target_x = 0.0
+                target_y = 0.0
 
             master_frames.append({
                 "match_clock": row_a.get("MatchClock (mm:ss)", "00:00"),
@@ -271,17 +320,150 @@ def precompute_replay_timeline(df):
                 "players": interp_players,
                 "home_score": home_score,
                 "away_score": away_score,
-                "cam_x": cam_x,
-                "cam_y": cam_y,
-                "cam_w": cam_w,
-                "cam_h": cam_h,
+                "target_x": target_x,
+                "target_y": target_y,
+                "target_w": target_w,
+                "target_h": target_h,
                 "interaction_shares": interaction_shares,
                 "shots_ranked": shots_ranked,
                 "passes_ranked": passes_ranked,
+                "banner_text": banner_text,
+                "banner_color": banner_color,
+                "banner_anchor": puck_a if banner_text and puck_a is not None else None,
             })
 
-    print(f"Precomputation complete: {len(master_frames):,} frames.")
+        current_simulated_time += duration
+
+    print(f"Precomputation complete: {len(master_frames):,} raw frames.")
     return master_frames
+
+
+def optimize_stagnant_frames(master_frames, movement_radius=0.01, fps=30):
+    if not master_frames:
+        return master_frames
+
+    optimized_frames = [master_frames[0]]
+    
+    for i in range(1, len(master_frames)):
+        current = master_frames[i]
+        prev = optimized_frames[-1]
+
+        # 1. Delete consecutive identical target coordinates & zero speed static frames (unless event/banner changes)
+        is_same_target = (
+            current.get("target_x") == prev.get("target_x") and
+            current.get("target_y") == prev.get("target_y") and
+            current.get("target_w") == prev.get("target_w") and
+            current.get("banner_text") is None and prev.get("banner_text") is None and
+            current.get("event_idx") == prev.get("event_idx")
+        )
+
+        if is_same_target and current.get("speed", 1.0) == 0.0:
+            continue
+
+        # Always keep frames that trigger an event change or banner text
+        is_event_change = (
+            current.get("event_idx") != prev.get("event_idx") or
+            current.get("banner_text") is not None or
+            str(current.get("event_type")) != str(prev.get("event_type"))
+        )
+
+        if is_event_change:
+            optimized_frames.append(current)
+            continue
+
+        puck_a = prev.get("puck")
+        puck_b = current.get("puck")
+        puck_moved = False
+        if puck_a is not None and puck_b is not None:
+            if math.hypot(puck_b[0] - puck_a[0], puck_b[1] - puck_a[1]) > movement_radius:
+                puck_moved = True
+
+        players_moved = False
+        players_a = prev.get("players", {})
+        players_b = current.get("players", {})
+
+        for p_id, p_data_b in players_b.items():
+            if p_id in players_a:
+                dist = math.hypot(
+                    p_data_b["coord"][0] - players_a[p_id]["coord"][0],
+                    p_data_b["coord"][1] - players_a[p_id]["coord"][1]
+                )
+                if dist > movement_radius:
+                    players_moved = True
+                    break
+            else:
+                players_moved = True
+                break
+
+        # Drop entirely if nothing moved and no event happened
+        if not puck_moved and not players_moved:
+            continue
+
+        optimized_frames.append(current)
+
+    print(f"Aggressive compression & duplicate purging: reduced from {len(master_frames):,} down to {len(optimized_frames):,} active frames.")
+    return optimized_frames
+
+
+def draw_world_event_banner(surface, popup, is_underlayer=False):
+    text = popup["text"]
+    color = popup["color"]
+    anchor = popup["anchor"]
+    wall_elapsed = time.time() - popup["start_time"]
+    progress = wall_elapsed / POPUP_DURATION_SECONDS
+
+    if not text or anchor is None or progress >= 1.0:
+        return
+
+    anchor_x, anchor_y = scale_coordinates(*anchor)
+    intro = min(1.0, max(0.0, progress / 0.12))
+    outro = min(1.0, max(0.0, (1.0 - progress) / 0.12))
+    visibility = min(intro, outro)
+    
+    max_opacity_factor = 0.7
+    if is_underlayer:
+        visibility *= 0.55
+    
+    eased = 1.0 - math.pow(1.0 - intro, 3)
+    base_scale = 0.6 + 0.4 * eased
+    scale = base_scale * (0.85 if is_underlayer else 1.0)
+    
+    shake_strength = (1.0 - min(1.0, wall_elapsed / 0.5)) * (2.0 if is_underlayer else 3.0)
+    shake_x = math.sin(wall_elapsed * 52.0) * shake_strength
+    shake_y = math.cos(wall_elapsed * 43.0) * shake_strength * 0.45
+
+    font = FONT_BANNER if scale > 0.8 else FONT_SMALL_BANNER
+    text_surf = font.render(text, True, color)
+    
+    box_w = max(130, text_surf.get_width() + 24)
+    box_h = text_surf.get_height() + 12
+    box_w = max(1, int(box_w * scale))
+    box_h = max(1, int(box_h * scale))
+
+    panel = pygame.Surface((box_w + 10, box_h + 10), pygame.SRCALPHA)
+    
+    alpha = max(0, min(178, int(235 * visibility * max_opacity_factor)))
+    rect = pygame.Rect(5, 5, box_w, box_h)
+    radius = max(3, int(6 * scale))
+
+    pygame.draw.rect(panel, (*color, int(alpha * 0.15)), rect.inflate(6, 6), border_radius=radius)
+    pygame.draw.rect(panel, (5, 10, 22, int(alpha * 0.96)), rect, border_radius=radius)
+    pygame.draw.rect(panel, (*color, alpha), rect, width=max(1, int(1.5 * scale)), border_radius=radius)
+
+    scaled_text = pygame.transform.smoothscale(
+        text_surf,
+        (max(1, int(text_surf.get_width() * scale)),
+         max(1, int(text_surf.get_height() * scale)))
+    )
+    text_alpha = pygame.Surface(scaled_text.get_size(), pygame.SRCALPHA)
+    text_alpha.blit(scaled_text, (0, 0))
+    text_alpha.set_alpha(alpha)
+    panel.blit(text_alpha, text_alpha.get_rect(center=rect.center))
+
+    y_shift = 18 if is_underlayer else 0
+    dest = panel.get_rect(center=(int(anchor_x + shake_x),
+                                  int(anchor_y - 32 * scale - y_shift + shake_y)))
+    surface.blit(panel, dest)
 
 
 def draw_master_rink(surface):
@@ -368,11 +550,11 @@ def draw_puck(surface, frame):
         surface.blit(speed_surf, speed_surf.get_rect(center=(pk_x, pk_y + 18)))
 
 
-def blit_camera_view(source, destination, frame, crop_surface):
-    cam_w = max(10, min(float(VIRTUAL_WIDTH), frame["cam_w"]))
-    cam_h = max(10, min(float(VIRTUAL_HEIGHT), frame["cam_h"]))
-    cam_x = max(0.0, min(float(VIRTUAL_WIDTH) - cam_w, frame["cam_x"]))
-    cam_y = max(0.0, min(float(VIRTUAL_HEIGHT) - cam_h, frame["cam_y"]))
+def blit_camera_view(source, destination, cur_cam_x, cur_cam_y, cur_cam_w, cur_cam_h, crop_surface):
+    cam_w = max(10, min(float(VIRTUAL_WIDTH), cur_cam_w))
+    cam_h = max(10, min(float(VIRTUAL_HEIGHT), cur_cam_h))
+    cam_x = cur_cam_x
+    cam_y = cur_cam_y
 
     crop_w, crop_h = max(10, int(cam_w)), max(10, int(cam_h))
     crop_surface.fill(ARENA_BG)
@@ -391,7 +573,6 @@ def blit_camera_view(source, destination, frame, crop_surface):
         scaled_w = int(ACTUAL_HEIGHT * crop_aspect)
 
     scaled = pygame.transform.smoothscale(crop_view, (scaled_w, scaled_h))
-    
     dest_x = (ACTUAL_WIDTH - scaled_w) // 2
     dest_y = (ACTUAL_HEIGHT - scaled_h) // 2
 
@@ -419,7 +600,9 @@ def main():
         if "Gajan" in p7 or "Finley" in p7:
             home_team_name = "EV Zug"
 
-    master_frames = precompute_replay_timeline(df)
+    raw_frames = precompute_replay_timeline(df)
+    master_frames = optimize_stagnant_frames(raw_frames, movement_radius=0.15, fps=TARGET_FPS)
+
     if not master_frames:
         print("Not enough rows to create a replay timeline.")
         pygame.quit()
@@ -432,6 +615,11 @@ def main():
     show_performance = False
     last_frame_ms = 0.0
 
+    cur_cam_x = 0.0
+    cur_cam_y = 0.0
+    cur_cam_w = float(VIRTUAL_WIDTH)
+    cur_cam_h = float(VIRTUAL_HEIGHT)
+
     rink_surface = pygame.Surface((VIRTUAL_WIDTH, VIRTUAL_HEIGHT)).convert()
     draw_master_rink(rink_surface)
     master_surface = pygame.Surface((VIRTUAL_WIDTH, VIRTUAL_HEIGHT)).convert()
@@ -442,7 +630,7 @@ def main():
     pip_background = pygame.transform.smoothscale(rink_surface, (pip_w, pip_h)).convert()
     pip_surface = pygame.Surface((pip_w, pip_h)).convert()
 
-    hud_height = max(1, int(ACTUAL_HEIGHT * 0.08))
+    hud_height = max(1, int(ACTUAL_HEIGHT * 0.085))
     hud_surface = pygame.Surface((ACTUAL_WIDTH, hud_height), pygame.SRCALPHA)
     hud_surface.fill(PANEL_BG)
 
@@ -457,6 +645,8 @@ def main():
         return result
 
     overlay_start_time = time.time()
+    active_celebration_idx = -1
+    active_popups = []
 
     print("Replay running. Controls: Space pause, arrows seek/speed, F3 performance, Esc quit.")
 
@@ -490,15 +680,48 @@ def main():
             if frame_idx >= total_frames:
                 frame_idx %= total_frames
 
-        current_frame = master_frames[int(frame_idx)]
+        current_int_frame = int(frame_idx)
+        current_frame = master_frames[current_int_frame]
+
+        target_x = current_frame["target_x"]
+        target_y = current_frame["target_y"]
+        target_w = current_frame["target_w"]
+        target_h = current_frame["target_h"]
+
+        cam_diff = math.hypot(target_x - cur_cam_x, target_y - cur_cam_y)
+        smooth_speed = 0.45 if cam_diff > 300 else CAMERA_SMOOTH_SPEED
+
+        cur_cam_x += (target_x - cur_cam_x) * smooth_speed
+        cur_cam_y += (target_y - cur_cam_y) * smooth_speed
+        cur_cam_w += (target_w - cur_cam_w) * CAMERA_SMOOTH_SPEED
+        cur_cam_h += (target_h - cur_cam_h) * CAMERA_SMOOTH_SPEED
+
+        if current_frame.get("banner_text"):
+            if active_celebration_idx != current_frame.get("event_idx"):
+                active_celebration_idx = current_frame.get("event_idx")
+                active_popups.append({
+                    "text": current_frame["banner_text"],
+                    "color": current_frame.get("banner_color", P3_YELLOW),
+                    "anchor": current_frame.get("banner_anchor"),
+                    "start_time": time.time(),
+                    "event_idx": active_celebration_idx
+                })
+
+        now = time.time()
+        active_popups = [p for p in active_popups if (now - p["start_time"]) < POPUP_DURATION_SECONDS]
 
         master_surface.blit(rink_surface, (0, 0))
+        
+        for i, popup in enumerate(active_popups):
+            is_underlayer = (i < len(active_popups) - 1)
+            draw_world_event_banner(master_surface, popup, is_underlayer=is_underlayer)
+
         for p_data in current_frame["players"].values():
             draw_player(master_surface, p_data)
         draw_puck(master_surface, current_frame)
-
+        
         cam_x, cam_y, cam_w, cam_h = blit_camera_view(
-            master_surface, screen, current_frame, crop_surface
+            master_surface, screen, cur_cam_x, cur_cam_y, cur_cam_w, cur_cam_h, crop_surface
         )
 
         if cam_w < float(VIRTUAL_WIDTH) - 50:
@@ -538,37 +761,43 @@ def main():
         txt_status = cached_text(FONT_MD, f"[{status_label}] {mode_str}", status_color)
         screen.blit(txt_status, (30, hud_height // 2 - txt_status.get_height() // 2))
 
-        # Centered Scoreboard: Small HOME/AWAY labels stacked above larger team names
         txt_home_label = cached_text(FONT_SM, "HOME", (180, 190, 210))
-        txt_home_name = cached_text(FONT_HUGE, home_team_name, HOME_TEAM)
-        txt_home_score = cached_text(FONT_HUGE, f"  {current_frame['home_score']} ", GOLD_NEON)
-        txt_dash = cached_text(FONT_HUGE, " - ", WHITE)
-        txt_away_score = cached_text(FONT_HUGE, f" {current_frame['away_score']}  ", GOLD_NEON)
-        txt_away_name = cached_text(FONT_HUGE, away_team_name, AWAY_TEAM)
         txt_away_label = cached_text(FONT_SM, "AWAY", (180, 190, 210))
+        txt_home_name = cached_text(FONT_HUGE, home_team_name, HOME_TEAM)
+        txt_home_score = cached_text(FONT_HUGE, f" {current_frame['home_score']} ", GOLD_NEON)
+        txt_dash = cached_text(FONT_HUGE, " - ", WHITE)
+        txt_away_score = cached_text(FONT_HUGE, f" {current_frame['away_score']} ", GOLD_NEON)
+        txt_away_name = cached_text(FONT_HUGE, away_team_name, AWAY_TEAM)
 
-        total_width = (
-            txt_home_name.get_width() +
-            txt_home_score.get_width() +
-            txt_dash.get_width() +
-            txt_away_score.get_width() +
-            txt_away_name.get_width()
-        )
-        start_x = (ACTUAL_WIDTH - total_width) // 2
+        screen_center_x = ACTUAL_WIDTH // 2
+        dash_x = screen_center_x - (txt_dash.get_width() // 2)
 
-        y_center = hud_height // 2 + 2
-        screen.blit(txt_home_name, (start_x, y_center - txt_home_name.get_height() // 2))
-        curr_x = start_x + txt_home_name.get_width()
-        screen.blit(txt_home_score, (curr_x, y_center - txt_home_score.get_height() // 2))
-        curr_x += txt_home_score.get_width()
-        screen.blit(txt_dash, (curr_x, y_center - txt_dash.get_height() // 2))
-        curr_x += txt_dash.get_width()
-        screen.blit(txt_away_score, (curr_x, y_center - txt_away_score.get_height() // 2))
+        left_block_width = txt_home_name.get_width() + txt_home_score.get_width()
+        home_start_x = dash_x - left_block_width
+        away_start_x = dash_x + txt_dash.get_width()
+
+        y_labels = 6
+        y_names = hud_height // 2 + 5
+
+        curr_x = home_start_x
+        screen.blit(txt_home_name, (curr_x, y_names - txt_home_name.get_height() // 2))
+        curr_x += txt_home_name.get_width()
+        screen.blit(txt_home_score, (curr_x, y_names - txt_home_score.get_height() // 2))
+        home_score_x = curr_x
+
+        screen.blit(txt_dash, (dash_x, y_names - txt_dash.get_height() // 2))
+
+        curr_x = away_start_x
+        screen.blit(txt_away_score, (curr_x, y_names - txt_away_score.get_height() // 2))
+        away_score_x = curr_x
         curr_x += txt_away_score.get_width()
-        screen.blit(txt_away_name, (curr_x, y_center - txt_away_name.get_height() // 2))
+        screen.blit(txt_away_name, (curr_x, y_names - txt_away_name.get_height() // 2))
 
-        screen.blit(txt_home_label, (start_x + (txt_home_name.get_width() - txt_home_label.get_width()) // 2, 6))
-        screen.blit(txt_away_label, (curr_x + (txt_away_name.get_width() - txt_away_label.get_width()) // 2, 6))
+        home_score_center = home_score_x + (txt_home_score.get_width() // 2)
+        away_score_center = away_score_x + (txt_away_score.get_width() // 2)
+
+        screen.blit(txt_home_label, (home_score_center - (txt_home_label.get_width() // 2), y_labels))
+        screen.blit(txt_away_label, (away_score_center - (txt_away_label.get_width() // 2), y_labels))
 
         info_text = (
             f"Speed: {playback_speed:.1f}x  |  Clock: {current_frame['match_clock']}  "
@@ -577,9 +806,7 @@ def main():
         txt_info = cached_text(FONT_MD, info_text, WHITE)
         screen.blit(txt_info, txt_info.get_rect(right=ACTUAL_WIDTH - 30, centery=hud_height // 2))
 
-        # ---------------------------------------------------------------------------
-        # Wall-Clock Independent F1-Style Leaderboard State Machine (Upper Left)
-        # ---------------------------------------------------------------------------
+        # Leaderboard State Machine
         cycle_duration = 45.0
         elapsed_real = time.time() - overlay_start_time
         cycle_time = elapsed_real % cycle_duration
@@ -653,17 +880,18 @@ def main():
 
                 pygame.draw.rect(table_surf, CYAN_NEON, pygame.Rect(0, 0, table_w, table_h), 2, border_radius=6)
 
-                target_x = 30
-                start_x = -table_w - 30
-                current_x = int(start_x + (target_x - start_x) * anim_progress)
+                target_x_box = 30
+                start_x_box = -table_w - 30
+                current_x_box = int(start_x_box + (target_x_box - start_x_box) * anim_progress)
 
-                screen.blit(table_surf, (current_x, hud_height + 15))
+                screen.blit(table_surf, (current_x_box, hud_height + 15))
 
         if show_performance:
             perf_text = (
                 f"FPS: {clock.get_fps():.1f} | Frame: {last_frame_ms:.1f} ms | "
                 f"Replay: {int(frame_idx)}/{total_frames}"
             )
+    
             perf_surf = cached_text(FONT_MD, perf_text, WHITE)
             panel = pygame.Surface((perf_surf.get_width() + 20, perf_surf.get_height() + 12),
                                    pygame.SRCALPHA)
