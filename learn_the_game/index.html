@@ -7,6 +7,7 @@
 <title>Learn the Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:ital,wght@0,500;0,600;0,700;1,600;1,700;1,800&display=swap" rel="stylesheet">
 <style>
 /* Tokens: eine Farbe = eine Bedeutung.
    ink = Text & Hauptaktion · usc/hcd = nur Teams · gold = nur Hervorhebung auf dem Eis */
@@ -211,6 +212,54 @@ summary em.late{font-style:normal;font-size:11px;font-weight:700;color:var(--ink
 .late-note{margin-top:4px;color:#F59E0B}
 canvas[hidden]{display:none!important}
 .field{width:100%;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--fill);color:var(--ink);padding:0 14px;font:inherit;margin-top:12px}
+
+/* ================================================================
+   Design wie Be a Pro (Prototyp von Alessio): gleicher Look für beide Spiele.
+   Farben: Arena #04070C, Eis #0D172A, Neon-Cyan #00F0FF, Heim blau #2882FF, Gast pink-rot #FF2D5F. Schrift: Rajdhani.
+   ================================================================ */
+:root{
+  --bg:#04070C; --surface:rgba(14,24,42,.82); --fill:rgba(20,35,60,.6); --line:rgba(0,240,255,.16);
+  --ink:#FFFFFF; --ink2:#94A3B8; --on-ink:#04070C; --ice:#00F0FF; --cyan:#00F0FF;
+  --usc:#2882FF; --hcd:#FF2D5F; --gold:#F5B800; --ok:#30FF96; --bad:#FF3B56;
+}
+html,body{background:radial-gradient(circle at 50% 0%,#0B1220 0%,#04070C 70%) fixed;font:600 17px/1.45 'Rajdhani',-apple-system,sans-serif}
+.lt{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:36px;letter-spacing:.5px;line-height:1}
+.t2{font-style:italic;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:.5px;line-height:1.05}
+.sub,.fn{color:var(--ink2)}
+.eyebrow,.rbcat,.qa .k{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;letter-spacing:.14em;color:var(--cyan)}
+.group,.door,.modal .box{background:var(--surface);border:1px solid rgba(0,240,255,.22);box-shadow:0 0 30px rgba(0,240,255,.06)}
+.modal .box{border-bottom:0;box-shadow:0 -20px 50px rgba(0,0,0,.6),0 0 30px rgba(0,240,255,.12);background:rgba(10,18,32,.97)}
+.modal{background:rgba(4,7,12,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.grab{background:rgba(0,240,255,.35)}
+.btn{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:18px;letter-spacing:1px;text-transform:uppercase;background:rgba(0,210,255,.15);color:#fff;border:1px solid var(--cyan);border-radius:10px;transform:skewX(-8deg);box-shadow:0 10px 25px rgba(0,240,255,.2)}
+.btn.sec{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5);box-shadow:none}
+.linkbtn{font-style:italic;font-weight:700;color:var(--ink2)}
+.playbtn{background:rgba(0,210,255,.15);color:#fff;border:1px solid var(--cyan);box-shadow:0 0 18px rgba(0,240,255,.35)}
+.seg2 button{font-style:italic;font-weight:800;font-size:15px;letter-spacing:.5px;text-transform:uppercase;background:rgba(20,35,60,.6);border:1px solid rgba(0,130,210,.5);color:var(--ink2);transform:skewX(-8deg)}
+.seg2 button.on{background:rgba(0,210,255,.15);border-color:var(--cyan);color:#fff;box-shadow:0 6px 18px rgba(0,240,255,.25)}
+.newrule{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:14px;letter-spacing:.5px;background:#0A0F1D;color:#fff;border:2px solid var(--ok);border-left-width:8px;border-radius:2px;transform:skewX(-12deg);box-shadow:4px 4px 0 rgba(0,0,0,.6)}
+.qa{border-top-color:var(--line);font-size:17px}
+.qa .k{font-size:13px}
+.rinkwrap{background:#04070C;border:1px solid rgba(0,240,255,.25);border-radius:12px}
+#wScore .res{font-style:italic;font-weight:800;font-size:40px}
+.score .tm{font-style:italic;font-weight:800;font-size:20px;letter-spacing:.5px}
+.ruleshead b,.ruleshead .mult{font-style:italic;font-weight:800}
+.ruleshead .mult{color:var(--cyan)}
+.rulebar{background:rgba(255,255,255,.08)}.rulebar i{background:linear-gradient(90deg,#0088FF,var(--cyan));box-shadow:0 0 12px rgba(0,240,255,.6)}
+.sigrow{background:rgba(20,35,60,.6);border:1px solid rgba(0,240,255,.2)}
+.sigpic,.bigsig,.sig{background:#E6EDF6 !important;box-shadow:0 0 0 2px rgba(0,240,255,.35)}
+.sig .nm{font-style:italic;font-weight:700}
+.toast{background:#0A0F1D;color:#fff;border:1px solid var(--cyan);font-style:italic;font-weight:800;box-shadow:0 0 24px rgba(0,240,255,.35)}
+nav.tabs{background:rgba(10,18,32,.92);border-top:1px solid rgba(0,240,255,.25)}
+nav.tabs button{font-style:italic;font-weight:800;font-size:13px;letter-spacing:.5px;text-transform:uppercase}
+nav.tabs button.on{color:var(--cyan)}
+.apphead .brand{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:17px;letter-spacing:.12em}
+.apphead .brand b{color:var(--cyan)}
+.langs{border-color:rgba(0,240,255,.3)}.langs button{font-style:italic;font-weight:800}.langs button.on{background:var(--cyan);color:#04070C}
+.live{font-style:italic;font-weight:800;letter-spacing:.5px}.live i{background:#FF3B56}
+summary{font-weight:700}
+.cell.locked .lock{filter:grayscale(1)}
+summary em.late{font-style:italic;color:var(--ok);margin-left:auto;margin-right:12px}
 </style>
 </head>
 <body>

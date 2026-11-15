@@ -5,6 +5,8 @@
 'use strict';
 
 const D = window.MATCH_DATA;
+// Öffentliche Demo: simulierte Partie statt Wisehockey-Daten (siehe simulate_data.py)
+const SIM = !!D.sim;
 
 // Sprache: ?lang=en, sonst dieselbe Wahl wie auf der Website, sonst Browsersprache
 const LANG = (() => {
@@ -18,7 +20,8 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmtClock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const pct = x => `${Math.round(x * 100)} %`;
-const TEAM_COL = { HCD: ['#1D4ED8', '#FFD200'], USC: ['#C8102E', '#FFFFFF'] };
+// Teamfarben wie im Be-a-Pro-Prototyp: Heim (USC) blau, Gast (HCD) pink-rot
+const TEAM_COL = { HCD: ['#FF2D5F', '#FFFFFF'], USC: ['#2882FF', '#FFFFFF'] };
 const TEAM_NAME = { HCD: 'HC Davos', USC: 'U.S. Collegiate Selects' };
 const other = tm => (tm === 'HCD' ? 'USC' : 'HCD');
 const attackDir = (tm, p = 1) => (D.attack[String(p)] || D.attack['1'])[tm];
@@ -286,63 +289,65 @@ class Rink {
   X(x) { return this.pad + (x + 30) * this.k; }
   Y(y) { return this.pad + (15 - y) * this.k; }
   ice(opt = {}) {
+    // Eisfläche im Stil von Be a Pro: dunkles Eis, Neon-Linien
     const { ctx, k } = this;
     ctx.clearRect(0, 0, this.w, this.h);
-    const r = 8.5 * k;
+    ctx.fillStyle = '#04070C'; ctx.fillRect(0, 0, this.w, this.h);
+    const r = 6 * k;
     const x0 = this.X(-30), y0 = this.Y(15), W = 60 * k, H = 30 * k;
     ctx.save();
-    ctx.beginPath(); ctx.roundRect(x0, y0, W, H, r); ctx.fillStyle = '#eef4fa'; ctx.fill();
+    const g = ctx.createRadialGradient(this.X(0), this.Y(0), 4 * k, this.X(0), this.Y(0), 34 * k); g.addColorStop(0, '#121E36'); g.addColorStop(1, '#0A1220');
+    ctx.beginPath(); ctx.roundRect(x0, y0, W, H, r); ctx.fillStyle = g; ctx.fill();
     ctx.clip();
     const vline = (x, col, wd) => { ctx.fillStyle = col; ctx.fillRect(this.X(x) - wd * k / 2, y0, wd * k, H); };
     const left = attackDir('HCD') < 0; // HCD greift nach links an
-    if (opt.zones) {
-      ctx.fillStyle = 'rgba(29,78,216,.16)'; ctx.fillRect(x0, y0, (30 - 7.14) * k, H);
-      ctx.fillStyle = 'rgba(148,163,184,.12)'; ctx.fillRect(this.X(-7.14), y0, 14.28 * k, H);
-      ctx.fillStyle = 'rgba(220,38,38,.16)'; ctx.fillRect(this.X(7.14), y0, (30 - 7.14) * k, H);
-    } else {
-      ctx.fillStyle = 'rgba(29,78,216,.05)'; ctx.fillRect(x0, y0, (30 - 7.14) * k, H);
-      ctx.fillStyle = 'rgba(220,38,38,.05)'; ctx.fillRect(this.X(7.14), y0, (30 - 7.14) * k, H);
-    }
-    if (opt.blue) { vline(-7.14, 'rgba(250,204,21,.55)', 1.4); vline(7.14, 'rgba(250,204,21,.55)', 1.4); }
-    if (opt.goalLine) { vline(-26, 'rgba(250,204,21,.6)', 0.9); vline(26, 'rgba(250,204,21,.6)', 0.9); }
-    vline(0, '#d33', 0.3); vline(-7.14, '#2b59c3', 0.3); vline(7.14, '#2b59c3', 0.3);
-    vline(-26, '#d33', 0.06); vline(26, '#d33', 0.06);
-    ctx.lineWidth = Math.max(1, 0.06 * k);
+    const tint = (tm, a) => { const c = TEAM_COL[tm][0]; return c + Math.round(a * 255).toString(16).padStart(2, '0'); };
+    const lt = left ? 'HCD' : 'USC', rt = left ? 'USC' : 'HCD';   // Angriffszone links / rechts
+    ctx.fillStyle = tint(lt, opt.zones ? .18 : .05); ctx.fillRect(x0, y0, (30 - 7.14) * k, H);
+    if (opt.zones) { ctx.fillStyle = 'rgba(148,163,184,.08)'; ctx.fillRect(this.X(-7.14), y0, 14.28 * k, H); }
+    ctx.fillStyle = tint(rt, opt.zones ? .18 : .05); ctx.fillRect(this.X(7.14), y0, (30 - 7.14) * k, H);
+    if (opt.blue) { vline(-7.14, 'rgba(250,204,21,.45)', 1.4); vline(7.14, 'rgba(250,204,21,.45)', 1.4); }
+    if (opt.goalLine) { vline(-26, 'rgba(250,204,21,.5)', 0.9); vline(26, 'rgba(250,204,21,.5)', 0.9); }
+    vline(0, '#FF2E4C', 0.3); vline(-7.14, '#0088FF', 0.32); vline(7.14, '#0088FF', 0.32);
+    vline(-26, 'rgba(255,46,76,.7)', 0.09); vline(26, 'rgba(255,46,76,.7)', 0.09);
+    ctx.lineWidth = Math.max(1, 0.07 * k);
     const circ = (x, y, rr, col) => { ctx.beginPath(); ctx.arc(this.X(x), this.Y(y), rr * k, 0, 7); ctx.strokeStyle = col; ctx.stroke(); };
     const dot = (x, y, col) => { ctx.beginPath(); ctx.arc(this.X(x), this.Y(y), 0.3 * k, 0, 7); ctx.fillStyle = col; ctx.fill(); };
-    circ(0, 0, 4.5, '#2b59c3'); dot(0, 0, '#2b59c3');
+    circ(0, 0, 4.5, 'rgba(0,240,255,.6)'); dot(0, 0, '#FF2E4C');
     for (const sx of [-1, 1]) {
-      for (const sy of [-1, 1]) { circ(sx * 20, sy * 7, 4.5, '#d33'); dot(sx * 20, sy * 7, '#d33'); dot(sx * 5.6, sy * 7, '#d33'); }
+      for (const sy of [-1, 1]) { circ(sx * 20, sy * 7, 4.5, 'rgba(0,240,255,.4)'); dot(sx * 20, sy * 7, '#00F0FF'); dot(sx * 5.6, sy * 7, '#00F0FF'); }
       ctx.beginPath(); ctx.moveTo(this.X(sx * 26), this.Y(1.8));
       ctx.arc(this.X(sx * 26), this.Y(0), 1.8 * k, sx > 0 ? Math.PI / 2 : -Math.PI / 2, sx > 0 ? 1.5 * Math.PI : Math.PI / 2);
-      ctx.closePath(); ctx.fillStyle = 'rgba(96,165,250,.35)'; ctx.fill();
-      ctx.strokeStyle = '#d33'; ctx.strokeRect(Math.min(this.X(sx * 26), this.X(sx * 27.1)), this.Y(0.915), 1.1 * k, 1.83 * k);
+      ctx.closePath(); ctx.fillStyle = 'rgba(15,50,90,.6)'; ctx.fill(); ctx.strokeStyle = '#00F0FF'; ctx.stroke();
+      const nx = Math.min(this.X(sx * 26), this.X(sx * 27.1));
+      ctx.fillStyle = 'rgba(60,20,20,.8)'; ctx.fillRect(nx, this.Y(0.915), 1.1 * k, 1.83 * k);
+      ctx.strokeStyle = '#FF2E4C'; ctx.strokeRect(nx, this.Y(0.915), 1.1 * k, 1.83 * k);
     }
     ctx.restore();
-    ctx.beginPath(); ctx.roundRect(x0, y0, W, H, r); ctx.strokeStyle = '#7c8aa5'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.font = `700 ${Math.max(9, 1.3 * k)}px -apple-system,sans-serif`;
-    ctx.fillStyle = 'rgba(15,23,42,.45)'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.beginPath(); ctx.roundRect(x0, y0, W, H, r); ctx.strokeStyle = 'rgba(0,212,255,.8)'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.font = `italic 700 ${Math.max(10, 1.4 * k)}px Rajdhani,sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
     const lx = left ? -1 : 1;
     if (opt.zones) {
-      ctx.fillStyle = 'rgba(15,23,42,.7)';
-      ctx.fillText(tr('Angriffszone HCD', 'HCD attacking zone'), this.X(lx * 18.5), this.Y(12.4));
-      ctx.fillText(tr('Neutrale Zone', 'Neutral zone'), this.X(0), this.Y(12.4));
-      ctx.fillText(tr('Angriffszone USC', 'USC attacking zone'), this.X(-lx * 18.5), this.Y(12.4));
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.fillText(tr('Angriffszone HCD', 'HCD attacking zone').toUpperCase(), this.X(lx * 18.5), this.Y(12.4));
+      ctx.fillText(tr('Neutrale Zone', 'Neutral zone').toUpperCase(), this.X(0), this.Y(12.4));
+      ctx.fillText(tr('Angriffszone USC', 'USC attacking zone').toUpperCase(), this.X(-lx * 18.5), this.Y(12.4));
     }
-    ctx.fillStyle = 'rgba(15,23,42,.45)';
-    ctx.fillText(tr('Tor USC', 'USC net'), this.X(lx * 23.5), this.Y(-12.6));
-    ctx.fillText(tr('Tor HCD', 'HCD net'), this.X(-lx * 23.5), this.Y(-12.6));
+    ctx.fillStyle = 'rgba(148,163,184,.75)';
+    ctx.fillText(tr('Tor USC', 'USC net').toUpperCase(), this.X(lx * 23.5), this.Y(-12.6));
+    ctx.fillText(tr('Tor HCD', 'HCD net').toUpperCase(), this.X(-lx * 23.5), this.Y(-12.6));
   }
   arrow(a, b) {
     const { ctx } = this;
-    ctx.save(); ctx.strokeStyle = 'rgba(234,179,8,.95)'; ctx.lineWidth = 2.5; ctx.setLineDash([6, 5]);
+    ctx.save(); ctx.strokeStyle = 'rgba(0,229,255,.95)'; ctx.lineWidth = 2.5; ctx.setLineDash([6, 5]);
     ctx.beginPath(); ctx.moveTo(this.X(a[0]), this.Y(a[1])); ctx.lineTo(this.X(b[0]), this.Y(b[1])); ctx.stroke();
     ctx.setLineDash([]);
     const ang = Math.atan2(this.Y(b[1]) - this.Y(a[1]), this.X(b[0]) - this.X(a[0]));
     ctx.beginPath(); ctx.moveTo(this.X(b[0]), this.Y(b[1]));
     ctx.lineTo(this.X(b[0]) - 10 * Math.cos(ang - 0.4), this.Y(b[1]) - 10 * Math.sin(ang - 0.4));
     ctx.lineTo(this.X(b[0]) - 10 * Math.cos(ang + 0.4), this.Y(b[1]) - 10 * Math.sin(ang + 0.4));
-    ctx.closePath(); ctx.fillStyle = 'rgba(234,179,8,.95)'; ctx.fill(); ctx.restore();
+    ctx.closePath(); ctx.fillStyle = 'rgba(0,229,255,.95)'; ctx.fill(); ctx.restore();
   }
   draw(g, opt = {}) {
     this.fit();
@@ -350,7 +355,7 @@ class Rink {
     const { ctx, k } = this;
     this.ice(opt);
     if (opt.arrow) this.arrow(opt.arrow[0], opt.arrow[1]);
-    ctx.save(); ctx.strokeStyle = 'rgba(15,23,42,.35)'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.save(); ctx.strokeStyle = 'rgba(0,240,255,.35)'; ctx.lineWidth = 2; ctx.beginPath();
     let started = false;
     for (let t = g - 1.2; t <= g; t += 0.06) {
       const p = store.puckAt(t);
@@ -365,24 +370,25 @@ class Rink {
       const info = PL[p.id] || {};
       const [fill, num] = TEAM_COL[info.tm] || ['#666', '#fff'];
       const X = this.X(p.x), Y = this.Y(p.y);
-      if (opt.ring === p.id) { ctx.beginPath(); ctx.arc(X, Y, r + 5, 0, 7); ctx.strokeStyle = '#eab308'; ctx.lineWidth = 3.5; ctx.stroke(); }
-      ctx.beginPath(); ctx.arc(X, Y, r, 0, 7); ctx.fillStyle = fill; ctx.fill();
-      ctx.lineWidth = info.gk ? 3 : 1.5; ctx.strokeStyle = info.gk ? '#111827' : 'rgba(255,255,255,.9)'; ctx.stroke();
-      ctx.fillStyle = num; ctx.font = `800 ${Math.round(r * 1.05)}px -apple-system,sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(info.no ?? '', X, Y + 0.5);
+      if (opt.ring === p.id) { ctx.beginPath(); ctx.arc(X, Y, r + 6, 0, 7); ctx.strokeStyle = '#F5B800'; ctx.lineWidth = 3.5; ctx.stroke(); }
+      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.arc(X + 1.5, Y + 2, r, 0, 7); ctx.fill();
+      ctx.fillStyle = '#0F1624'; ctx.beginPath(); ctx.arc(X, Y, r, 0, 7); ctx.fill();
+      ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(X, Y, r * .86, 0, 7); ctx.fill();
+      ctx.strokeStyle = info.gk ? '#FFFFFF' : '#00F0FF'; ctx.lineWidth = info.gk ? 2.5 : 1.6; ctx.beginPath(); ctx.arc(X, Y, r, 0, 7); ctx.stroke();
+      ctx.font = `italic 700 ${Math.round(r * 1.12)}px Rajdhani,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#000'; ctx.fillText(info.no ?? '', X + 1, Y + 1.5); ctx.fillStyle = num; ctx.fillText(info.no ?? '', X, Y + .5);
       this.last.push({ id: p.id, X, Y, r });
     }
     const pk = store.puckAt(g);
     if (pk) {
       ctx.beginPath(); ctx.arc(this.X(pk[0]), this.Y(pk[1]), Math.max(3.5, 0.4 * k), 0, 7);
-      ctx.fillStyle = '#0b0b0b'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#0A0A0E'; ctx.fill(); ctx.strokeStyle = '#00F0FF'; ctx.lineWidth = 1.5; ctx.stroke();
     }
     if (opt.counts) {
       const n = { USC: 0, HCD: 0 };
       players.forEach(p => { const i = PL[p.id]; if (i && !i.gk) n[i.tm]++; });
       const label = `${tr('Feldspieler', 'Skaters')}  USC ${n.USC} : ${n.HCD} HCD`;
-      ctx.font = `800 ${Math.max(11, 1.4 * k)}px -apple-system,sans-serif`;
+      ctx.font = `italic 800 ${Math.max(12, 1.5 * k)}px Rajdhani,sans-serif`;
       const w = ctx.measureText(label).width + 16;
       ctx.fillStyle = 'rgba(11,18,32,.85)'; ctx.beginPath(); ctx.roundRect(this.w / 2 - w / 2, this.pad + 4, w, 22, 8); ctx.fill();
       ctx.fillStyle = '#facc15'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, this.w / 2, this.pad + 15);
@@ -515,10 +521,11 @@ class Schematic extends Rink {
   }
   pill(text, tone, y) {
     const { ctx } = this;
-    ctx.font = `600 ${Math.max(12, 1.45 * this.k)}px -apple-system,sans-serif`;
-    const w = ctx.measureText(text).width + 20, h = Math.max(24, 2.4 * this.k);
-    ctx.fillStyle = tone === 'bad' ? '#B91C1C' : tone === 'ok' ? '#15803D' : 'rgba(14,26,43,.9)';
-    ctx.beginPath(); ctx.roundRect(this.w / 2 - w / 2, y, w, h, h / 2); ctx.fill();
+    ctx.font = `italic 800 ${Math.max(13, 1.6 * this.k)}px Rajdhani,sans-serif`;
+    const w = ctx.measureText(text).width + 28, h = Math.max(24, 2.4 * this.k), col = tone === 'bad' ? '#FF1A40' : tone === 'ok' ? '#30FF96' : '#00E5FF';
+    // schräges Banner wie im Prototyp
+    ctx.save(); ctx.translate(this.w / 2, y + h / 2); ctx.transform(1, 0, -.22, 1, 0, 0);
+    ctx.fillStyle = col; ctx.fillRect(-w / 2 - 3, -h / 2 - 3, w + 6, h + 6); ctx.fillStyle = '#0A0F1D'; ctx.fillRect(-w / 2, -h / 2, w, h); ctx.fillStyle = col; ctx.fillRect(-w / 2, -h / 2, 6, h); ctx.restore();
     ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(text, this.w / 2, y + h / 2 + 0.5);
   }
@@ -529,9 +536,9 @@ class Schematic extends Rink {
     if (a.custom) { a.custom(this, t); return; }
     this.ice(a.opts || {});
     const area = (x0, y0, x1, y1, label) => {
-      ctx.fillStyle = 'rgba(14,26,43,.08)'; ctx.fillRect(this.X(x0), this.Y(y1), (x1 - x0) * k, (y1 - y0) * k);
-      ctx.strokeStyle = 'rgba(14,26,43,.35)'; ctx.lineWidth = 1; ctx.strokeRect(this.X(x0), this.Y(y1), (x1 - x0) * k, (y1 - y0) * k);
-      ctx.fillStyle = 'rgba(14,26,43,.6)'; ctx.font = `600 ${Math.max(10, 1.1 * k)}px -apple-system,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(0,240,255,.07)'; ctx.fillRect(this.X(x0), this.Y(y1), (x1 - x0) * k, (y1 - y0) * k);
+      ctx.strokeStyle = 'rgba(0,240,255,.45)'; ctx.lineWidth = 1; ctx.strokeRect(this.X(x0), this.Y(y1), (x1 - x0) * k, (y1 - y0) * k);
+      ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = `italic 700 ${Math.max(11, 1.25 * k)}px Rajdhani,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(label, this.X((x0 + x1) / 2), this.Y((y0 + y1) / 2));
     };
     if (a.box) area(-3.5, -14.8, 3.5, -11.6, tr('Strafbank', 'Penalty box'));
@@ -542,7 +549,7 @@ class Schematic extends Rink {
       ctx.beginPath(); ctx.arc(this.X(x), this.Y(y), r, 0, 7); ctx.strokeStyle = '#F5B800'; ctx.lineWidth = 3; ctx.stroke();
     }
     if (a.puck) {
-      ctx.save(); ctx.strokeStyle = 'rgba(14,26,43,.3)'; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.save(); ctx.strokeStyle = 'rgba(0,240,255,.35)'; ctx.lineWidth = 2; ctx.beginPath();
       for (let s = Math.max(0, t - 0.8); s <= t; s += 0.05) { const p = this.pos(a.puck, s); s === Math.max(0, t - 0.8) ? ctx.moveTo(this.X(p[0]), this.Y(p[1])) : ctx.lineTo(this.X(p[0]), this.Y(p[1])); }
       ctx.stroke(); ctx.restore();
     }
@@ -558,16 +565,16 @@ class Schematic extends Rink {
         ctx.fillStyle = '#111827'; for (let sx = -r; sx < r; sx += r / 1.5) ctx.fillRect(X + sx, Y - r, r / 3, 2 * r);
         ctx.restore(); ctx.beginPath(); ctx.arc(X, Y, r, 0, 7); ctx.strokeStyle = '#F97316'; ctx.lineWidth = 2.5; ctx.stroke();
       } else {
-        ctx.fillStyle = tok.c[0] === 'A' ? '#1D4ED8' : '#C8102E'; ctx.fill();
-        ctx.lineWidth = tok.c.length > 1 ? 3 : 1.5; ctx.strokeStyle = tok.c.length > 1 ? '#111827' : '#fff'; ctx.stroke();
-        if (tok.c.length > 1) { ctx.fillStyle = '#fff'; ctx.font = `800 ${Math.round(r)}px -apple-system,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('G', X, Y + 0.5); }
+        ctx.fillStyle = tok.c[0] === 'A' ? '#2882FF' : '#FF2D5F'; ctx.fill();
+        ctx.lineWidth = tok.c.length > 1 ? 3 : 1.8; ctx.strokeStyle = tok.c.length > 1 ? '#FFFFFF' : '#00F0FF'; ctx.stroke();
+        if (tok.c.length > 1) { ctx.fillStyle = '#fff'; ctx.font = `italic 800 ${Math.round(r * 1.1)}px Rajdhani,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('G', X, Y + 0.5); }
       }
       if (tok.hi && t >= tok.hi[0] && t <= tok.hi[1]) { ctx.beginPath(); ctx.arc(X, Y, r + 5, 0, 7); ctx.strokeStyle = '#F5B800'; ctx.lineWidth = 3; ctx.stroke(); }
     }
     if (a.puck) {
       const p = this.pos(a.puck, t);
       ctx.beginPath(); ctx.arc(this.X(p[0]), this.Y(p[1]), Math.max(3.5, 0.45 * k), 0, 7);
-      ctx.fillStyle = '#0B0B0B'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#0A0A0E'; ctx.fill(); ctx.strokeStyle = '#00F0FF'; ctx.lineWidth = 1.5; ctx.stroke();
     }
     const lab = (a.labels || []).find(([t0, t1]) => t >= t0 && t <= t1);
     if (lab) this.pill(lab[2], lab[3], this.pad + 6);
@@ -626,20 +633,20 @@ const ANIM = {
     const { ctx } = s;
     const W = s.w, H = s.h;
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#EEF4FA'; ctx.fillRect(0, 0, W, H);
+    const gg = ctx.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, W * .7); gg.addColorStop(0, '#121E36'); gg.addColorStop(1, '#0A1220'); ctx.fillStyle = gg; ctx.fillRect(0, 0, W, H);
     const lx = W * 0.62;
-    ctx.fillStyle = 'rgba(96,165,250,.35)'; ctx.beginPath(); ctx.arc(lx, H / 2, H * 0.34, Math.PI / 2, 1.5 * Math.PI); ctx.fill();
-    ctx.fillStyle = '#C8102E'; ctx.fillRect(lx - 2, 0, 4, H);
-    ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 3; ctx.strokeRect(lx, H * 0.28, W * 0.12, H * 0.44);
-    ctx.strokeStyle = 'rgba(200,16,46,.25)'; ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(15,50,90,.7)'; ctx.beginPath(); ctx.arc(lx, H / 2, H * 0.34, Math.PI / 2, 1.5 * Math.PI); ctx.fill();
+    ctx.fillStyle = '#FF2E4C'; ctx.fillRect(lx - 2, 0, 4, H);
+    ctx.fillStyle = 'rgba(60,20,20,.8)'; ctx.fillRect(lx, H * 0.28, W * 0.12, H * 0.44); ctx.strokeStyle = '#FF2E4C'; ctx.lineWidth = 3; ctx.strokeRect(lx, H * 0.28, W * 0.12, H * 0.44);
+    ctx.strokeStyle = 'rgba(255,46,76,.3)'; ctx.lineWidth = 1;
     for (let i = 1; i < 6; i++) { ctx.beginPath(); ctx.moveTo(lx + (W * 0.12 * i) / 6, H * 0.28); ctx.lineTo(lx + (W * 0.12 * i) / 6, H * 0.72); ctx.stroke(); }
     const pr = H * 0.07;
     const phase = t < 3.5 ? 0 : 1;
     const tt = phase ? t - 3.5 : t;
     const target = phase ? lx + pr * 1.6 : lx + pr * 0.2;
     const x = W * 0.2 + Math.min(1, tt / 1.2) * (target - W * 0.2);
-    ctx.beginPath(); ctx.arc(x, H / 2, pr, 0, 7); ctx.fillStyle = '#0B0B0B'; ctx.fill();
-    ctx.fillStyle = 'rgba(14,26,43,.55)'; ctx.font = `600 ${Math.max(11, H * 0.06)}px -apple-system,sans-serif`; ctx.textAlign = 'center';
+    ctx.beginPath(); ctx.arc(x, H / 2, pr, 0, 7); ctx.fillStyle = '#0A0A0E'; ctx.fill(); ctx.strokeStyle = '#00F0FF'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = `italic 700 ${Math.max(12, H * 0.07)}px Rajdhani,sans-serif`; ctx.textAlign = 'center';
     ctx.fillText(tr('Torlinie', 'Goal line'), lx, H - 10);
     if (tt > 1.3) s.pill(phase ? tr('Ganz über der Linie: Tor', 'Fully over the line: goal') : tr('Auf der Linie: kein Tor', 'On the line: no goal'), phase ? 'ok' : 'bad', 10);
   } },
@@ -661,6 +668,8 @@ const hsDouble = EV.filter(e => e.ty === 'Penalty' && e.pl === hsPenalty.pl && e
 const walsh = SCENES.find(s => s.tm === 'USC');
 const enScene = SCENES.find(s => s.tag === 'Leeres Tor');
 const finalWhistle = EV[EV.length - 1];
+const REALNOTE = SIM ? tr('Simulierte Partie: So zeigen die Live-Trackingdaten die Situation im Moment des Pfiffs.', 'Simulated game: this is how live tracking data shows the situation at the moment of the whistle.')
+  : tr('Echte Positionen aus den Tracking-Daten, im Moment des Pfiffs.', 'Real positions from the tracking data, at the moment of the whistle.');
 const avgShift = Math.round(SKATERS.reduce((s, p) => s + p.avgs, 0) / SKATERS.length);
 
 const MOMENTS = [
@@ -706,8 +715,12 @@ const MOMENTS = [
       'Late in the game, a trailing team often pulls the goalie for a sixth skater. More attackers, but their own net is empty.') },
   { from: finalWhistle.g - 8, to: finalWhistle.g, title: tr('Schlusspfiff', 'Final whistle'), end: true,
     why: tr('Nach 3 × 20 Minuten ist Schluss.', 'After 3 × 20 minutes the game is over.'),
-    seen: tr('HC Davos gewinnt den Final 6:3 und den 97. Spengler Cup.', 'HC Davos wins the final 6:3 and the 97th Spengler Cup.'),
-    text: tr('Du hast die wichtigsten Pfiffe an echten Szenen gesehen: Bully, Icing, Strafen, Powerplay, Tor, Abseits und das leere Tor. Damit verstehst du jeden Pfiff.',
+    seen: SIM ? (() => { const s = scoreAt(finalWhistle.g), w = s.HCD > s.USC ? 'HCD' : 'USC';
+      return tr(`${TEAM_NAME[w]} gewinnt die simulierte Partie ${s[w]}:${s[other(w)]}.`, `${TEAM_NAME[w]} wins the simulated game ${s[w]}:${s[other(w)]}.`); })()
+      : tr('HC Davos gewinnt den Final 6:3 und den 97. Spengler Cup.', 'HC Davos wins the final 6:3 and the 97th Spengler Cup.'),
+    text: SIM ? tr('Du hast die wichtigsten Pfiffe gesehen: Bully, Icing, Strafen, Powerplay, Tor, Abseits und das leere Tor. Damit verstehst du jeden Pfiff.',
+      'You have seen the key whistles: faceoff, icing, penalties, power play, goal, offside and the empty net. Now you understand every whistle.')
+      : tr('Du hast die wichtigsten Pfiffe an echten Szenen gesehen: Bully, Icing, Strafen, Powerplay, Tor, Abseits und das leere Tor. Damit verstehst du jeden Pfiff.',
       'You have seen the key whistles in real scenes: faceoff, icing, penalties, power play, goal, offside and the empty net. Now you understand every whistle.') },
 ];
 
@@ -796,7 +809,9 @@ views.learn = (() => {
   }
   function dots() {
     // Live: Was als Nächstes passiert, ist unbekannt – also nichts ankündigen
-    $('#wNext').innerHTML = `<span class="live"><i></i>LIVE</span> · ${playing ? tr('Spiel läuft', 'Game on') : tr('Pausiert', 'Paused')}`;
+    $('#wNext').innerHTML = SIM
+      ? `<span class="live"><i></i>${tr('VORSCHAU', 'PREVIEW')}</span> · ${playing ? tr('Simulation läuft', 'Simulation running') : tr('Pausiert', 'Paused')}`
+      : `<span class="live"><i></i>LIVE</span> · ${playing ? tr('Spiel läuft', 'Game on') : tr('Pausiert', 'Paused')}`;
   }
   function load(i, autoplay) {
     mi = i; t = MOMENTS[i].from; dots(); board();
@@ -823,7 +838,7 @@ views.learn = (() => {
       <div class="qa"><span class="k">${tr('Warum', 'Why')}</span><span class="hl">${m.why}</span></div>
       <div class="seg2" style="margin-top:14px"><button class="on" data-v2="real">${tr('Im Spiel', 'In the game')}</button>${m.anim ? `<button data-v2="rule">${tr('Regel erklärt', 'Rule explained')}</button>` : ''}</div>
       <div class="rinkwrap" style="margin-top:8px"><canvas class="rink real"></canvas>${m.anim ? '<canvas class="rink sch" hidden></canvas>' : ''}</div>
-      <div class="fn" style="margin-top:6px" id="sitNote">${tr('Echte Positionen aus den Tracking-Daten, im Moment des Pfiffs.', 'Real positions from the tracking data, at the moment of the whistle.')}</div>
+      <div class="fn" style="margin-top:6px" id="sitNote">${REALNOTE}</div>
       ${m.sig ? `<button class="cell sigrow" data-sig="${m.sig}"><span class="sigpic">${SIG[m.sig]}</span><span class="grow"><span class="hl">${tr('So zeigt es der Schiri', 'The referee signal')}</span><br><span class="fn">${SIGMAP[m.sig].name}</span></span><span class="chev">›</span></button>` : ''}
       <details class="more"><summary>${tr('Mehr dazu', 'More')}</summary><p>${m.text}</p></details>
       ${last ? `<button class="btn" style="margin-top:18px" data-w="spick">${tr('Dein Regelbuch', 'Your rulebook')}</button><button class="linkbtn" data-w="restart">${tr('Nochmal von vorne', 'Start again')}</button>`
@@ -839,7 +854,7 @@ views.learn = (() => {
         $$('[data-v2]', el).forEach(b => b.classList.toggle('on', b === v2));
         const isReal = v2.dataset.v2 === 'real';
         $('canvas.real', el).hidden = !isReal; if ($('canvas.sch', el)) $('canvas.sch', el).hidden = isReal;
-        $('#sitNote', el).textContent = isReal ? tr('Echte Positionen aus den Tracking-Daten, im Moment des Pfiffs.', 'Real positions from the tracking data, at the moment of the whistle.') : tr('Die Regel vereinfacht erklärt.', 'The rule, explained simply.');
+        $('#sitNote', el).textContent = isReal ? REALNOTE : tr('Die Regel vereinfacht erklärt.', 'The rule, explained simply.');
         if (isReal) real.draw(g - 0.1, { ring: m.ring });
         return;
       }
@@ -898,6 +913,15 @@ $$('[data-setlang]').forEach(b => {
   b.classList.toggle('on', b.dataset.setlang === LANG);
   b.onclick = () => { try { localStorage.setItem('hv_lang', b.dataset.setlang); } catch (e) { /* egal */ } const u = new URL(location.href); u.searchParams.set('lang', b.dataset.setlang); location.href = u.toString(); };
 });
+// Öffentliche Demo: klar sagen, dass es eine Vorschau ist
+if (SIM) {
+  const n = document.createElement('p');
+  n.className = 'sub simnote';
+  n.textContent = tr('Statische Vorschau mit einer simulierten Partie. Im Betrieb läuft das live während des Spiels, mit den Trackingdaten in Echtzeit.',
+    'Static preview with a simulated game. In operation, this runs live during the game, with real-time tracking data.');
+  n.style.cssText = 'margin-top:8px;font-size:13px;color:#F5B800;font-weight:600';
+  $('#v-learn .sub').after(n);
+}
 show('learn');
 // Direktlinks für Screenshots: ?demo=watch | watch-pp | spick
 (function demo() {

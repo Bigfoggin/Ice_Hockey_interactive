@@ -31,6 +31,39 @@ h2{font-size:clamp(38px,6vw,76px)}
 .btn.ghost{border:2px solid rgba(255,255,255,.35)}
 .btn.ghost:hover{border-color:var(--white)}
 .btn svg{width:18px;height:18px}
+.btn.primary svg path[fill]{fill:currentColor}
+.daysteps li[data-go]{cursor:pointer;transition:transform .2s,border-color .2s}
+.daysteps li[data-go]:hover{transform:translateY(-3px);border-color:var(--ice)}
+.daysteps li[data-go]::after{content:'→';margin-top:auto;color:var(--ice);font-weight:900;font-size:18px}
+.daysteps li.bp[data-go]::after{color:#F5B800}
+/* Helle Abschnitte: helles Blau, dunkelblauer Titel */
+.lite{background:var(--ice);color:var(--navy)}
+.lite .eyebrow{color:var(--navy);opacity:.7}
+.lite h2{color:var(--navy)}
+.lite .lead{color:#0B3A5E}
+.lite .btn.primary{background:var(--navy);color:var(--white);box-shadow:0 14px 40px -12px rgba(0,31,63,.7)}
+.prizegrid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+@media (max-width:900px){.prizegrid{grid-template-columns:1fr;gap:50px}}
+.rwlist{list-style:none;padding:0;margin:30px 0 0;display:grid;gap:10px;max-width:560px}
+.rwlist li{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.42);border:1px solid rgba(0,31,63,.12);border-radius:12px;padding:12px 16px;font-weight:600;color:var(--navy)}
+.rwlist li b{flex:none;min-width:74px;text-align:center;background:var(--navy);color:#F5B800;border-radius:99px;padding:5px 10px;font-size:14px;font-weight:900}
+.rwlist li.got b{background:#15803D;color:#fff}
+.rwlist li.got span::after{content:' ✓';color:#15803D;font-weight:900}
+.ptitle{font-size:22px;font-weight:800;color:var(--navy);margin:34px 0 14px;display:flex;flex-direction:column;gap:4px}
+.ptitle small{font-size:14px;font-weight:600;color:#0B3A5E;letter-spacing:0}
+.prizes .prizegrid{align-items:start;gap:50px}
+.prizes .ticket{max-width:none;transform:rotate(-2deg);margin:6px 8px 26px}
+.rwlist.ranks{margin-top:0}
+.rwlist.ranks li b{min-width:96px;background:#F5B800;color:var(--navy)}
+.rwlist li b{min-width:92px}
+.prizes .prizenote{margin-top:30px}
+.prizeprog{margin-top:18px;font-weight:700;color:var(--navy);font-size:15px}
+.prizenote{margin-top:10px;font-size:13px;color:#0B3A5E;font-weight:500}
+.prizes .ticket{max-width:430px;justify-self:center}
+.team.lite .person{background:rgba(255,255,255,.42);border-color:rgba(0,31,63,.12)}
+.team.lite .person .av{background:var(--navy);color:var(--ice)}
+.team.lite .person b{color:var(--navy)}
+.team.lite .person span{color:#0B3A5E}
 
 /* Nav */
 nav{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s,backdrop-filter .3s}
@@ -196,6 +229,13 @@ section{position:relative}
 .ticket b{display:block;font-size:34px;font-weight:900;line-height:1;text-transform:uppercase;margin-top:10px}
 .ticket .score{font-size:44px;font-weight:900;color:var(--ice);font-variant-numeric:tabular-nums}
 
+.people{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:44px}
+.person{background:rgba(255,255,255,.04);border:1px solid rgba(184,199,217,.14);border-radius:16px;padding:26px 22px}
+.person .av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--ice);color:var(--deep);font-weight:900;font-size:19px;letter-spacing:.02em}
+.person b{display:block;margin-top:18px;font-size:18px;font-weight:800;color:var(--white)}
+.person span{display:block;margin-top:6px;font-size:14px;color:var(--mist);font-weight:500;line-height:1.45}
+@media (max-width:960px){.people{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.people{grid-template-columns:1fr}}
 footer{background:var(--deep);padding:70px 0 50px;color:var(--mist);font-size:13px;font-weight:500}
 footer .wrap{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}
 footer b{color:var(--white)}
@@ -262,9 +302,9 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 .hero::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,20,43,.92) 0%,rgba(0,20,43,.6) 55%,rgba(0,20,43,.25) 100%),linear-gradient(0deg,var(--deep) 0%,transparent 30%);pointer-events:none;z-index:1}
 .hero .wrap,.hero .scrollcue{z-index:3}
 .lead{color:var(--mist);font-size:clamp(18px,1.6vw,21px);font-weight:500;line-height:1.55;max-width:560px;margin-top:24px}
-.flow{list-style:none;display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;padding:0}
-.flow li{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px}
-.flow li+li::before{content:'→';margin-right:10px;color:var(--ice)}
+.flow{list-style:none;display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:22px;padding:0;counter-reset:f}
+.flow li{counter-increment:f;display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;color:var(--mist)}
+.flow li::before{content:counter(f);width:24px;height:24px;flex:none;border-radius:50%;background:rgba(102,193,211,.16);color:var(--ice);font-size:12px;font-weight:800;display:grid;place-items:center}
 .final{background:var(--deep)}
 .yt,.demo{position:relative;display:block;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;cursor:pointer;margin-top:40px;box-shadow:0 40px 120px -40px rgba(102,193,211,.45)}
 .yt img,.demo video,.lb video{width:100%;height:100%;object-fit:cover;display:block}
@@ -318,13 +358,43 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
 .rewards div{background:var(--navy);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 12px;display:flex;flex-direction:column;gap:6px}
 .rewards b{font-size:22px;font-weight:900;color:#F5B800}.rewards b::after{content:' P';font-size:13px;color:var(--mist)}
 .rewards span{font-size:13px;color:var(--mist);line-height:1.35}
+
+/* Typografie: eine ruhige, einheitliche Skala. Grossbuchstaben nur im Hero. */
+h2,h3{text-transform:none;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+h2,#pro h2{font-size:clamp(30px,3.6vw,46px)}
+.hero h1{font-size:clamp(40px,8vw,120px)}
+.lead{font-size:18px;line-height:1.6;font-weight:500}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em}
+.navlinks{font-size:13px;letter-spacing:.06em;text-transform:none;font-weight:600}
+.daysteps b,.board .r.h,.dlg label,.ticket .e,.phone .hint,.yt .cap,.demo .cap{font-size:12px;font-weight:700;letter-spacing:.12em}
+.btn{text-transform:none;letter-spacing:0;font-weight:700;font-size:16px;height:52px;border-radius:8px}
+.rotator{text-transform:none;letter-spacing:0;font-weight:600;font-size:clamp(18px,1.8vw,22px)}
+.daysteps strong{text-transform:none;font-size:19px;font-weight:800;letter-spacing:-.01em}
+.formula div b{text-transform:none;font-size:18px;font-weight:800}
+.ticket b{text-transform:none;font-size:32px;font-weight:800;line-height:1.05}
+.flow li{font-size:15px;font-weight:600}
+.person b{font-weight:700}
+
+/* Outline-Schrift wie im ersten Entwurf */
+.hero h1 span:nth-child(2) b{color:#fff;-webkit-text-stroke:0;filter:url(#ol-white)}
+.daysteps{counter-reset:d}
+.daysteps li{position:relative;counter-increment:d;padding-top:58px}
+.daysteps li::before{content:counter(d,decimal-leading-zero);position:absolute;left:18px;top:12px;font-size:44px;font-weight:900;line-height:1;color:var(--navy);filter:url(#ol-ice)}
+.daysteps li.bp::before{filter:url(#ol-gold)}
+.daysteps strong span{font-size:inherit;color:inherit}
 </style>
 
 <body>
+<!-- Outline-Schrift ohne innere Linien: nur die äussere Kontur der Buchstaben (Montserrat hat überlappende Teilformen) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="ol-white" x="-5%" y="-10%" width="110%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feComposite in="d" in2="SourceAlpha" operator="out" result="o"/><feFlood flood-color="#fff" flood-opacity=".92"/><feComposite in2="o" operator="in"/></filter>
+  <filter id="ol-ice" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="d"/><feComposite in="d" in2="SourceAlpha" operator="out" result="o"/><feFlood flood-color="#66C1D3" flood-opacity=".6"/><feComposite in2="o" operator="in"/></filter>
+  <filter id="ol-gold" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="d"/><feComposite in="d" in2="SourceAlpha" operator="out" result="o"/><feFlood flood-color="#F5B800" flood-opacity=".7"/><feComposite in2="o" operator="in"/></filter>
+</svg>
 
 <nav id="nav"><div class="wrap">
   <a class="logo" href="#top" aria-label="In the Game"><i></i>IN THE GAME</a>
-  <div class="navlinks"><a href="#day"><span data-l="de">Spieltag</span><span data-l="en">Game day</span></a><a href="#learn">Learn the Game</a><a href="#pro">Be a Pro</a><a href="#ranking">Hockey-IQ</a></div>
+  <div class="navlinks"><a href="#day"><span data-l="de">Spieltag</span><span data-l="en">Game day</span></a><a href="#learn">Learn the Game</a><a href="#pro">Be a Pro</a><a href="#ranking">Hockey-IQ</a><a href="#prizes"><span data-l="de">Preise</span><span data-l="en">Prizes</span></a></div>
   <div class="navr">
     <div class="langs" role="group" aria-label="Sprache / Language"><button data-setlang="de">DE</button><button data-setlang="en">EN</button></div>
     <button class="acct" id="acctBtn"><i id="acctIni"></i><span class="lbl" id="acctLbl"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></span></button>
@@ -341,8 +411,8 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
     <h1><span><b><span data-l="de">Nicht nur</span><span data-l="en">Don&#39;t just</span></b></span><span><b><span data-l="de">zuschauen.</span><span data-l="en">watch.</span></b></span><span><b><span data-l="de" class="w"><em class="on">Mitspielen.</em><em>Verstehen.</em><em>Mitfiebern.</em></span><span data-l="en" class="w"><em class="on">Play.</em><em>Understand.</em><em>Feel it.</em></span></b></span></h1>
     <div class="rotator fade d2"><span data-l="de">Ein Spiel für Neulinge und Kenner. Mittendrin am Spengler Cup.</span><span data-l="en">One game for newcomers and experts. Right in the middle of the Spengler Cup.</span></div>
     <div class="ctas fade d3">
-      <a class="btn primary" href="#learn">Learn the Game <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      <a class="btn ghost" href="#pro">Be a Pro</a>
+      <a class="btn primary" href="#learn" data-start="learn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><span data-l="de">Regeln lernen</span><span data-l="en">Learn the rules</span></a>
+      <a class="btn ghost" href="#pro"><span data-l="de">Pass spielen</span><span data-l="en">Play a pass</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </div>
   </div>
   <div class="scrollcue"></div>
@@ -354,11 +424,11 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <div class="eyebrow reveal"><span data-l="de">Dein Spieltag</span><span data-l="en">Your game day</span></div>
   <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Ein Spiel. Von Anpfiff bis Schlusspfiff.</span><span data-l="en">One game. From faceoff to final whistle.</span></h2>
   <ol class="daysteps reveal d2">
-    <li class="lg"><b>01 · <span data-l="de">Während der Drittel</span><span data-l="en">During the periods</span></b><strong>Learn the Game</strong><span><span data-l="de">Jeder Pfiff erklärt. Jede neue Regel: +10 Punkte.</span><span data-l="en">Every whistle explained. Every new rule: +10 points.</span></span></li>
-    <li class="bp"><b>02 · <span data-l="de">In den Pausen und danach</span><span data-l="en">In the breaks and after</span></b><strong>Be a Pro</strong><span><span data-l="de">Schlüsselszenen einfrieren, Pass ziehen: bis 100 Punkte.</span><span data-l="en">Freeze key scenes, draw the pass: up to 100 points.</span></span></li>
-    <li><b>03 · <span data-l="de">Nach dem Spiel</span><span data-l="en">After the game</span></b><strong>Hockey-IQ</strong><span><span data-l="de">Alle Punkte zusammen. Wer liegt vorne, du oder deine Freunde?</span><span data-l="en">All points together. Who is ahead, you or your friends?</span></span></li>
-    <li><b>04 · <span data-l="de">Jederzeit</span><span data-l="en">Any time</span></b><strong><span data-l="de">Prämien</span><span data-l="en">Rewards</span></strong><span><span data-l="de">Punkte einlösen: Rabattcodes, virtuelle und echte Preise.</span><span data-l="en">Redeem points: discount codes, virtual and real prizes.</span></span></li>
-    <li><b>05 · <span data-l="de">Nächstes Spiel</span><span data-l="en">Next game</span></b><strong><span data-l="de">Revanche</span><span data-l="en">Rematch</span></strong><span><span data-l="de">11 Spiele in 6 Tagen. Neue Regeln, neue Szenen.</span><span data-l="en">11 games in 6 days. New rules, new scenes.</span></span></li>
+    <li class="lg" data-go="learn"><b><span data-l="de">Während der Drittel</span><span data-l="en">During the periods</span></b><strong>Learn the Game</strong><span><span data-l="de">Jeder Pfiff erklärt. Jede neue Regel: +10 Punkte.</span><span data-l="en">Every whistle explained. Every new rule: +10 points.</span></span></li>
+    <li class="bp" data-go="pro"><b><span data-l="de">In den Pausen und danach</span><span data-l="en">In the breaks and after</span></b><strong>Be a Pro</strong><span><span data-l="de">Schlüsselszenen einfrieren, Pass ziehen: bis 100 Punkte.</span><span data-l="en">Freeze key scenes, draw the pass: up to 100 points.</span></span></li>
+    <li data-go="ranking"><b><span data-l="de">Nach dem Spiel</span><span data-l="en">After the game</span></b><strong>Hockey-IQ</strong><span><span data-l="de">Alle Punkte zusammen. Wer liegt vorne, du oder deine Freunde?</span><span data-l="en">All points together. Who is ahead, you or your friends?</span></span></li>
+    <li data-go="prizes"><b><span data-l="de">Jederzeit</span><span data-l="en">Any time</span></b><strong><span data-l="de">Prämien</span><span data-l="en">Rewards</span></strong><span><span data-l="de">Punkte einlösen: Rabattcodes, virtuelle und echte Preise.</span><span data-l="en">Redeem points: discount codes, virtual and real prizes.</span></span></li>
+    <li><b><span data-l="de">Nächstes Spiel</span><span data-l="en">Next game</span></b><strong><span data-l="de">Revanche</span><span data-l="en">Rematch</span></strong><span><span data-l="de">11 Spiele in 6 Tagen. Neue Regeln, neue Szenen.</span><span data-l="en">11 games in 6 days. New rules, new scenes.</span></span></li>
   </ol>
 </div></section>
 
@@ -369,10 +439,10 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
       <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Eishockey, was?<br>Erklär mir den Sport.</span><span data-l="en">Hockey, what?<br>Explain it to me.</span></h2>
       <p class="lead reveal d2"><span data-l="de">Bei jedem Pfiff zeigt dir dein Handy, was gepfiffen wurde und warum: mit der echten Situation aus dem Spiel und dem Schiri-Zeichen. Jede Regel landet in deinem Regelbuch, 30 gibt es zu sammeln.</span><span data-l="en">At every whistle, your phone shows what was called and why: with the real situation from the game and the referee signal. Every rule goes into your rulebook, 30 to collect.</span></p>
       <ol class="flow reveal d2"><li><span data-l="de">Pfiff</span><span data-l="en">Whistle</span></li><li><span data-l="de">Erklärung</span><span data-l="en">Explanation</span></li><li><span data-l="de">Regel gesammelt</span><span data-l="en">Rule collected</span></li></ol>
-      <div style="margin-top:30px" class="reveal"><a class="btn primary" href="../learn_the_game/Hockey-verstehen.html"><span data-l="de">Regeln live lernen</span><span data-l="en">Learn the rules live</span></a></div>
+      <div style="margin-top:30px" class="reveal"><button class="btn primary" type="button" data-start="learn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><span data-l="de">Vorschau starten</span><span data-l="en">Start the preview</span></button></div>
     </div>
     <div class="phonecol reveal">
-      <div class="phone"><div class="screen"><iframe src="../learn_the_game/Hockey-verstehen.html" title="Learn the Game" loading="lazy"></iframe></div><div class="hint"><span data-l="de">Probier es aus</span><span data-l="en">Try it</span></div></div>
+      <div class="phone"><div class="screen"><iframe src="../learn_the_game/Hockey-verstehen.html" title="Learn the Game" loading="lazy"></iframe></div><div class="hint"><span data-l="de">Spieler antippen für Details</span><span data-l="en">Tap a player for details</span></div></div>
     </div>
   </div>
 </div></section>
@@ -382,14 +452,14 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
     <div>
       <div class="eyebrow reveal">Be a Pro</div>
       <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Schon mal geträumt, Teil des Spengler Cup zu sein?</span><span data-l="en">Ever dreamed of being part of the Spengler Cup?</span></h2>
-      <p class="lead reveal d2"><span data-l="de">Hier ist deine Chance. In der Pause und nach dem Spiel kommen die Schlüsselszenen zurück. Die Szene friert ein, du ziehst den Pass. Danach siehst du, wie es wirklich lief und warum.</span><span data-l="en">Here is your chance. In the break and after the game, the key scenes come back. The scene freezes, you draw the pass. Then you see how it really went, and why.</span></p>
-      <ol class="flow reveal d2"><li><span data-l="de">Szene friert ein</span><span data-l="en">Scene freezes</span></li><li><span data-l="de">Pass ziehen</span><span data-l="en">Draw the pass</span></li><li><span data-l="de">Punkte</span><span data-l="en">Points</span></li></ol>
+      <p class="lead reveal d2"><span data-l="de">Hier ist deine Chance. In der Pause und nach dem Spiel kommen die Schlüsselszenen zurück, in zwei Modi. Im Replay-Modus erlebst du sie nochmals wie im Fernsehen, mit jedem Spieler und jedem Pass. Im Game-Modus friert die Szene ein und du ziehst den Pass.</span><span data-l="en">Here is your chance. In the break and after the game, the key scenes come back, in two modes. In Replay mode, you relive them like a broadcast, every player and every pass. In Game mode, the scene freezes and you draw the pass.</span></p>
+      <ol class="flow reveal d2"><li><span data-l="de">Replay: Szene erleben</span><span data-l="en">Replay: relive the scene</span></li><li><span data-l="de">Game: Pass ziehen</span><span data-l="en">Game: draw the pass</span></li><li><span data-l="de">Punkte nach Genauigkeit</span><span data-l="en">Points for accuracy</span></li></ol>
     </div>
     <div class="reveal">
       <button class="demo" id="proDemo" aria-label="Be a Pro" style="margin-top:0">
         <video src="media/be-a-pro-loop.mp4" autoplay muted loop playsinline preload="metadata"></video>
         <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
-        <span class="cap"><span data-l="de">Probier es aus</span><span data-l="en">Try it</span></span>
+        <span class="cap"><span data-l="de">Pass-Spiel starten</span><span data-l="en">Start the pass game</span></span>
       </button>
     </div>
   </div>
@@ -400,23 +470,51 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
   <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Erst beides macht dich zum Profi.</span><span data-l="en">Only both make you a pro.</span></h2>
   <div class="formula reveal d2">
     <div><b><span data-l="de">Regel-Punkte</span><span data-l="en">Rule points</span></b><span><span data-l="de">Learn the Game · 10 pro Regel</span><span data-l="en">Learn the Game · 10 per rule</span></span></div><i>+</i>
-    <div><b><span data-l="de">Pass-Punkte</span><span data-l="en">Pass points</span></b><span><span data-l="de">Be a Pro · bis 100 pro Szene</span><span data-l="en">Be a Pro · up to 100 per scene</span></span></div><i>=</i>
+    <div><b><span data-l="de">Pass-Punkte</span><span data-l="en">Pass points</span></b><span><span data-l="de">Be a Pro · bis 100 pro Pass</span><span data-l="en">Be a Pro · up to 100 per pass</span></span></div><i>=</i>
     <div class="res"><b><span data-l="de">Dein Hockey-IQ</span><span data-l="en">Your Hockey IQ</span></b><span><span data-l="de">eine Bestenliste</span><span data-l="en">one leaderboard</span></span></div>
   </div>
   <p class="lead reveal d2"><span data-l="de">Neulinge sammeln Regeln, Kenner lesen Pässe. Nach oben kommt nur, wer beides kann. Und deine Punkte sind etwas wert: Du löst sie gegen Prämien ein.</span><span data-l="en">Newcomers collect rules, experts read passes. Only those who do both reach the top. And your points are worth something: you redeem them for rewards.</span></p>
   <div class="iqgrid">
     <div class="board reveal" id="board"></div>
     <div class="reveal">
-      <div class="rewards">
-        <div><b>150</b><span><span data-l="de">Digitales Fan-Abzeichen</span><span data-l="en">Digital fan badge</span></span></div>
-        <div><b>300</b><span><span data-l="de">10 % Rabatt im Fan-Shop</span><span data-l="en">10 % off in the fan shop</span></span></div>
-        <div><b>500</b><span><span data-l="de">Los für ein Final-Ticket</span><span data-l="en">Draw ticket for the final</span></span></div>
-      </div>
-      <p class="prizeline"><span data-l="de"><b>Beispiel-Prämien.</b> Welche es wirklich gibt, entscheidet der Spengler Cup.</span><span data-l="en"><b>Example rewards.</b> The Spengler Cup decides which ones are real.</span></p>
-      <div style="margin-top:18px"><button class="btn primary" id="boardLogin"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button></div>
+      <p class="lead" style="margin-top:50px;font-size:17px"><span data-l="de">Melde dich an, damit deine Punkte zählen. Dann landest du in der Bestenliste und kannst Preise einlösen.</span><span data-l="en">Log in so your points count. Then you appear on the leaderboard and can redeem prizes.</span></p>
+      <div style="margin-top:22px"><button class="btn primary" id="boardLogin"><span data-l="de">Anmelden</span><span data-l="en">Log in</span></button></div>
       <p style="margin-top:14px;color:var(--mist);font-size:12px"><span data-l="de">Prototyp: «Demo»-Einträge sind Beispiele, alles bleibt in diesem Browser.</span><span data-l="en">Prototype: “demo” entries are examples, everything stays in this browser.</span></p>
     </div>
   </div>
+</div></section>
+
+<section class="sec lite prizes" id="prizes"><div class="wrap">
+  <div class="eyebrow reveal"><span data-l="de">Zu gewinnen</span><span data-l="en">Prizes</span></div>
+  <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Deine Punkte sind etwas wert.</span><span data-l="en">Your points are worth something.</span></h2>
+  <p class="lead reveal d2"><span data-l="de">Zwei Wege zum Preis: Löse deine Punkte im Shop ein, sobald du genug hast. Oder spiel um einen Platz in der Bestenliste, abgerechnet nach dem Final.</span><span data-l="en">Two ways to a prize: redeem your points in the shop as soon as you have enough. Or play for a spot on the leaderboard, settled after the final.</span></p>
+  <div class="prizegrid">
+  <div class="reveal d2">
+    <h3 class="ptitle"><span data-l="de">Einlösen</span><span data-l="en">Redeem</span><small><span data-l="de">Punkte gegen Prämie, jederzeit</span><span data-l="en">Points for rewards, any time</span></small></h3>
+    <ul class="rwlist" id="rwlist">
+      <li data-p="1000"><b>1'000 P</b><span><span data-l="de">Digitales Fan-Abzeichen fürs Profil</span><span data-l="en">Digital fan badge for your profile</span></span></li>
+      <li data-p="2500"><b>2'500 P</b><span><span data-l="de">10 % Rabatt im Fan-Shop</span><span data-l="en">10 % off in the fan shop</span></span></li>
+      <li data-p="5000"><b>5'000 P</b><span><span data-l="de">Spengler-Cup-Fanschal</span><span data-l="en">Spengler Cup fan scarf</span></span></li>
+      <li data-p="10000"><b>10'000 P</b><span><span data-l="de">Signierter Spielpuck</span><span data-l="en">Signed game puck</span></span></li>
+    </ul>
+    <p class="prizeprog" id="prizeProg"></p>
+  </div>
+  <div class="reveal d2">
+    <h3 class="ptitle"><span data-l="de">Bestenliste</span><span data-l="en">Leaderboard</span><small><span data-l="de">Die besten Hockey-IQs des Turniers</span><span data-l="en">The best Hockey IQs of the tournament</span></small></h3>
+    <div class="ticket">
+      <div class="e"><span data-l="de">Platz 1</span><span data-l="en">Rank 1</span></div>
+      <b><span data-l="de">2 Tickets für<br>den Final</span><span data-l="en">2 tickets for<br>the final</span></b>
+      <div class="row"><div class="e" style="color:var(--mist);letter-spacing:.08em;text-transform:none;font-weight:600;font-size:14px;max-width:230px"><span data-l="de">Für den besten Hockey-IQ nach 11 Spielen.</span><span data-l="en">For the best Hockey IQ after 11 games.</span></div><div class="e" style="text-align:right">Davos<br>31.12.</div></div>
+    </div>
+    <ul class="rwlist ranks">
+      <li><b><span data-l="de">Platz 1</span><span data-l="en">Rank 1</span></b><span><span data-l="de">2 Tickets für den Final</span><span data-l="en">2 tickets for the final</span></span></li>
+      <li><b><span data-l="de">Platz 2–3</span><span data-l="en">Rank 2–3</span></b><span><span data-l="de">Signiertes Trikot</span><span data-l="en">Signed jersey</span></span></li>
+      <li><b><span data-l="de">Platz 4–10</span><span data-l="en">Rank 4–10</span></b><span><span data-l="de">Fan-Paket</span><span data-l="en">Fan package</span></span></li>
+    </ul>
+    <p class="prizeprog" id="rankProg"></p>
+  </div>
+  </div>
+  <p class="prizenote"><span data-l="de">Beispiel-Preise. Welche es wirklich gibt, entscheidet der Spengler Cup.</span><span data-l="en">Example prizes. The Spengler Cup decides which ones are real.</span></p>
 </div></section>
 
 <section class="sec final" id="final"><div class="wrap">
@@ -429,6 +527,18 @@ html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !impor
     <span class="cap">Highlights · U.S. Collegiate Selects vs. HC Davos · Spengler Cup Davos</span>
   </button>
   <p class="src"><span data-l="de">Video: Spengler Cup Davos auf YouTube, provisorisch eingebunden. Wird erst beim Klick geladen.</span><span data-l="en">Video: Spengler Cup Davos on YouTube, embedded provisionally. Loads only on click.</span></p>
+</div></section>
+
+<section class="sec team lite" id="team"><div class="wrap">
+  <div class="eyebrow reveal"><span data-l="de">Das Team</span><span data-l="en">The team</span></div>
+  <h2 class="reveal d1" style="margin-top:18px"><span data-l="de">Die Menschen hinter In the Game.</span><span data-l="en">The people behind In the Game.</span></h2>
+  <p class="lead reveal d2"><span data-l="de">Ein Studierendenteam der FHGR, entstanden an der Sport Innovation Challenge 2026.</span><span data-l="en">A student team from FHGR, built for the Sport Innovation Challenge 2026.</span></p>
+  <div class="people">
+    <div class="person reveal"><div class="av">JS</div><b>Jason Stalder</b><span>Student · FHGR</span></div>
+    <div class="person reveal"><div class="av">AD</div><b>Alessio De Icco</b><span>Student · FHGR</span></div>
+    <div class="person reveal"><div class="av">AS</div><b>Anna Skrylnyk</b><span>Student · FHGR</span></div>
+    <div class="person reveal"><div class="av">NA</div><b>Nicola Augsburger</b><span>Student · FHGR</span></div>
+  </div>
 </div></section>
 
 <footer><div class="wrap">
@@ -536,6 +646,22 @@ document.querySelectorAll('.yt').forEach(b => b.addEventListener('click', () => 
   b.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.yt}?autoplay=1&rel=0" title="Highlights" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
 }));
 
+// Learn the Game: Vorschau im Handy starten (ohne extra Klick)
+const learnFrame = document.querySelector('#learn iframe');
+let learnStarted = false;
+function startLearn() {
+  if (learnStarted || !learnFrame) return;
+  const go = () => { try { const b = learnFrame.contentDocument.getElementById('wPlay'); if (b && !b.innerHTML.includes('rect')) { b.click(); learnStarted = true; } } catch (e) { /* andere Herkunft */ } };
+  if (learnFrame.contentDocument && learnFrame.contentDocument.readyState === 'complete' && learnFrame.contentDocument.getElementById('wPlay')) go();
+  else learnFrame.addEventListener('load', () => setTimeout(go, 300), { once: true });
+}
+document.querySelectorAll('[data-start="learn"]').forEach(b => b.addEventListener('click', e => {
+  e.preventDefault(); document.getElementById('learn').scrollIntoView({ behavior: 'smooth' }); learnFrame && learnFrame.removeAttribute('loading'); setTimeout(startLearn, 500);
+}));
+if (learnFrame) new IntersectionObserver(([en], o) => { if (en.intersectionRatio > 0.6) { o.disconnect(); startLearn(); } }, { threshold: [0.6] }).observe(learnFrame);
+// Tagesübersicht: Kacheln springen zum Abschnitt
+document.querySelectorAll('.daysteps li[data-go]').forEach(li => li.addEventListener('click', () => document.getElementById(li.dataset.go).scrollIntoView({ behavior: 'smooth' })));
+
 // Smart Link Be a Pro: echtes Spiel, wenn erreichbar, sonst die Demo mit Ton
 const BE_A_PRO = ['../index.html', 'http://localhost:8800/index.html'];
 async function reachable(url) {
@@ -577,6 +703,17 @@ function renderAccount() {
   document.getElementById('acctIni').textContent = u ? u.name.trim().slice(0, 1).toUpperCase() : '';
   document.getElementById('acctLbl').textContent = u ? u.name : t('Anmelden', 'Log in');
   document.getElementById('boardLogin').textContent = u ? t('Abmelden', 'Log out') : t('Anmelden', 'Log in');
+  const iq = HVAccount.stats().iq;
+  document.querySelectorAll('#rwlist li').forEach(li => li.classList.toggle('got', iq >= +li.dataset.p));
+  const nxt = [...document.querySelectorAll('#rwlist li')].find(li => iq < +li.dataset.p);
+  const n2 = v => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  document.getElementById('prizeProg').textContent = nxt
+    ? t(`Du hast ${n2(iq)} Punkte. Noch ${n2(nxt.dataset.p - iq)} bis «${nxt.querySelector('[data-l=de]').textContent}».`, `You have ${n2(iq)} points. ${n2(nxt.dataset.p - iq)} more for “${nxt.querySelector('[data-l=en]').textContent}”.`)
+    : t(`Du hast ${n2(iq)} Punkte. Alle Prämien freigeschaltet.`, `You have ${n2(iq)} points. All rewards unlocked.`);
+  const all = HVAccount.board(99), mine = all.findIndex(r => r.me);
+  document.getElementById('rankProg').textContent = mine >= 0
+    ? t(`Du bist auf Platz ${mine + 1} von ${all.length}.`, `You are rank ${mine + 1} of ${all.length}.`)
+    : t('Melde dich an, um in der Bestenliste mitzuspielen.', 'Log in to play for a spot on the leaderboard.');
   const rows = HVAccount.board(8);
   const fmt = r => `${r.rules} ${t('Regeln', 'rules')} (${r.rulePoints}) + ${r.pass} ${t('Pass-Punkte', 'pass points')}`;
   document.getElementById('board').innerHTML = `<div class="r h"><i>#</i>${t('Name', 'Name')}<em>Hockey-IQ</em></div>` + rows.map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><i>${i + 1}</i><span class="nm">${esc(r.name)}${r.demo ? '<small>Demo</small>' : ''}<small class="bd">${fmt(r)}</small></span><em>${r.iq}</em></div>`).join('');
