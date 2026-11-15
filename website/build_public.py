@@ -7,6 +7,7 @@
 Aufruf:  python3 website/build_public.py
 """
 import json
+import os
 import math
 import shutil
 import subprocess
@@ -15,7 +16,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LEARN = ROOT / "learn_the_game"
-OUT = ROOT / "outputs" / "public-demo"
+# VARIANT=video: Variante nur fürs Demovideo (lokal, nicht veröffentlichen): echte Daten, ohne Vorschau-Hinweise
+VIDEO = os.environ.get("VARIANT") == "video"
+OUT = ROOT / "outputs" / ("video-demo" if VIDEO else "public-demo")
+DATA = LEARN / ("data.js" if VIDEO else "data.sim.js")
 
 subprocess.run([sys.executable, str(LEARN / "simulate_data.py")], check=True)
 if OUT.exists():
@@ -25,19 +29,19 @@ if OUT.exists():
 
 # ---------------------------------------------------------------- App mit simulierten Daten
 html = (LEARN / "index.html").read_text(encoding="utf-8")
-for name, src in (("../shared/hv-account.js", ROOT / "shared/hv-account.js"), ("data.js", LEARN / "data.sim.js"), ("app.js", LEARN / "app.js")):
+for name, src in (("../shared/hv-account.js", ROOT / "shared/hv-account.js"), ("data.js", DATA), ("app.js", LEARN / "app.js")):
     js = src.read_text(encoding="utf-8").replace("</script", "<\\/script")
     tag = f'<script src="{name}"></script>'
     assert tag in html, tag
     html = html.replace(tag, f"<script>\n{js}\n</script>")
-assert "MATCH_DATA = {\"match\":{\"date\":\"31.12.2025\"" not in html
+assert VIDEO or "MATCH_DATA = {\"match\":{\"date\":\"31.12.2025\"" not in html
 assert '<meta charset="utf-8">' in html
 html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="robots" content="noindex, nofollow">', 1)
 (OUT / "app" / "index.html").write_text(html, encoding="utf-8")
 shutil.copy(ROOT / "shared/hv-account.js", OUT / "shared/hv-account.js")
 
 # ---------------------------------------------------------------- Szenen für Be a Pro (Replay und Game)
-sim = (LEARN / "data.sim.js").read_text(encoding="utf-8")
+sim = DATA.read_text(encoding="utf-8")
 D = json.loads(sim[sim.index("{"):sim.rindex("}") + 1])
 EV = D["events"]
 PL = D["players"]
@@ -108,7 +112,7 @@ def seg_dist(p, a, b):
 
 
 replays = []
-for gi in (0, 1, 5):
+for gi in (0, 1, len(goals) - 1):
     goal = goals[gi]
     shot = shot_for(goal)
     replays.append(scene(goal, shot["g"] - 9.0, goal["g"] + 1.6))
@@ -214,17 +218,18 @@ def rep(a, b, n=1):
 rep("../learn_the_game/Hockey-verstehen.html", "app/index.html")
 rep('src="../shared/hv-account.js"', 'src="shared/hv-account.js"')
 rep('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="robots" content="noindex, nofollow">\n<link href="https://fonts.googleapis.com/css2?family=Rajdhani:ital,wght@0,600;0,700;1,700;1,800&display=swap" rel="stylesheet">')
-rep('Im Betrieb laufen beide Angebote mit den Live-Trackingdaten von Wisehockey. Der Prototyp nutzt die Daten des Finals 2025.',
-    'Im Betrieb laufen beide Angebote mit den Live-Trackingdaten von Wisehockey. Diese öffentliche Demo zeigt eine simulierte Partie, die echten Daten bleiben privat.')
-rep('In operation, both offers run on live Wisehockey tracking data. The prototype uses the data of the 2025 final.',
-    'In operation, both offers run on live Wisehockey tracking data. This public demo shows a simulated game; the real data stays private.')
-PREV = '<p class="prev reveal d2"><b>{b}</b> {t}</p>'
-rep('<span data-l="en">Rule collected</span></li></ol>', '<span data-l="en">Rule collected</span></li></ol>\n      ' + PREV.format(
-    b='<span data-l="de">Statische Vorschau.</span><span data-l="en">Static preview.</span>',
-    t='<span data-l="de">Hier läuft eine simulierte Partie. Im Betrieb erklärt Learn the Game die Pfiffe live während des Spiels, mit den Trackingdaten in Echtzeit.</span><span data-l="en">This runs a simulated game. In operation, Learn the Game explains the whistles live during the game, with real-time tracking data.</span>'))
-rep('<span data-l="en">Points for accuracy</span></li></ol>', '<span data-l="en">Points for accuracy</span></li></ol>\n      ' + PREV.format(
-    b='<span data-l="de">Statische Vorschau.</span><span data-l="en">Static preview.</span>',
-    t='<span data-l="de">Die Szenen stammen aus einer simulierten Partie. Im Betrieb kommen die Schlüsselszenen live aus dem laufenden Spiel, in der Pause und nach dem Schlusspfiff.</span><span data-l="en">The scenes come from a simulated game. In operation, the key scenes come live from the game in progress, in the break and after the final whistle.</span>'))
+if not VIDEO:
+    rep('Im Betrieb laufen beide Angebote mit den Live-Trackingdaten von Wisehockey. Der Prototyp nutzt die Daten des Finals 2025.',
+        'Im Betrieb laufen beide Angebote mit den Live-Trackingdaten von Wisehockey. Diese öffentliche Demo zeigt eine simulierte Partie, die echten Daten bleiben privat.')
+    rep('In operation, both offers run on live Wisehockey tracking data. The prototype uses the data of the 2025 final.',
+        'In operation, both offers run on live Wisehockey tracking data. This public demo shows a simulated game; the real data stays private.')
+    PREV = '<p class="prev reveal d2"><b>{b}</b> {t}</p>'
+    rep('<span data-l="en">Rule collected</span></li></ol>', '<span data-l="en">Rule collected</span></li></ol>\n      ' + PREV.format(
+        b='<span data-l="de">Statische Vorschau.</span><span data-l="en">Static preview.</span>',
+        t='<span data-l="de">Hier läuft eine simulierte Partie. Im Betrieb erklärt Learn the Game die Pfiffe live während des Spiels, mit den Trackingdaten in Echtzeit.</span><span data-l="en">This runs a simulated game. In operation, Learn the Game explains the whistles live during the game, with real-time tracking data.</span>'))
+    rep('<span data-l="en">Points for accuracy</span></li></ol>', '<span data-l="en">Points for accuracy</span></li></ol>\n      ' + PREV.format(
+        b='<span data-l="de">Statische Vorschau.</span><span data-l="en">Static preview.</span>',
+        t='<span data-l="de">Die Szenen stammen aus einer simulierten Partie. Im Betrieb kommen die Schlüsselszenen live aus dem laufenden Spiel, in der Pause und nach dem Schlusspfiff.</span><span data-l="en">The scenes come from a simulated game. In operation, the key scenes come live from the game in progress, in the break and after the final whistle.</span>'))
 rep(".lb .x{", ".prev{margin-top:22px;max-width:560px;font-size:14px;line-height:1.5;color:var(--mist);border-left:3px solid #F5B800;padding:4px 0 4px 14px}\n.prev b{color:#F5B800}\n.lb .x{")
 L = lambda de, en: f'<span data-l="de">{de}</span><span data-l="en">{en}</span>'
 ps = web.index('<button class="demo" id="proDemo"')
@@ -233,7 +238,7 @@ web = web[:ps] + ('<div class="bpmodes" role="tablist">'
     + '<button type="button" data-m="replay" class="on"><b>REPLAY MODE</b><span>Watch cinematic broadcast</span><span>Fully automated playback</span></button>'
     + '<button type="button" data-m="game" class="game"><b>GAME MODE</b><span>Draw puck prediction vectors</span><span>Score points with distance accuracy</span></button></div>'
     + '<div class="bpwrap" id="proGame"><canvas id="bapCanvas" aria-label="Be a Pro"></canvas></div>'
-    + '<p class="bpnote">' + L('Statische Vorschau im Design des Be-a-Pro-Prototyps · simulierte Partie · ', 'Static preview in the design of the Be a Pro prototype · simulated game · ') + '<span id="bapNote"></span></p>') + web[pe:]
+    + ('<p class="bpnote" hidden><span id="bapNote"></span></p>' if VIDEO else '<p class="bpnote">' + L('Statische Vorschau im Design des Be-a-Pro-Prototyps · simulierte Partie · ', 'Static preview in the design of the Be a Pro prototype · simulated game · ') + '<span id="bapNote"></span></p>')) + web[pe:]
 
 old_start = web.index("// Smart Link Be a Pro")
 old_end = web.index("// Sprache: ?lang=en")
@@ -259,10 +264,11 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     small = W < 640; TOP = small ? 46 : 62;
     const vw = W - 8, vh = H - TOP - 6;
-    k = Math.min(vw / cam.span, vh / Math.min(30.6, cam.span / 2));
+    const full = cam.span >= 60;
+    k = full ? Math.min(W / (1500 / 17.5), H / (800 / 17.5)) : Math.min(vw / cam.span, vh / Math.min(30.6, cam.span / 2));
     const hw = vw / (2 * k), hh = vh / (2 * k);
-    const cx = hw >= 31 ? 0 : Math.max(-31 + hw, Math.min(31 - hw, cam.cx)), cy = hh >= 15.3 ? 0 : Math.max(-15.3 + hh, Math.min(15.3 - hh, cam.cy));
-    ox = W / 2 - (cx + 30) * k; oy = TOP + vh / 2 - (15 - cy) * k; f = k / 22.7;
+    const cx = full || hw >= 31 ? 0 : Math.max(-31 + hw, Math.min(31 - hw, cam.cx)), cy = full || hh >= 15.3 ? 0 : Math.max(-15.3 + hh, Math.min(15.3 - hh, cam.cy));
+    ox = W / 2 - (cx + 30) * k; oy = full ? H / 2 - 15 * k : TOP + vh / 2 - (15 - cy) * k; f = full ? k / 17.5 : k / 22.7;
   }
   const X = x => ox + (x + 30) * k, Y = y => oy + (15 - y) * k;
   const toWorld = (px, py) => [(px - ox) / k - 30, 15 - (py - oy) / k];
@@ -284,28 +290,33 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
     ctx.save(); rr(x0, y0, rw, rh, rad, false, false); ctx.clip();
     const vline = (x, col, lw, inset = 0) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(X(x), y0 + inset); ctx.lineTo(X(x), y0 + rh - inset); ctx.stroke(); };
     vline(0, LINE_RED, Math.max(1.5, 3 * f));
-    ctx.strokeStyle = 'rgba(0,240,255,.6)'; ctx.lineWidth = Math.max(1, 2 * f); ctx.beginPath(); ctx.arc(X(0), Y(0), 4.5 * k, 0, 7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,240,255,.6)'; ctx.lineWidth = Math.max(1, 2 * f); ctx.beginPath(); ctx.arc(X(0), Y(0), 65 / 17.5 * k, 0, 7); ctx.stroke();
     ctx.fillStyle = LINE_RED; ctx.beginPath(); ctx.arc(X(0), Y(0), Math.max(2, 6 * f), 0, 7); ctx.fill();
-    vline(-7.14, LINE_BLUE, Math.max(2, 3.5 * f)); vline(7.14, LINE_BLUE, Math.max(2, 3.5 * f));
+    vline(-8.5, LINE_BLUE, Math.max(2, 3.5 * f)); vline(8.5, LINE_BLUE, Math.max(2, 3.5 * f));
     vline(-26, 'rgba(255,46,76,.7)', Math.max(1, 2 * f), 10 * f); vline(26, 'rgba(255,46,76,.7)', Math.max(1, 2 * f), 10 * f);
-    for (const [dx, dy] of [[-20, -7], [-20, 7], [20, -7], [20, 7]]) {
-      ctx.strokeStyle = 'rgba(0,240,255,.4)'; ctx.lineWidth = Math.max(1, 1.5 * f); ctx.beginPath(); ctx.arc(X(dx), Y(dy), 4.5 * k, 0, 7); ctx.stroke();
+    for (const [dx, dy] of [[-20, -6], [-20, 6], [20, -6], [20, 6]]) {
+      ctx.strokeStyle = 'rgba(0,240,255,.4)'; ctx.lineWidth = Math.max(1, 1.5 * f); ctx.beginPath(); ctx.arc(X(dx), Y(dy), 45 / 17.5 * k, 0, 7); ctx.stroke();
       ctx.fillStyle = CYAN; ctx.beginPath(); ctx.arc(X(dx), Y(dy), Math.max(2, 4 * f), 0, 7); ctx.fill();
     }
-    for (const [dx, dy] of [[-5.6, -7], [-5.6, 7], [5.6, -7], [5.6, 7]]) { ctx.fillStyle = CYAN; ctx.beginPath(); ctx.arc(X(dx), Y(dy), Math.max(2, 4 * f), 0, 7); ctx.fill(); }
+    for (const [dx, dy] of [[-6, -6], [-6, 6], [6, -6], [6, 6]]) { ctx.fillStyle = CYAN; ctx.beginPath(); ctx.arc(X(dx), Y(dy), Math.max(2, 4 * f), 0, 7); ctx.fill(); }
     for (const sx of [-1, 1]) {
-      ctx.fillStyle = 'rgba(15,50,90,.6)'; ctx.beginPath(); ctx.arc(X(sx * 26), Y(0), 1.8 * k, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(15,50,90,.6)'; ctx.beginPath(); ctx.arc(X(sx * 26), Y(0), 20 / 17.5 * k, 0, 7); ctx.fill();
       ctx.strokeStyle = CYAN; ctx.lineWidth = Math.max(1, 1.5 * f); ctx.stroke();
       const hot = goalFlash && goalFlash.side === sx ? goalFlash.a : 0;
-      const nw = 1.1 * k, nh = 1.83 * k, nx = sx < 0 ? X(-26) - nw : X(26), ny = Y(0) - nh / 2;
+      const nw = 14 / 17.5 * k, nh = 24 / 17.5 * k, nx = sx < 0 ? X(-26) - nw : X(26), ny = Y(0) - nh / 2;
       ctx.fillStyle = hot ? `rgba(255,26,64,${.35 + .6 * hot})` : 'rgba(60,20,20,.8)'; ctx.fillRect(nx, ny, nw, nh);
       ctx.strokeStyle = LINE_RED; ctx.lineWidth = Math.max(1, 1.5 * f); ctx.strokeRect(nx, ny, nw, nh);
     }
     ctx.restore();
     ctx.strokeStyle = BOARD; ctx.lineWidth = Math.max(2, 3.5 * f); rr(x0, y0, rw, rh, rad, false, true);
   }
-  function player(id, x, y) {
+  function player(id, x, y, vx, vy) {
     const info = RP[id] || [0, '', 'USC'], px = X(x), py = Y(y), R = Math.max(8, 16 * f), r = R * 14 / 16;
+    if (vx !== undefined && Math.hypot(vx, vy) > .25) {
+      const a = Math.atan2(-vy, vx), d = R + 6 * f, ts = Math.max(4, 7 * f);
+      ctx.save(); ctx.translate(px, py); ctx.rotate(a); ctx.fillStyle = CYAN; ctx.strokeStyle = '#0F1624'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(d + ts, 0); ctx.lineTo(d - ts, -ts * .7); ctx.lineTo(d - ts, ts * .7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.arc(px + 2 * f, py + 3 * f, R, 0, 7); ctx.fill();
     ctx.fillStyle = '#0F1624'; ctx.beginPath(); ctx.arc(px, py, R, 0, 7); ctx.fill();
     ctx.fillStyle = TEAM[info[2]]; ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.fill();
@@ -333,7 +344,7 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
       let vis = Math.min(intro, outro); if (under) vis *= .5;
       const sc = (0.7 + 0.3 * (1 - Math.pow(1 - intro, 3))) * (under ? .85 : 1) * (small ? .75 : 1);
       const sh = (1 - Math.min(1, el / .4)) * (under ? 2 : 4);
-      const ax = Math.max(80, Math.min(W - 80, X(p.anchor[0]))) + Math.sin(el * 60) * sh, ay = Math.max(TOP + 40, Y(p.anchor[1]) - 45 - (under ? 20 : 0)) + Math.cos(el * 50) * sh * .5;
+      const ax = Math.max(80, Math.min(W - 80, X(p.anchor[0]))) + Math.sin(el * 60) * sh, ay = Math.min(H - 70, Math.max(TOP + 40, Y(p.anchor[1]) - 45 - (under ? 20 : 0))) + Math.cos(el * 50) * sh * .5;
       ctx.save(); ctx.font = F(800, 22); const w = ctx.measureText(p.text).width + 64, h = 42;
       ctx.translate(ax, ay); ctx.scale(sc, sc); ctx.globalAlpha = vis;
       ctx.save(); ctx.transform(1, 0, -.22, 1, 6, 6); ctx.fillStyle = 'rgba(0,0,0,.75)'; ctx.fillRect(-w / 2, -h / 2, w, h); ctx.restore();
@@ -373,7 +384,8 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
     const gf = tt >= sc.goalT - .05 && tt < sc.goalT + 1.6 ? { side: sc.tm === 'USC' ? 1 : -1, a: 1 - Math.max(0, tt - sc.goalT) / 1.6 } : null;
     rink(gf);
     const ps = framesAt(sc.frames, tt), pk = puckAt(sc.puck, tt), tc = Math.min(tt, sc.goalT);
-    for (const [id, x, y] of ps) player(id, x, y);
+    const pv = new Map(framesAt(sc.frames, Math.max(0, tt - .25)).map(q => [q[0], q]));
+    for (const [id, x, y] of ps) { const q = pv.get(id); player(id, x, y, q ? (x - q[1]) / .25 : 0, q ? (y - q[2]) / .25 : 0); }
     if (pk) puck(pk, frozen ? 0 : speed(sc.puck, tc), speed(sc.puck, tc) >= speed(sc.puck, tc - .2));
     return { ps, pk };
   }
@@ -408,25 +420,47 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
     ctx.strokeStyle = WHITE; ctx.lineWidth = 1.5; ctx.strokeRect(mx(Math.max(-30, vx0)), my(Math.min(15, vy0)), mx(Math.min(30, vx1)) - mx(Math.max(-30, vx0)), my(Math.max(-15, vy1)) - my(Math.min(15, vy0)));
     return py + ph + 8;
   }
-  function partyCards(ps, pk, rightTop) {
-    if (W < 980) return;
-    const cardH = 34, gap = 7, cw = 150;
-    const side = (tm, x0, dir, startY) => {
+  // Avatar wie getP3PlayerAvatar (Alessio)
+  const AV = {};
+  function avatar(jersey, home) {
+    const key = jersey + (home ? 'h' : 'a'); if (AV[key]) return AV[key];
+    const c = document.createElement('canvas'); c.width = c.height = 120; const a = c.getContext('2d');
+    a.fillStyle = home ? '#0A255C' : '#5C0A1E'; a.beginPath(); a.moveTo(10, 0); a.lineTo(120, 15); a.lineTo(105, 120); a.lineTo(0, 95); a.closePath(); a.fill();
+    const seed = (parseInt(jersey) || 0) % 5;
+    a.fillStyle = '#1E293B'; a.beginPath(); a.moveTo(15, 110); a.lineTo(105, 110); a.lineTo(85, 75); a.lineTo(35, 75); a.closePath(); a.fill();
+    a.fillStyle = '#F8FAFC'; a.beginPath(); a.moveTo(40, 45); a.lineTo(75, 45); a.lineTo(70, 78); a.lineTo(55, 88); a.lineTo(42, 75); a.closePath(); a.fill();
+    a.fillStyle = home ? '#1D4ED8' : '#9F1239'; a.beginPath();
+    if (seed === 0) { a.moveTo(30, 35); a.lineTo(85, 25); a.lineTo(75, 55); a.lineTo(60, 42); a.lineTo(45, 60); }
+    else if (seed === 1) { a.moveTo(25, 45); a.lineTo(80, 20); a.lineTo(65, 50); a.lineTo(50, 35); a.lineTo(35, 55); }
+    else { a.moveTo(35, 25); a.lineTo(88, 35); a.lineTo(70, 58); a.lineTo(55, 45); a.lineTo(40, 65); }
+    a.closePath(); a.fill();
+    a.fillStyle = '#0F172A'; a.beginPath(); a.moveTo(48, 56); a.lineTo(58, 54); a.lineTo(56, 60); a.closePath(); a.moveTo(64, 54); a.lineTo(74, 56); a.lineTo(66, 60); a.closePath(); a.fill();
+    a.strokeStyle = CYAN; a.lineWidth = 2; a.beginPath(); a.moveTo(42, 54); a.lineTo(78, 54); a.stroke();
+    return (AV[key] = c);
+  }
+  // Spielerkarten wie drawPersonaPartyHUD (Alessio), auf die Canvas-Breite skaliert
+  function partyCards(ps, pk, rightTop, leftTop) {
+    if (W < 860) return;
+    const s = Math.max(.72, Math.min(1, W / 1500)), cardH = 48 * s, gap = 12 * s, cw = 210 * s, y0 = TOP + 40 * s;
+    const side = (tm, dir, startY) => {
       ps.filter(([id]) => RP[id] && RP[id][2] === tm && !RP[id][3]).slice(0, 5).forEach(([id, x, y], i) => {
-        const yy = startY + i * (cardH + gap), xx = (dir > 0 ? x0 + i * 6 : x0 - i * 6) + .15 * dir * (yy + cardH / 2);
+        const yy = startY + i * (cardH + gap), home = tm === 'USC';
+        const xr = home ? 20 * s + i * 8 * s : W - 230 * s - i * 8 * s, xx = xr + .15 * dir * (yy + cardH / 2);
         const carrier = pk && Math.hypot(x - pk[0], y - pk[1]) < 2.5;
-        ctx.save(); ctx.transform(1, 0, -.15 * dir, 1, 0, 0); ctx.globalAlpha = .92;
-        ctx.fillStyle = carrier ? (tm === 'USC' ? 'rgba(0,240,255,.25)' : 'rgba(255,45,95,.3)') : (tm === 'USC' ? 'rgba(10,22,40,.85)' : 'rgba(26,10,20,.85)');
-        ctx.strokeStyle = carrier ? (tm === 'USC' ? CYAN : WHITE) : (tm === 'USC' ? 'rgba(40,130,255,.5)' : 'rgba(255,45,95,.5)'); ctx.lineWidth = carrier ? 2 : 1;
+        ctx.save(); ctx.transform(1, 0, -.15 * dir, 1, 0, 0);
+        ctx.fillStyle = carrier ? (home ? 'rgba(0,240,255,.25)' : 'rgba(255,45,95,.3)') : (home ? 'rgba(10,22,40,.85)' : 'rgba(26,10,20,.85)');
+        ctx.strokeStyle = carrier ? (home ? CYAN : WHITE) : (home ? 'rgba(40,130,255,.5)' : 'rgba(255,45,95,.5)'); ctx.lineWidth = carrier ? 2.5 : 1.5;
         rr(xx, yy, cw, cardH, 6, true, true);
-        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        ctx.font = F(700, 14); ctx.fillStyle = WHITE; ctx.fillText(nm(id).toUpperCase().slice(0, 11), xx + 12, yy + 12);
-        ctx.font = F(700, 14); ctx.fillStyle = tm === 'USC' ? CYAN : AWAY; ctx.textAlign = 'right'; ctx.fillText(`#${RP[id][0]}`, xx + cw - 10, yy + 12);
-        ctx.textAlign = 'left'; ctx.font = F(800, 10); ctx.fillStyle = carrier ? WHITE : '#64748B'; ctx.fillText(carrier ? '★ IN CONTROL' : 'ACTIVE ON ICE', xx + 12, yy + 25);
+        ctx.drawImage(avatar(String(RP[id][0]), home), home ? xx - 8 * s : xx + 160 * s, yy - 4 * s, 52 * s, 52 * s);
+        const tx = home ? xx + 50 * s : xx + 15 * s;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.font = F(700, Math.round(17 * s)); ctx.fillStyle = WHITE; ctx.fillText(nm(id).toUpperCase().slice(0, 11), tx, yy + 22 * s);
+        ctx.font = F(700, Math.round(18 * s)); ctx.fillStyle = home ? CYAN : AWAY; ctx.fillText(`#${RP[id][0]}`, home ? xx + 168 * s : xx + 125 * s, yy + 22 * s);
+        ctx.font = F(800, Math.max(9, Math.round(11 * s))); ctx.fillStyle = carrier ? WHITE : '#64748B'; ctx.fillText(carrier ? '★ IN CONTROL' : 'ACTIVE ON ICE', tx, yy + 38 * s);
         ctx.restore();
       });
     };
-    side('USC', 14, 1, TOP + 12); side('HCD', W - cw - 14, -1, rightTop);
+    side('USC', 1, Math.max(y0, leftTop || 0)); side('HCD', -1, Math.max(y0, rightTop));
   }
   function leaders(list, title, a) {
     const tw = Math.min(330, W - 40), th = 44 + list.length * 30, tx = -tw - 30 + (20 + tw + 30) * a, ty = TOP + 14;
@@ -463,15 +497,16 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
     if (rt > sc.dur + OUT) { ri = (ri + 1) % REPLAYS.length; rt = 0; popups = []; setNote(); return; }
     const tt = Math.min(rt, sc.dur), pk0 = puckAt(sc.puck, tt);
     if (pk0) { const z = rt < .05 ? 1 : Math.min(1, dt * 2.2); cam.cx += (pk0[0] - cam.cx) * z; cam.cy += (pk0[1] * .5 - cam.cy) * z; }
-    cam.span = small ? 26 : 38; fit();
+    cam.span = small ? 26 : 60; fit(); // ganzes Feld, kein Zoom
     fireMarks(sc, prev, tt);
     const { ps, pk } = scene(sc, tt);
     drawPopups();
     const ev = (() => { let c = null; for (const m of sc.marks) if (m[0] <= tt) c = m; return c ? ({ Pass: 'PASS', Shot: 'SHOT', Goal: 'GOAL', BluelineCrossing: 'ZONE ENTRY', Faceoff: 'FACEOFF' })[c[1]] : 'PLAY'; })();
     scoreboard(sc, tt, '[REPLAY] PLAYING', '#00FFB4', ev);
     let rightTop = TOP + 12;
-    if (!small) rightTop = minimap(ps, pk) + 4;
-    partyCards(ps, pk, rightTop);
+    if (!small && cam.span < 60) rightTop = minimap(ps, pk) + 4;
+    const lead = ri % 2 ? LEADERS.shots : LEADERS.passes;
+    partyCards(ps, pk, rightTop, rt > sc.dur ? TOP + 14 + 44 + lead.length * 30 + 16 : 0);
     if (rt > sc.dur) {
       const a = Math.min(1, (rt - sc.dur) / .6, (sc.dur + OUT - rt) / .6), e = 1 - Math.pow(1 - Math.max(0, a), 3);
       leaders(ri % 2 ? LEADERS.shots : LEADERS.passes, ri % 2 ? 'SHOTS LEADERS' : 'PASSES LEADERS', e);
@@ -491,10 +526,11 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
     frozen = gstate === 'draw';
     // Kamera auf die Hälfte, in der der Spielzug läuft
     const xs = sc.passes.flatMap(q => [q.s[0], q.e[0]]);
-    cam.span = small ? 26 : 44; cam.cx = small ? (P.s[0] + P.e[0]) / 2 : xs.reduce((a, b) => a + b, 0) / xs.length; cam.cy = small ? (P.s[1] + P.e[1]) / 2 : 0;
+    cam.span = small ? 26 : 60; cam.cx = small ? (P.s[0] + P.e[0]) / 2 : xs.reduce((a, b) => a + b, 0) / xs.length; const ys = sc.passes.flatMap(q => [q.s[1], q.e[1]]); cam.cy = small ? (P.s[1] + P.e[1]) / 2 : ys.reduce((a, b) => a + b, 0) / ys.length;
     fit();
     if (gstate !== 'draw' && gstate !== 'review') fireMarks(sc, prev, gt);
     const { ps, pk } = scene(sc, gt);
+    partyCards(ps, pk, TOP + 12);
     // Vorhersage und Auswertung
     if (gstate === 'draw') {
       const ph = (performance.now() / 1000 % 1.2) / 1.2;
@@ -565,6 +601,8 @@ const PASS_SCENES = """ + json.dumps(scenes, separators=(",", ":")) + """;
     if (mode === 'replay') tickReplay(dt); else tickGame(dt);
     requestAnimationFrame(loop);
   }
+  // für das Demovideo: Zustand lesen und Modus steuern
+  window.BAP = { state: () => (mode === 'game' ? gstate : 'replay'), setMode, start(i) { gi = i; setMode('game'); }, target() { const P = PASS_SCENES[gi].passes[Math.min(pi, PASS_SCENES[gi].passes.length - 1)]; const r = cv.getBoundingClientRect(); return { s: [r.left + X(P.s[0]), r.top + Y(P.s[1])], e: [r.left + X(P.e[0]), r.top + Y(P.e[1])] }; }, replay: () => ({ ri, rt }) };
   setMode('replay'); requestAnimationFrame(loop);
 })();
 
@@ -582,13 +620,74 @@ rep(".lb .x{", """#pro .showgrid.pro{grid-template-columns:1fr;gap:34px}
 .bpnote{margin-top:10px;font-size:12px;color:var(--mist)}
 @media (max-width:640px){.bpwrap{aspect-ratio:3/4}.bpmodes{gap:10px}.bpmodes button{padding:10px 8px}.bpmodes button b{font-size:17px}.bpmodes button span{font-size:12px}}
 .lb .x{""")
-(OUT / ".htaccess").write_text('# Nicht in Suchmaschinen listen\n<IfModule mod_headers.c>\n  Header set X-Robots-Tag "noindex, nofollow"\n</IfModule>\n', encoding="utf-8")
+
+HERO_RINK_JS = """<script>
+// Header: Spielfeld im Be-a-Pro-Stil, zehn simulierte Spieler und ein Puck bewegen sich ruhig (keine echten Daten)
+(() => {
+  const cv = document.querySelector('.herorink'); if (!cv) return;
+  const ctx = cv.getContext('2d'), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const HOME = '#2882FF', AWAY = '#FF2D5F', CYAN = '#00F0FF';
+  const P = Array.from({ length: 10 }, (_, i) => ({ home: i < 5, no: [9, 14, 21, 27, 33, 7, 11, 18, 24, 41][i],
+    bx: (i < 5 ? -1 : 1) * (4 + (i % 5) * 4.2), by: [-9, -3, 3, 9, 0][i % 5] * .95, a: Math.random() * 6, b: Math.random() * 6, s: .25 + Math.random() * .2 }));
+  let W = 0, H = 0, k = 1, ox = 0, oy = 0, vis = true;
+  function fit() { const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height; cv.width = W * d; cv.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+    const n = W < 760; k = n ? Math.min(W * .95 / 61.6, H * .5 / 29.7) : Math.min(W * .56 / 61.6, H * .62 / 29.7); ox = n ? W * .5 : W * .7; oy = n ? H * .74 : H * .5; }
+  const X = x => ox + x * k, Y = y => oy - y * k;
+  function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+  function rink() {
+    ctx.clearRect(0, 0, W, H);
+    const x0 = X(-30.8), y0 = Y(14.85), w = 61.6 * k, h = 29.7 * k;
+    ctx.fillStyle = 'rgba(10,18,32,.55)'; rr(x0, y0, w, h, 2.3 * k); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,212,255,.8)'; ctx.lineWidth = 3; rr(x0, y0, w, h, 2.3 * k); ctx.stroke();
+    const v = (x, c, lw) => { ctx.strokeStyle = c; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(X(x), y0); ctx.lineTo(X(x), y0 + h); ctx.stroke(); };
+    v(0, '#FF2E4C', 3); v(-8.5, '#0088FF', 3.5); v(8.5, '#0088FF', 3.5); v(-26, 'rgba(255,46,76,.7)', 2); v(26, 'rgba(255,46,76,.7)', 2);
+    ctx.strokeStyle = 'rgba(0,240,255,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(0), Y(0), 3.7 * k, 0, 7); ctx.stroke();
+    for (const [x, y] of [[-20, -6], [-20, 6], [20, -6], [20, 6]]) { ctx.strokeStyle = 'rgba(0,240,255,.35)'; ctx.beginPath(); ctx.arc(X(x), Y(y), 2.6 * k, 0, 7); ctx.stroke();
+      ctx.fillStyle = CYAN; ctx.beginPath(); ctx.arc(X(x), Y(y), 3, 0, 7); ctx.fill(); }
+  }
+  function frame(t) {
+    if (!vis) return requestAnimationFrame(frame);
+    t /= 1000; rink();
+    const pos = P.map(p => [p.bx + Math.sin(t * p.s + p.a) * 3.2 + Math.sin(t * .11 + p.b) * 2, p.by + Math.cos(t * p.s * .8 + p.b) * 2.4]);
+    const seg = Math.floor(t / 2.2), u = (t / 2.2) % 1, from = pos[(seg * 3) % 5], to = pos[(seg * 3 + 2) % 5 + (seg % 4 === 3 ? 5 : 0)];
+    const e = u < .55 ? 0 : Math.min(1, (u - .55) / .35), pk = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
+    const R = Math.max(7, k * .5);
+    pos.forEach(([x, y], i) => { const p = P[i];
+      ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(X(x) + 2, Y(y) + 3, R, 0, 7); ctx.fill();
+      ctx.fillStyle = p.home ? HOME : AWAY; ctx.beginPath(); ctx.arc(X(x), Y(y), R * .88, 0, 7); ctx.fill();
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(x), Y(y), R, 0, 7); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = `italic 700 ${Math.round(R)}px Rajdhani, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.no, X(x), Y(y) + 1); });
+    ctx.fillStyle = '#0A0A0E'; ctx.strokeStyle = CYAN; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X(pk[0]), Y(pk[1]), Math.max(4, R * .4), 0, 7); ctx.fill(); ctx.stroke();
+    if (!still) requestAnimationFrame(frame);
+  }
+  fit(); addEventListener('resize', () => { fit(); if (still) frame(0); });
+  new IntersectionObserver(es => { vis = es[0].isIntersecting; }).observe(cv);
+  requestAnimationFrame(frame);
+})();
+</script>
+"""
+
+if not VIDEO:
+    # Vorgabe ThinkSport (15.11.): keine Spengler-Cup-Videos in öffentlich zugänglichen Demos, nur Platzhalter
+    import re as _re
+    # Header: eigene Grafik statt Video, Spielfeld im Be-a-Pro-Stil mit simulierten Spielern
+    web = _re.sub(r'<video class="herovid"[^>]*>\s*</video>', '<canvas class="herovid herorink" aria-hidden="true"></canvas>', web, count=1)
+    i = web.rindex('</body>'); web = web[:i] + HERO_RINK_JS + web[i:]
+    a = web.index('<button class="yt reveal"'); b = web.index('</p>', web.index('<p class="src">', a)) + 4
+    web = web[:a] + ('<div class="ytph reveal"><b>' + L('Platzhalter für die Highlights', 'Placeholder for the highlights') + '</b><span>'
+        + L('In der öffentlichen Demo betten wir keine Videos des Spengler Cup ein. Im Betrieb läuft hier das Highlight-Video des letzten Finals.',
+            'The public demo embeds no Spengler Cup videos. In operation, the highlight video of the last final plays here.') + '</span>'
+        + '<a class="ytlink" href="https://www.youtube.com/watch?v=O3rLScC5SKw" target="_blank" rel="noopener">'
+        + L('Highlights des Finals auf YouTube ansehen', 'Watch the final highlights on YouTube') + ' ↗</a></div>') + web[b:]
+    rep(".lb .x{", ".ytph{margin-top:28px;aspect-ratio:16/9;max-width:900px;border-radius:14px;border:1px dashed rgba(102,193,211,.5);background:linear-gradient(135deg,#0A2A4A,#00142B);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px}\n.ytph b{font-size:20px;color:#66C1D3}.ytlink{margin-top:6px;font-weight:700;color:#fff;border:1px solid rgba(102,193,211,.6);border-radius:10px;padding:10px 18px;text-decoration:none}.ytlink:hover{background:rgba(102,193,211,.15)}.herorink{opacity:.85}.ytph span{max-width:520px;color:var(--mist);font-size:15px;line-height:1.5}\n.lb .x{")
+    assert "Headervideo" not in web and "ytimg" not in web and "data-yt=" not in web
+    (OUT / ".htaccess").write_text('# Nicht in Suchmaschinen listen\n<IfModule mod_headers.c>\n  Header set X-Robots-Tag "noindex, nofollow"\n</IfModule>\n', encoding="utf-8")
 assert "be-a-pro-demo.mp4" not in web and "be-a-pro-loop.mp4" not in web
 (OUT / "index.html").write_text(web, encoding="utf-8")
 
 # Kontrolle: keine echten Namen oder Daten im Ergebnis
 real = (LEARN / "data.js").read_text(encoding="utf-8") if (LEARN / "data.js").exists() else ""
-if real:
+if real and not VIDEO:
     R = json.loads(real[real.index("{"):real.rindex("}") + 1])
     names = [p["n"] for p in R["players"].values()]
     for f in OUT.rglob("*"):
