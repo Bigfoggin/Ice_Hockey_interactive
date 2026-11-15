@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Learn the Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:ital,wght@0,500;0,600;0,700;1,600;1,700;1,800&display=swap" rel="stylesheet">
+<style>
+/* Tokens: eine Farbe = eine Bedeutung.
+   ink = Text & Hauptaktion · usc/hcd = nur Teams · gold = nur Hervorhebung auf dem Eis */
+:root{
+  --bg:#00142B; --surface:#001F3F; --fill:#00284F; --line:#1B3556;
+  --ink:#FFFFFF; --ink2:#B8C7D9; --on-ink:#001F3F; --ice:#66C1D3;
+  --usc:#F0526A; --hcd:#6B9BFF; --gold:#F5B800;
+  --ok:#4ADE80; --bad:#F87171;
+  --r:16px;
+}
+html[lang="de"] [data-l="en"], html[lang="en"] [data-l="de"]{display:none !important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Montserrat,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(120% 60% at 80% 0%,#003366 0%,var(--bg) 60%) fixed;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding:0 0 96px}
+.view{display:none;padding:0 16px}
+.view.active{display:block}
+.hidden{display:none !important}
+
+/* Typo-Skala: 34 Large Title · 22 Title · 17 Body/Headline · 15 Subhead · 13 Footnote */
+.lt{font-size:32px;line-height:1.05;font-weight:900;text-transform:uppercase;letter-spacing:-.2px;margin:14px 0 8px}
+.t2{font-size:22px;line-height:1.25;font-weight:700;margin:0 0 6px}
+.hl{font-weight:600}
+.sub{font-size:15px;color:var(--ink2);margin:0}
+.fn{font-size:13px;color:var(--ink2)}
+.eyebrow{font-size:13px;font-weight:600;color:var(--ink2);margin:28px 4px 8px}
+
+/* Signatur: das Eisfeld. Oben als schmales Band mit den Linien des Rinks */
+.iceband{position:relative;height:76px;margin-top:16px;border-radius:38px;border:2px solid #C9D3DF;background:
+  linear-gradient(90deg,transparent calc(50% - 1.5px),#C8102E calc(50% - 1.5px),#C8102E calc(50% + 1.5px),transparent calc(50% + 1.5px)),
+  linear-gradient(90deg,transparent calc(36% - 2.5px),#1D4ED8 calc(36% - 2.5px),#1D4ED8 calc(36% + 2.5px),transparent calc(36% + 2.5px),transparent calc(64% - 2.5px),#1D4ED8 calc(64% - 2.5px),#1D4ED8 calc(64% + 2.5px),transparent calc(64% + 2.5px)),
+  linear-gradient(90deg,transparent calc(7% - 1px),#C8102E calc(7% - 1px),#C8102E calc(7% + 1px),transparent calc(7% + 1px),transparent calc(93% - 1px),#C8102E calc(93% - 1px),#C8102E calc(93% + 1px),transparent calc(93% + 1px)),
+  #EEF4FA}
+.iceband::after{content:'';position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:2px solid #1D4ED8;border-radius:50%}
+.iceband::before{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;background:#0B0B0B;border-radius:50%;box-shadow:0 0 0 2px #fff;z-index:1}
+
+.group{background:var(--surface);border-radius:var(--r);overflow:hidden}
+.group + .group{margin-top:12px}
+.pad{padding:16px}
+.row{display:flex;gap:12px;align-items:center}
+.grow{flex:1;min-width:0}
+.cell{display:flex;gap:14px;align-items:center;padding:14px 16px;width:100%;text-align:left;min-height:56px}
+.cell + .cell{border-top:1px solid var(--line)}
+.cell .chev{color:var(--ink2);font-size:22px;line-height:1}
+.ico{display:block;width:28px;height:28px;flex:none;color:var(--ink)}
+.ico svg{width:100%;height:100%}
+
+/* Buttons: Hauptaktion = Tinte, sonst neutral gefüllt */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:8px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:14px;background:var(--ice);color:var(--on-ink);width:100%}
+.btn.sec{background:var(--fill);color:var(--ink)}
+.btn.inline{width:auto;min-height:40px;padding:0 16px;border-radius:12px;font-size:15px}
+.btn:disabled{opacity:.35}
+.seg{display:flex;background:var(--fill);border-radius:10px;padding:2px;gap:2px}
+.seg button{flex:1;min-height:32px;padding:0 6px;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* Start */
+.door{display:block;width:100%;text-align:left;background:var(--surface);border-radius:20px;padding:20px;margin-top:12px}
+.door .tt{font-size:22px;font-weight:700;margin:12px 0 4px}
+.door .go{margin-top:14px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.door .prog{margin-top:12px}
+
+/* Eis + Clip */
+.rinkwrap{position:relative;border-radius:14px;overflow:hidden;background:#EEF4FA}
+canvas.rink{display:block;width:100%;height:auto;touch-action:manipulation}
+.clipbar{display:flex;gap:10px;align-items:center;margin-top:10px}
+.playbtn{width:44px;height:44px;border-radius:50%;background:var(--ice);color:var(--on-ink);display:flex;align-items:center;justify-content:center;flex:none}
+.playbtn svg{width:18px;height:18px}
+.scrub{flex:1;height:4px;background:var(--fill);border-radius:2px;overflow:hidden}
+.scrub i{display:block;height:100%;background:var(--ink);width:0}
+.cap{margin-top:12px;min-height:72px}
+.cap .k{font-size:13px;font-weight:600;color:var(--ink2)}
+.cap .x{font-size:17px;margin-top:2px}
+
+/* Kurs */
+.bar{height:4px;background:var(--fill);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);transition:width .3s}
+.num{width:30px;height:30px;border-radius:50%;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex:none}
+.done .num{background:var(--ink);color:var(--on-ink)}
+.lesson{font-size:17px}
+.lesson p{margin:0 0 12px}
+.lesson ul{margin:0 0 12px;padding-left:20px}
+.lesson li{margin:6px 0}
+.rule{border-left:3px solid var(--ink);padding:2px 0 2px 14px;margin:16px 0;font-weight:600}
+.opt{display:block;width:100%;text-align:left;background:var(--fill);border-radius:12px;padding:14px 16px;font-weight:500;border:2px solid transparent;min-height:50px}
+.opt + .opt{margin-top:8px}
+.opt.right{border-color:var(--ok)} .opt.wrong{border-color:var(--bad)}
+.opt .pl{display:flex;gap:12px;align-items:center}
+.fb{margin-top:12px;font-size:15px}
+.fb b{color:var(--ok)} .fb.bad b{color:var(--bad)}
+
+/* Mitschauen */
+.wdots{display:flex;gap:6px;margin-top:16px}
+.wdots span{flex:1;height:4px;border-radius:2px;background:var(--fill)}
+.wdots span.on{background:var(--ink2)} .wdots span.cur{background:var(--ink)}
+#wScore .res{font-size:34px}
+.seen{font-size:15px;color:var(--ink2);border-left:3px solid var(--gold);padding-left:12px}
+.sigrow{background:var(--fill);border-radius:14px;margin-top:16px}
+.sigpic{width:64px;height:64px;flex:none;background:#F7F9FC;border-radius:12px}
+
+/* Spick */
+.siggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sig{background:#F7F9FC !important}
+.sig{background:var(--surface);border-radius:14px;padding:12px 6px 10px;text-align:center}
+.sig .pic{width:72px;height:72px;margin:0 auto}
+.sig .nm{color:#0E1A2B}
+.sig .nm{font-size:13px;font-weight:600;margin-top:6px;line-height:1.25}
+details{border-top:1px solid var(--line)}
+details:first-child{border-top:0}
+summary{list-style:none;padding:14px 16px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';color:var(--ink2)}
+details[open] summary::after{content:'–'}
+details p{margin:0;padding:0 16px 14px;color:var(--ink2);font-size:15px}
+
+/* Spielbericht */
+.score{display:flex;align-items:center;justify-content:center;gap:18px;padding:20px 16px 8px}
+.score .tm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px}
+.score .res{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.gl{display:flex;gap:12px;align-items:center;padding:12px 16px;width:100%;text-align:left}
+.gl + .gl{border-top:1px solid var(--line)}
+.gl.on{background:var(--fill)}
+.gl .t{font-size:13px;color:var(--ink2);width:58px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.gl .s{font-weight:700;width:34px;font-variant-numeric:tabular-nums}
+.chip{font-size:13px;color:var(--ink2)}
+svg.chart{width:100%;height:auto;display:block}
+.cmp{padding:6px 16px 14px}
+.cmp .r{padding:10px 0}
+.cmp .r + .r{border-top:1px solid var(--line)}
+.cmp .l{display:flex;justify-content:space-between;align-items:baseline}
+.cmp .l span{font-size:15px;color:var(--ink2)}
+.cmp .l b{font-variant-numeric:tabular-nums;width:60px}
+.cmp .l b:last-child{text-align:right}
+.cmp .bars{display:flex;gap:3px;height:6px;margin-top:6px}
+.cmp .bars i{display:block;height:100%;border-radius:3px}
+.lb .cell{padding:10px 16px;min-height:52px}
+.badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.val{font-weight:600;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--ink2);margin-top:10px;flex-wrap:wrap}
+.note{font-size:15px;color:var(--ink2);margin-top:12px}
+.note b{color:var(--ink)}
+
+/* Quiz */
+.big{font-size:48px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;margin:18px 0 6px}
+.big small{font-size:17px;color:var(--ink2);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--ink);height:32px}
+.field{width:100%;min-height:50px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;margin-top:8px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--ink2);margin:12px 0}
+.chk input{width:22px;height:22px;margin:0;flex:none}
+
+/* Sheet, Toast */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal .box{background:var(--surface);width:min(560px,100%);border-radius:20px 20px 0 0;padding:8px 20px 32px;max-height:85vh;overflow:auto}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.bigsig{width:210px;height:210px;margin:4px auto 10px;background:#F7F9FC;border-radius:20px}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--on-ink);border-radius:14px;padding:12px 16px;font-size:15px;font-weight:600;max-width:calc(100% - 32px)}
+
+/* Tab-Bar */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--line);z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .in{display:flex;max-width:560px;margin:0 auto}
+nav.tabs button{flex:1;padding:7px 0 9px;font-size:11px;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px}
+nav.tabs svg{width:26px;height:26px}
+nav.tabs button.on{color:var(--ink)}
+
+.apphead{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 0}
+.apphead .brand{font-weight:900;letter-spacing:.06em;font-size:14px;text-transform:uppercase}
+.apphead .brand b{color:var(--ice)}
+.langs{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.langs button{color:var(--ink2);font-weight:700;font-size:12px;letter-spacing:.1em;padding:7px 10px}
+.langs button.on{background:var(--ink);color:var(--on-ink)}
+.eyebrow{color:var(--ice);text-transform:uppercase;letter-spacing:.16em;font-weight:800;font-size:12px}
+.live{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:var(--ink)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--usc);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+.pophead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.newrule{flex:none;white-space:nowrap;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--ice);color:var(--on-ink);padding:5px 10px;border-radius:999px;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.qa{display:grid;grid-template-columns:62px 1fr;gap:10px;font-size:16px;line-height:1.4;padding:8px 0;border-top:1px solid var(--line)}
+.qa .k{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ice);padding-top:3px}
+.more{margin-top:12px;border-top:1px solid var(--line)}
+.more summary{padding:12px 0}
+.more p{padding:0 0 4px}
+.linkbtn{display:block;width:100%;margin-top:6px;padding:12px;font-size:14px;font-weight:600;color:var(--ink2);background:none}
+.rules{padding:14px 16px}
+.ruleshead{font-size:15px;color:var(--ink2)}.ruleshead b{font-size:22px;color:var(--ink);font-weight:900;margin-right:4px}
+.rulebar{height:6px;border-radius:3px;background:var(--fill);margin:10px 0 12px;overflow:hidden}.rulebar i{display:block;height:100%;background:var(--ice);transition:width .6s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;border:1px dashed var(--line);color:var(--ink2);min-width:30px;text-align:center}
+.chip.on{border:1px solid var(--ice);color:var(--ink);background:rgba(102,193,211,.12)}
+#rulesList .ruleshead,#rulesList .rulebar{margin-left:16px;margin-right:16px}#rulesList .ruleshead{padding-top:14px}
+.cell.locked{color:var(--ink2)}
+.checkin{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--surface);min-height:52px}
+.checkin .live{color:var(--ink)}
+.ruleshead{display:flex;align-items:baseline;gap:6px}.ruleshead .mult{margin-left:auto;font-weight:900;font-size:20px;color:var(--ice)}
+.rbcat{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ice);padding:16px 16px 6px;display:flex;justify-content:space-between}
+.rbcat span{color:var(--ink2)}
+.cell.locked{opacity:.55}.cell.locked .lock{font-size:13px}
+summary em.late{font-style:normal;font-size:11px;font-weight:700;color:var(--ink2);margin-left:8px;text-transform:uppercase;letter-spacing:.06em}
+.seg2{display:flex;gap:6px}.seg2 button{flex:1;min-height:34px;border-radius:9px;background:var(--fill);color:var(--ink2);font-weight:700;font-size:13px}
+.seg2 button.on{background:var(--ice);color:var(--on-ink)}
+.late-note{margin-top:4px;color:#F59E0B}
+canvas[hidden]{display:none!important}
+.field{width:100%;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--fill);color:var(--ink);padding:0 14px;font:inherit;margin-top:12px}
+
+/* ================================================================
+   Design wie Be a Pro (Prototyp von Alessio): gleicher Look für beide Spiele.
+   Farben: Arena #04070C, Eis #0D172A, Neon-Cyan #00F0FF, Heim blau #2882FF, Gast pink-rot #FF2D5F. Schrift: Rajdhani.
+   ================================================================ */
+:root{
+  --bg:#04070C; --surface:rgba(14,24,42,.82); --fill:rgba(20,35,60,.6); --line:rgba(0,240,255,.16);
+  --ink:#FFFFFF; --ink2:#94A3B8; --on-ink:#04070C; --ice:#00F0FF; --cyan:#00F0FF;
+  --usc:#2882FF; --hcd:#FF2D5F; --gold:#F5B800; --ok:#30FF96; --bad:#FF3B56;
+}
+html,body{background:radial-gradient(circle at 50% 0%,#0B1220 0%,#04070C 70%) fixed;font:600 17px/1.45 'Rajdhani',-apple-system,sans-serif}
+.lt{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:36px;letter-spacing:.5px;line-height:1}
+.t2{font-style:italic;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:.5px;line-height:1.05}
+.sub,.fn{color:var(--ink2)}
+.eyebrow,.rbcat,.qa .k{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;letter-spacing:.14em;color:var(--cyan)}
+.group,.door,.modal .box{background:var(--surface);border:1px solid rgba(0,240,255,.22);box-shadow:0 0 30px rgba(0,240,255,.06)}
+.modal .box{border-bottom:0;box-shadow:0 -20px 50px rgba(0,0,0,.6),0 0 30px rgba(0,240,255,.12);background:rgba(10,18,32,.97)}
+.modal{background:rgba(4,7,12,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.grab{background:rgba(0,240,255,.35)}
+.btn{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:18px;letter-spacing:1px;text-transform:uppercase;background:rgba(0,210,255,.15);color:#fff;border:1px solid var(--cyan);border-radius:10px;transform:skewX(-8deg);box-shadow:0 10px 25px rgba(0,240,255,.2)}
+.btn.sec{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5);box-shadow:none}
+.linkbtn{font-style:italic;font-weight:700;color:var(--ink2)}
+.playbtn{background:rgba(0,210,255,.15);color:#fff;border:1px solid var(--cyan);box-shadow:0 0 18px rgba(0,240,255,.35)}
+.seg2 button{font-style:italic;font-weight:800;font-size:15px;letter-spacing:.5px;text-transform:uppercase;background:rgba(20,35,60,.6);border:1px solid rgba(0,130,210,.5);color:var(--ink2);transform:skewX(-8deg)}
+.seg2 button.on{background:rgba(0,210,255,.15);border-color:var(--cyan);color:#fff;box-shadow:0 6px 18px rgba(0,240,255,.25)}
+.newrule{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:14px;letter-spacing:.5px;background:#0A0F1D;color:#fff;border:2px solid var(--ok);border-left-width:8px;border-radius:2px;transform:skewX(-12deg);box-shadow:4px 4px 0 rgba(0,0,0,.6)}
+.qa{border-top-color:var(--line);font-size:17px}
+.qa .k{font-size:13px}
+.rinkwrap{background:#04070C;border:1px solid rgba(0,240,255,.25);border-radius:12px}
+#wScore .res{font-style:italic;font-weight:800;font-size:40px}
+.score .tm{font-style:italic;font-weight:800;font-size:20px;letter-spacing:.5px}
+.ruleshead b,.ruleshead .mult{font-style:italic;font-weight:800}
+.ruleshead .mult{color:var(--cyan)}
+.rulebar{background:rgba(255,255,255,.08)}.rulebar i{background:linear-gradient(90deg,#0088FF,var(--cyan));box-shadow:0 0 12px rgba(0,240,255,.6)}
+.sigrow{background:rgba(20,35,60,.6);border:1px solid rgba(0,240,255,.2)}
+.sigpic,.bigsig,.sig{background:#E6EDF6 !important;box-shadow:0 0 0 2px rgba(0,240,255,.35)}
+.sig .nm{font-style:italic;font-weight:700}
+.toast{background:#0A0F1D;color:#fff;border:1px solid var(--cyan);font-style:italic;font-weight:800;box-shadow:0 0 24px rgba(0,240,255,.35)}
+nav.tabs{background:rgba(10,18,32,.92);border-top:1px solid rgba(0,240,255,.25)}
+nav.tabs button{font-style:italic;font-weight:800;font-size:13px;letter-spacing:.5px;text-transform:uppercase}
+nav.tabs button.on{color:var(--cyan)}
+.apphead .brand{font-family:'Rajdhani',sans-serif;font-style:italic;font-weight:800;font-size:17px;letter-spacing:.12em}
+.apphead .brand b{color:var(--cyan)}
+.langs{border-color:rgba(0,240,255,.3)}.langs button{font-style:italic;font-weight:800}.langs button.on{background:var(--cyan);color:#04070C}
+.live{font-style:italic;font-weight:800;letter-spacing:.5px}.live i{background:#FF3B56}
+summary{font-weight:700}
+.cell.locked .lock{filter:grayscale(1)}
+summary em.late{font-style:italic;color:var(--ok);margin-left:auto;margin-right:12px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="apphead"><span class="brand">Learn <b>the Game</b></span>
+    <div class="langs" role="group" aria-label="Sprache / Language"><button data-setlang="de">DE</button><button data-setlang="en">EN</button></div></header>
+
+  <!-- LIVE -->
+  <section class="view active" id="v-learn">
+    <h1 class="lt"><span data-l="de">Jeder Pfiff, sofort erklärt.</span><span data-l="en">Every whistle, explained instantly.</span></h1>
+    <p class="sub"><span data-l="de">Drück Play und schau zu. Bei jedem Pfiff kommt die Erklärung.</span><span data-l="en">Press play and watch. At every whistle, the explanation appears.</span></p>
+    <div class="group" style="margin-top:14px">
+      <div class="score" id="wScore" style="padding:14px 16px 0"></div>
+      <div class="fn" id="wClock" style="text-align:center;padding:2px 16px 12px"></div>
+      <div style="padding:0 12px"><div class="rinkwrap"><canvas class="rink" id="c-watch"></canvas></div></div>
+      <div class="clipbar" style="padding:12px 12px 14px"><button class="playbtn" id="wPlay" aria-label="Play"></button><span class="grow fn" id="wNext"></span></div>
+    </div>
+    <div class="group rules" id="rulesLive" style="margin-top:12px"></div>
+  </section>
+
+  <!-- SPICK -->
+  <section class="view" id="v-spick">
+    <h1 class="lt"><span data-l="de">Spick</span><span data-l="en">Cheat sheet</span></h1>
+    <p class="sub"><span data-l="de">30 Regeln, die du für ein Spiel brauchst. Jede bringt dir 10 Punkte.</span><span data-l="en">30 rules you need to follow a game. Each one earns you 10 points.</span></p>
+    <div class="eyebrow" style="margin:22px 4px 8px"><span data-l="de">Dein Regelbuch</span><span data-l="en">Your rulebook</span></div>
+    <div class="group" id="rulesList"></div>
+    <div class="eyebrow" style="margin:26px 4px 8px"><span data-l="de">Schiri-Zeichen</span><span data-l="en">Referee signals</span></div>
+    <div class="siggrid" id="sigGrid"></div>
+    <div class="fn" style="margin:8px 4px"><span data-l="de">Vereinfacht nach den Handzeichen im IIHF-Regelbuch.</span><span data-l="en">Simplified from the IIHF rule book signals.</span></div>
+    <div class="eyebrow" style="margin:26px 4px 8px"><span data-l="de">Begriffe</span><span data-l="en">Terms</span></div>
+    <div class="group" id="glossNew"></div>
+  </section>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button data-v="learn" class="on"><span data-icon="learn"></span>Live</button>
+  <button data-v="spick"><span data-icon="spick"></span><span data-l="de">Spick</span><span data-l="en">Cheat sheet</span></button>
+</div></nav>
+
+<script src="../shared/hv-account.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
